@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BuyerOrderController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SellerProductController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,8 +50,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
 });
 
-Route::post('/logout', [AuthController::class, 'logout'])
-    ->middleware('auth')
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
     ->name('logout');
 
 /*
@@ -60,6 +60,7 @@ Route::post('/logout', [AuthController::class, 'logout'])
 */
 Route::middleware(['auth', 'role:buyer,seller,admin,super_admin'])->prefix('pembeli')->name('buyer.')->group(function () {
     Route::get('/dashboard', [BuyerOrderController::class, 'index'])->name('dashboard');
+    Route::get('/laporan', [ReportController::class, 'buyer'])->name('reports');
     Route::post('/keranjang/{product}', [BuyerOrderController::class, 'addToCart'])->name('cart.add');
     Route::get('/keranjang', [BuyerOrderController::class, 'viewCart'])->name('cart.index');
     Route::delete('/keranjang/{productId}', [BuyerOrderController::class, 'removeFromCart'])->name('cart.remove');
@@ -76,6 +77,7 @@ Route::middleware(['auth', 'role:buyer,seller,admin,super_admin'])->prefix('pemb
 */
 Route::middleware(['auth', 'role:seller,admin,super_admin'])->prefix('toko-saya')->name('seller.')->group(function () {
     Route::get('/dashboard', [SellerProductController::class, 'index'])->name('dashboard');
+    Route::get('/laporan', [ReportController::class, 'seller'])->name('reports');
     Route::put('/profil', [SellerProductController::class, 'updateProfile'])->name('profile.update');
     Route::put('/diskon', [SellerProductController::class, 'updateDiscounts'])->name('discounts.update');
     Route::get('/produk/tambah', [SellerProductController::class, 'create'])->name('products.create');
@@ -93,6 +95,7 @@ Route::middleware(['auth', 'role:seller,admin,super_admin'])->prefix('toko-saya'
 */
 Route::middleware(['auth', 'role:super_admin,admin'])->prefix('panel-admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/laporan', [ReportController::class, 'admin'])->name('reports');
 
     // CMS Konten Website (Tambah, Edit, Hapus Konten & Iklan Mitra)
     Route::post('/cms', [AdminDashboardController::class, 'storeCms'])->name('cms.store');

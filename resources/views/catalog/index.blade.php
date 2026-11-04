@@ -39,12 +39,9 @@ Algoritma:
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between gap-2 mb-2.5">
             <div class="inline-flex items-center gap-2 text-[11px] font-bold text-slate-500">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 badge-blink"></span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                 <span>MITRA & SPONSOR RESMI SMK PLUS AL HILAL</span>
             </div>
-            <span class="text-[11px] text-slate-400 hidden sm:inline">
-                Bergantian otomatis sesuai durasi tayang CMS
-            </span>
         </div>
 
         <div id="partner-ad-carousel" class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-200/80 bg-slate-900">
@@ -437,17 +434,15 @@ Algoritma:
 
 </section>
 
-<!-- Script Rotasi Otomatis Baris Iklan Mitra Sesuai Durasi Masing-Masing Iklan -->
+<!-- Script Navigasi Manual Baris Iklan Mitra (Otomatis Dihapus sesuai Permintaan) -->
 <script>
     (function () {
         const slides = Array.from(document.querySelectorAll('.partner-ad-slide'));
         const dots = Array.from(document.querySelectorAll('.partner-ad-dot'));
-        const progressBar = document.getElementById('partner-ad-progress');
 
         if (slides.length <= 1) return;
 
         let currentIndex = 0;
-        let timerId = null;
 
         function activateSlide(index) {
             currentIndex = (index + slides.length) % slides.length;
@@ -455,12 +450,10 @@ Algoritma:
             slides.forEach((slide, idx) => {
                 if (idx === currentIndex) {
                     slide.classList.remove('hidden');
-                    slide.classList.remove('ad-slide-active');
-                    void slide.offsetWidth; // Reflow agar efek kedip/pulse berulang
-                    slide.classList.add('block', 'ad-slide-active');
+                    slide.classList.add('block');
                 } else {
                     slide.classList.add('hidden');
-                    slide.classList.remove('block', 'ad-slide-active');
+                    slide.classList.remove('block');
                 }
             });
 
@@ -473,22 +466,6 @@ Algoritma:
                     dot.classList.add('w-2', 'bg-white/50');
                 }
             });
-
-            const durationSeconds = parseInt(slides[currentIndex].getAttribute('data-duration') || '5', 10);
-            const durationMs = Math.max(1000, durationSeconds * 1000);
-
-            if (progressBar) {
-                progressBar.style.transition = 'none';
-                progressBar.style.width = '0%';
-                void progressBar.offsetWidth;
-                progressBar.style.transition = `width ${durationMs}ms linear`;
-                progressBar.style.width = '100%';
-            }
-
-            if (timerId) clearTimeout(timerId);
-            timerId = setTimeout(() => {
-                activateSlide(currentIndex + 1);
-            }, durationMs);
         }
 
         window.goToPartnerAd = function (idx) {

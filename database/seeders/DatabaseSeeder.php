@@ -383,6 +383,111 @@ class DatabaseSeeder extends Seeder
             );
         }
 
+        // Contoh Data Transaksi untuk Laporan (Penjual, Pembeli, Admin/Super Admin)
+        if (Schema::hasTable('orders') && Schema::hasTable('order_items')) {
+            $productBunga = Product::where('slug', 'gantungan-kunci-bunga')->first();
+            $buyerAditya = User::where('email', 'pembeli@hilalkraft.sch.id')->first();
+            $bazaarEvent = \App\Models\BazaarEvent::where('voucher_code', 'BAZARSMKPAL')->first();
+
+            if ($productBunga && $buyerAditya && $storeKhoiriyah) {
+                $sampleOrders = [
+                    [
+                        'invoice'     => 'HK-20261104-001',
+                        'date'        => now()->subHours(2),
+                        'qty'         => 3,
+                        'price'       => 2000,
+                        'disc_pct'    => 10,
+                        'disc_amt'    => 600,
+                        'total'       => 5400,
+                        'status'      => 'confirmed',
+                        'progress'    => 'kemas',
+                        'note'        => 'Sedang dikemas dengan pita merah',
+                        'rating'      => null,
+                        'review'      => null,
+                    ],
+                    [
+                        'invoice'     => 'HK-20261103-RPFAA',
+                        'date'        => now()->subDays(1)->setTime(23, 57),
+                        'qty'         => 5,
+                        'price'       => 2000,
+                        'disc_pct'    => 10,
+                        'disc_amt'    => 1000,
+                        'total'       => 9000,
+                        'status'      => 'completed',
+                        'progress'    => 'sampai',
+                        'note'        => 'Barang telah diterima pembeli di stand sekolah',
+                        'rating'      => 5,
+                        'review'      => 'Karya ganci bunganya cantik dan rapi, bahan kawat bulunya lembut dan kuat!',
+                    ],
+                    [
+                        'invoice'     => 'HK-20261028-003',
+                        'date'        => now()->subDays(7)->setTime(14, 20),
+                        'qty'         => 8,
+                        'price'       => 2000,
+                        'disc_pct'    => 10,
+                        'disc_amt'    => 1600,
+                        'total'       => 14400,
+                        'status'      => 'completed',
+                        'progress'    => 'sampai',
+                        'note'        => 'Pesanan COD area Al Hilal',
+                        'rating'      => 5,
+                        'review'      => 'Pelayanan cepat dan ramah via WA. Sukses terus untuk karya siswa SMK PAL!',
+                    ],
+                    [
+                        'invoice'     => 'HK-20261015-004',
+                        'date'        => now()->subDays(20)->setTime(10, 15),
+                        'qty'         => 12,
+                        'price'       => 2000,
+                        'disc_pct'    => 15,
+                        'disc_amt'    => 3600,
+                        'total'       => 20400,
+                        'status'      => 'completed',
+                        'progress'    => 'sampai',
+                        'note'        => 'Pesanan suvenir bazar kelas',
+                        'rating'      => 5,
+                        'review'      => 'Bagus sekali untuk suvenir!',
+                    ],
+                ];
+
+                foreach ($sampleOrders as $sOrd) {
+                    $order = \App\Models\Order::firstOrCreate(
+                        ['invoice_number' => $sOrd['invoice']],
+                        [
+                            'buyer_id'                    => $buyerAditya->id,
+                            'store_id'                    => $storeKhoiriyah->id,
+                            'subtotal_price'              => $sOrd['qty'] * $sOrd['price'],
+                            'buyer_type_discount_percent' => $sOrd['disc_pct'],
+                            'buyer_type_discount_amount'  => $sOrd['disc_amt'],
+                            'bazaar_event_id'             => $bazaarEvent?->id,
+                            'bazaar_discount_percent'     => 0,
+                            'bazaar_discount_amount'      => 0,
+                            'total_price'                 => $sOrd['total'],
+                            'status'                      => $sOrd['status'],
+                            'progress_status'             => $sOrd['progress'],
+                            'progress_note'               => $sOrd['note'],
+                            'shipping_address'            => 'Blok Rembes belakang musholah, Arjawinangun',
+                            'buyer_rating'                => $sOrd['rating'],
+                            'buyer_review'                => $sOrd['review'],
+                            'rated_at'                    => $sOrd['rating'] ? $sOrd['date'] : null,
+                            'created_at'                  => $sOrd['date'],
+                            'updated_at'                  => $sOrd['date'],
+                        ]
+                    );
+
+                    \App\Models\OrderItem::firstOrCreate(
+                        ['order_id' => $order->id, 'product_id' => $productBunga->id],
+                        [
+                            'quantity'   => $sOrd['qty'],
+                            'unit_price' => $sOrd['price'],
+                            'subtotal'   => $sOrd['qty'] * $sOrd['price'],
+                            'created_at' => $sOrd['date'],
+                            'updated_at' => $sOrd['date'],
+                        ]
+                    );
+                }
+            }
+        }
+
         // 4. Contoh Iklan Mitra Kerjasama Sekolah (BSI, PT. Mega Mentari, Daihatsu) & Konten CMS
         $today = date('Y-m-d');
         $sixMonthsLater = date('Y-m-d', strtotime('+6 months'));

@@ -53,23 +53,6 @@ Algoritma:
             }
         }
     </script>
-    <style>
-        @keyframes adBlinkPulse {
-            0% { opacity: 0.35; transform: scale(0.992); }
-            50% { opacity: 1; transform: scale(1.003); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        .ad-slide-active {
-            animation: adBlinkPulse 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        @keyframes badgeBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.35; }
-        }
-        .badge-blink {
-            animation: badgeBlink 1.4s infinite ease-in-out;
-        }
-    </style>
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif

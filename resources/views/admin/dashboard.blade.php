@@ -74,6 +74,10 @@ Algoritma:
                     <span>⊞</span>
                     <span>Ringkasan</span>
                 </a>
+                <a href="{{ route('admin.reports') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
+                    <span>📊</span>
+                    <span>Laporan & Rekap</span>
+                </a>
                 <a href="#sec-cms" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span>✨</span>
                     <span>CMS Konten Website</span>
@@ -161,7 +165,10 @@ Algoritma:
                     <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Selamat datang, {{ auth()->user()->name }}. Kelola konten website, karya siswa, guru admin, dan seluruh data hilalkraft.</p>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ route('admin.reports') }}" class="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
+                        📊 Laporan & Rekap
+                    </a>
                     <a href="#sec-cms" class="rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] px-3.5 py-2 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
                         ✨ CMS Website
                     </a>
@@ -632,6 +639,33 @@ Algoritma:
                         </div>
                     @endif
 
+                    <!-- Filter Role Pengguna (Semua, Super Admin, Admin Guru, Toko Siswa, Pembeli) -->
+                    <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                        <span class="text-[11px] font-bold text-slate-400 mr-1">Filter Role:</span>
+                        <button type="button" onclick="setAdminUserRoleFilter('all', this)"
+                                class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-bold transition bg-[#0B6E4F] text-white shadow-xs">
+                            Semua ({{ $stats['total_users'] }})
+                        </button>
+                        @if(auth()->user()->role === 'super_admin')
+                            <button type="button" onclick="setAdminUserRoleFilter('super_admin', this)"
+                                    class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+                                Super Admin ({{ $superAdminCount }})
+                            </button>
+                        @endif
+                        <button type="button" onclick="setAdminUserRoleFilter('admin', this)"
+                                class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+                            Admin / Guru ({{ $adminCount }})
+                        </button>
+                        <button type="button" onclick="setAdminUserRoleFilter('seller', this)"
+                                class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+                            Toko Siswa ({{ $sellerCount }})
+                        </button>
+                        <button type="button" onclick="setAdminUserRoleFilter('buyer', this)"
+                                class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+                            Pembeli ({{ $buyerCount }})
+                        </button>
+                    </div>
+
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div class="relative flex-1 min-w-[240px]">
                             <input
@@ -681,7 +715,7 @@ Algoritma:
                                         default => 'Pembeli',
                                     };
                                 @endphp
-                                <tr class="hover:bg-slate-50/70 transition admin-user-row" data-search="{{ strtolower($user->name . ' ' . $user->email . ' usr-00' . $user->id) }}">
+                                <tr class="hover:bg-slate-50/70 transition admin-user-row" data-role="{{ $user->role }}" data-search="{{ strtolower($user->name . ' ' . $user->email . ' usr-00' . $user->id) }}">
                                     <td class="py-3.5 px-5 font-mono text-slate-400">
                                         USR-{{ str_pad((string) $user->id, 4, '0', STR_PAD_LEFT) }}
                                     </td>
@@ -1852,11 +1886,32 @@ Algoritma:
         });
     }
 
+    let currentAdminRoleFilter = 'all';
+    let currentAdminUserSearchTerm = '';
+
+    function setAdminUserRoleFilter(role, btn) {
+        currentAdminRoleFilter = role;
+        document.querySelectorAll('.admin-role-filter-btn').forEach(b => {
+            b.className = 'admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200';
+        });
+        if (btn) {
+            btn.className = 'admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-bold transition bg-[#0B6E4F] text-white shadow-xs';
+        }
+        applyAdminUserFilters();
+    }
+
     function filterAdminUserRows(q) {
-        const term = (q || '').toLowerCase();
+        currentAdminUserSearchTerm = (q || '').toLowerCase();
+        applyAdminUserFilters();
+    }
+
+    function applyAdminUserFilters() {
         document.querySelectorAll('.admin-user-row').forEach(row => {
-            const txt = row.getAttribute('data-search') || '';
-            row.style.display = txt.includes(term) ? '' : 'none';
+            const rowRole = row.getAttribute('data-role') || '';
+            const rowTxt = row.getAttribute('data-search') || '';
+            const roleMatch = (currentAdminRoleFilter === 'all' || rowRole === currentAdminRoleFilter);
+            const searchMatch = (!currentAdminUserSearchTerm || rowTxt.includes(currentAdminUserSearchTerm));
+            row.style.display = (roleMatch && searchMatch) ? '' : 'none';
         });
     }
 

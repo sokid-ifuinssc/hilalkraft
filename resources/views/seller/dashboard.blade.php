@@ -87,6 +87,10 @@ Algoritma:
                     </span>
                     <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">Promo</span>
                 </a>
+                <a href="{{ route('seller.reports') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
+                    <span>📊</span>
+                    <span>Laporan Penjualan</span>
+                </a>
                 <a href="#section-profil" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span>🏪</span>
                     <span>Profil Toko</span>
@@ -147,9 +151,14 @@ Algoritma:
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0F291E] tracking-tight">Produk Saya</h1>
                     <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Kelola karya, pantau stok, dan terus bertumbuh.</p>
                 </div>
-                <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-[#0B6E4F] px-5 py-3 text-xs sm:text-sm font-semibold text-white hover:bg-[#08583F] transition shadow-sm">
-                    <span>+ Tambah Produk Baru</span>
-                </a>
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ route('seller.reports') }}" class="inline-flex items-center gap-2 rounded-xl border border-[#CDEFE0] bg-[#EBF9F2] px-4 py-3 text-xs sm:text-sm font-semibold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
+                        📊 Laporan Penjualan
+                    </a>
+                    <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-[#0B6E4F] px-5 py-3 text-xs sm:text-sm font-semibold text-white hover:bg-[#08583F] transition shadow-sm">
+                        <span>+ Tambah Produk Baru</span>
+                    </a>
+                </div>
             </div>
 
             <!-- 4 Kartu KPI -->

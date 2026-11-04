@@ -46,9 +46,14 @@ Fungsi:
                 Pantau progres barang Anda dari <strong>Pesan → Kemas → Kirim (Dalam Perjalanan) → Sampai</strong>, hubungi penjual via WhatsApp, dan berikan <strong>Rating Bintang ★</strong>.
             </p>
         </div>
-        <a href="{{ route('home') }}" class="rounded-xl bg-[#0B6E4F] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#08583F] transition">
-            + Belanja Karya Lainnya
-        </a>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('buyer.reports') }}" class="rounded-xl border border-[#CDEFE0] bg-[#EBF9F2] px-4 py-2.5 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
+                📊 Laporan Belanja
+            </a>
+            <a href="{{ route('home') }}" class="rounded-xl bg-[#0B6E4F] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#08583F] transition">
+                + Belanja Karya Lainnya
+            </a>
+        </div>
     </div>
 
     <!-- Info Acara Bazar SMK yang Sedang Aktif -->

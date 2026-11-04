@@ -48,7 +48,14 @@ class AdminDashboardController extends Controller
             $usersQuery->whereIn('role', ['seller', 'buyer']);
         }
 
-        $users = $usersQuery->paginate(10);
+        if ($request->filled('role')) {
+            $roleFilter = $request->query('role');
+            if (in_array($roleFilter, ['super_admin', 'admin', 'seller', 'buyer'])) {
+                $usersQuery->where('role', $roleFilter);
+            }
+        }
+
+        $users = $usersQuery->paginate(50);
 
         $stores = Store::with(['owner', 'products', 'orders', 'comments'])
             ->withCount(['products', 'orders', 'comments'])
