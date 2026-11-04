@@ -2,35 +2,37 @@
 
 namespace App\Providers;
 
-use App\Models\Category;
-use App\Models\ClassMajor;
 use App\Models\User;
-use Illuminate\Database\Schema\Blueprint;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 use PDO;
 use Throwable;
 
 /**
  * ============================================================================
- * SERVICE PROVIDER: APP SERVICE PROVIDER (AUTO-BOOTSTRAPPER DB & MIGRATION)
+ * SERVICE PROVIDER: APP SERVICE PROVIDER (AUTO-BOOTSTRAPPER DB, MIGRATION & CMS)
  * ============================================================================
  * Fungsi:
- *   Menyiapkan layanan aplikasi saat booting, termasuk memastikan database
- *   `db_hilalkraft`, tabel migrasi (`users`, `stores`, `products`, `orders`,
- *   `categories`, `class_majors`), serta data awal otomatis tersedia.
- *
- * Algoritma (Self-Healing Schema & Incremental Master Data Seeding):
- *   1. Mengatur driver session dan cache ke `file`.
- *   2. Membuka koneksi PDO ke MySQL lokal (`127.0.0.1:3306`) dan mengeksekusi
- *      `CREATE DATABASE IF NOT EXISTS db_hilalkraft`.
- *   3. Mengecek tabel baru (`categories`, `class_majors`) dan kolom (`password_plain`,
- *      `seller_type`). Jika belum ada, jalankan `Artisan::call('migrate', ['--force' => true])`.
- *   4. Mengisi data awal Kategori Produk dan Kelas/Jurusan apabila tabel masih kosong.
+ *   Menyiapkan koneksi database (MySQL `db_hilalkraft` dengan fallback SQLite),
+ *   menjalankan migrasi skema terbaru (termasuk `cms_contents`), dan memastikan
+ *   data awal yang diminta pengguna tersedia secara otomatis satu kali:
+ *   - 1 Super Admin (`superadmin@hilalkraft.sch.id`)
+ *   - 2 Guru sebagai Admin: Ibu Silvi Dwi Manitik & Ibu Melinda
+ *   - 1 Siswa Pemilik Toko + 1 Karya Siswa Contoh (`Gantungan Kunci Bunga`)
+ *   - 1 Pembeli (`Aditya Pratama`)
+ *   - Blok Konten CMS Website (`cms_contents`)
+ * Algoritma:
+ *   1. Mencoba koneksi ke MySQL (`db_hilalkraft`) dan beralih ke SQLite lokal
+ *      apabila layanan MySQL sedang tidak aktif.
+ *   2. Menjalankan `migrate --force` secara otomatis apabila tabel baru seperti
+ *      `cms_contents` belum tersedia.
+ *   3. Menggunakan penanda satu kali (`cms_seeded_v2_{connection}.flag`) agar
+ *      sinkronisasi data contoh berjalan satu kali pada masing-masing database
+ *      tanpa menimpa perubahan yang dilakukan pengguna selanjutnya.
  * ============================================================================
  */
 class AppServiceProvider extends ServiceProvider
@@ -64,7 +66,7 @@ class AppServiceProvider extends ServiceProvider
             $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
             DB::purge('mysql');
 
-            $this->ensureSchemaAndMasterData();
+            $this->ensureSchemaAndSampleData();
         } catch (Throwable $e) {
             try {
                 $sqlitePath = database_path('database.sqlite');
@@ -73,81 +75,70 @@ class AppServiceProvider extends ServiceProvider
                 DB::purge('sqlite');
                 DB::setDefaultConnection('sqlite');
 
-                $this->ensureSchemaAndMasterData();
+                $this->ensureSchemaAndSampleData();
             } catch (Throwable $inner) {
                 // Abaikan jika gagal
             }
         }
     }
 
-    /**
-     * Fungsi: Memastikan seluruh tabel, kolom, dan data master awal tersedia.
-     * Algoritma: Schema Introspection + Incremental Migration + Idempotent Seeding.
-     */
-    private function ensureSchemaAndMasterData(): void
+    private function ensureSchemaAndSampleData(): void
     {
-        if (! Schema::hasTable('users') || ! Schema::hasTable('categories') || ! Schema::hasTable('class_majors')) {
+        if (
+            ! Schema::hasTable('users') ||
+            ! Schema::hasTable('categories') ||
+            ! Schema::hasTable('class_majors') ||
+            ! Schema::hasTable('product_comments') ||
+            ! Schema::hasTable('product_likes') ||
+            ! Schema::hasTable('visitor_logs') ||
+            ! Schema::hasTable('cms_contents') ||
+            ! Schema::hasTable('bazaar_events') ||
+            ! Schema::hasColumn('cms_contents', 'duration_seconds') ||
+            ! Schema::hasColumn('orders', 'progress_status') ||
+            ! Schema::hasColumn('stores', 'discount_pelajar') ||
+            ! Schema::hasColumn('users', 'user_subtype') ||
+            ! Schema::hasColumn('products', 'views_count')
+        ) {
             Artisan::call('migrate', ['--force' => true]);
         }
 
-        if (Schema::hasTable('users') && ! Schema::hasColumn('users', 'password_plain')) {
-            Schema::table('users', function (Blueprint $table) {
-                $table->string('password_plain')->nullable()->after('password');
-            });
-        }
+        // Pastikan minimal 1 contoh Acara Bazar SMK aktif tersedia jika tabel bazaar_events masih kosong
+        if (Schema::hasTable('bazaar_events') && \App\Models\BazaarEvent::count() === 0) {
+            \App\Models\BazaarEvent::create([
+                'title'               => 'Bazar Karya & Inovasi SMK Plus Al Hilal (SMK PAL)',
+                'voucher_code'        => 'BAZARSMKPAL',
+                'location'            => 'Halaman Utama SMK Plus Al Hilal Arjawinangun',
+                'description'         => 'Diskon spesial bagi pembeli yang hadir langsung atau berbelanja pada acara Bazar Karya & Inovasi SMK Plus Al Hilal.',
+                'discount_percent'    => 10,
+                'max_discount_amount' => null,
+                'start_date'          => date('Y-m-d'),
+                'end_date'            => date('Y-m-d', strtotime('+6 months')),
+                'is_active'           => true,
+            ]);
 
-        if (Schema::hasTable('stores') && ! Schema::hasColumn('stores', 'seller_type')) {
-            Schema::table('stores', function (Blueprint $table) {
-                $table->string('seller_type', 30)->default('siswa')->after('slug');
-            });
-        }
-
-        if (Schema::hasTable('users') && User::count() === 0) {
-            Artisan::call('db:seed', ['--force' => true]);
-        }
-
-        if (Schema::hasTable('users') && Schema::hasColumn('users', 'password_plain')) {
-            User::whereNull('password_plain')->update(['password_plain' => 'password123']);
-        }
-
-        // Seed Kategori Produk Awal jika kosong
-        if (Schema::hasTable('categories') && Category::count() === 0) {
-            $defaultCategories = [
-                'Kerajinan Tangan',
-                'Desain Grafis & Cetak',
-                'Kuliner & Olahan Pangan',
-                'Busana & Tekstil',
-                'Teknologi & IoT Siswa',
-                'Seni Kaligrafi & Islami',
-            ];
-            foreach ($defaultCategories as $catName) {
-                Category::create([
-                    'name'        => $catName,
-                    'slug'        => Str::slug($catName),
-                    'description' => 'Kategori produk karya ' . $catName,
-                ]);
+            if (Schema::hasColumn('stores', 'discount_pelajar')) {
+                \App\Models\Store::where('discount_pelajar', 0)
+                    ->where('discount_keluarga', 0)
+                    ->update([
+                        'discount_pelajar'     => 10,
+                        'discount_keluarga'    => 15,
+                        'discount_alumni'      => 10,
+                        'discount_bazar_extra' => 5,
+                    ]);
             }
         }
 
-        // Seed Kelas, Jurusan, & Unit Guru Awal jika kosong
-        if (Schema::hasTable('class_majors') && ClassMajor::count() === 0) {
-            $defaultUnits = [
-                ['class_name' => 'X', 'major_name' => 'Desain Komunikasi Visual (DKV)'],
-                ['class_name' => 'XI', 'major_name' => 'Desain Komunikasi Visual (DKV)'],
-                ['class_name' => 'XII', 'major_name' => 'Desain Komunikasi Visual (DKV)'],
-                ['class_name' => 'X', 'major_name' => 'Kriya Kreatif & Kerajinan'],
-                ['class_name' => 'XI', 'major_name' => 'Kriya Kreatif & Kerajinan'],
-                ['class_name' => 'XII', 'major_name' => 'Kriya Kreatif & Kerajinan'],
-                ['class_name' => 'XI', 'major_name' => 'Tata Busana & Tekstil'],
-                ['class_name' => 'XII', 'major_name' => 'Kuliner & Tata Boga'],
-                ['class_name' => 'Guru / Pembina', 'major_name' => 'Unit Kewirausahaan Guru SMK Plus Al Hilal'],
-                ['class_name' => 'Jurusan', 'major_name' => 'Unit Produksi DKV & Percetakan'],
-                ['class_name' => 'Jurusan', 'major_name' => 'Unit Produksi Kriya & Kaligrafi'],
-                ['class_name' => 'Jurusan', 'major_name' => 'Unit Produksi Kuliner & Boga'],
-            ];
-            foreach ($defaultUnits as $unit) {
-                ClassMajor::create($unit);
-            }
+        // Sinkronisasi satu kali (One-Time Flag v7):
+        // - Menghapus seeder kategori & produk lama, menyisakan akun utama + 1 contoh produk
+        // - Menambahkan 3 contoh Iklan Mitra Kerjasama Sekolah (BSI, PT. Mega Mentari, Daihatsu)
+        $connName = DB::getDefaultConnection();
+        $seedFlag = storage_path("app/cms_seeded_v7_{$connName}.flag");
+        if (! is_file($seedFlag)) {
+            app(DatabaseSeeder::class)->run();
+
+            @file_put_contents($seedFlag, date('c'));
+        } elseif ($connName === 'mysql') {
+            DatabaseSeeder::syncLiveSnapshotToStorage();
         }
     }
 }

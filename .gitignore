@@ -27,3 +27,4 @@ yarn-error.log
 /storage/logs/*
 !/storage/logs/.gitignore
 /bootstrap/cache/*.php
+

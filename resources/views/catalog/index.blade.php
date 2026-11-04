@@ -1,167 +1,505 @@
 {{--
 ============================================================================
-VIEW: LANDING PAGE & GALERI KATALOG PRODUK (catalog/index.blade.php)
+VIEW: BERANDA MARKETPLACE, BARIS IKLAN MITRA & KATALOG (catalog/index.blade.php)
 ============================================================================
 Fungsi:
-  Menampilkan halaman beranda interaktif bergaya marketplace dengan Hero Banner
-  gradasi hijau-putih, filter kategori horizontal, serta grid kartu produk
-  (foto produk, nama produk, nama toko/siswa, dan harga).
+  Menampilkan halaman beranda marketplace hilalkraf yang simpel, bersih,
+  tidak menumpuk, dan responsif di semua perangkat (Mobile, Tablet, Desktop):
+  1. Baris Iklan Mitra & Sponsor di Bagian Paling Atas (gaya Tokopedia):
+     Menampilkan iklan mitra kerjasama sekolah (misal: Bank Syariah Indonesia /
+     BSI, PT. Mega Mentari, Daihatsu) secara bergantian/berkedip sesuai
+     `duration_seconds` masing-masing iklan dan masa kontrak aktif (`contract_start`
+     s/d `contract_end`) yang diatur oleh Super Admin pada CMS.
+  2. Hero Banner Ringkas & Kartu Pilihan Minggu Ini.
+  3. Filter Kategori Dinamis (dari input Admin/Super Admin) & Katalog Produk
+     lengkap dengan indikator Ikon Lihat (👁️), Suka (❤️), dan Komentar (💬).
+
 Algoritma:
-  1. Active Category State Matching: Membandingkan `request('category')` dengan
-     setiap item kategori untuk menerapkan class gradasi hijau aktif sambil
-     mempertahankan query pencarian `request('q')`.
-  2. Iterative Card Rendering (`@forelse`): Melakukan perulangan koleksi `$products`
-     (12 item per halaman) dan menampilkan empty-state otomatis jika hasil kosong.
+  1. Per-Slide Dynamic Timer Carousel (`initPartnerAdsCarousel()`):
+     Membaca atribut `data-duration` (dalam detik) pada slide iklan aktif,
+     menjalankan animasi progress bar selama `duration * 1000` ms, lalu
+     berpindah secara otomatis dengan efek kedip/transisi halus (`ad-slide-active`)
+     ke iklan mitra berikutnya.
+  2. Contract-Aware Filtering: Hanya iklan dengan `is_active = true` dan
+     tanggal hari ini berada dalam rentang `contract_start` s/d `contract_end`
+     yang dikirim oleh `CmsContent::activePartnerAds()`.
 ============================================================================
 --}}
 @extends('layouts.app')
 
-@section('title', 'hilalkraft — Galeri & Katalog Karya Siswa SMK Plus Al Hilal')
+@section('title', 'hilalkraf — Marketplace Karya Siswa SMK Plus Al Hilal')
 
 @section('content')
-<!-- Hero Banner Gradasi Hijau Emerald & Putih -->
-<section class="relative overflow-hidden bg-gradient-to-br from-[#ECFDF5] via-white to-[#D1FAE5]/60 border-b border-emerald-500/10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div class="lg:col-span-7 space-y-5">
-                <div class="inline-flex items-center gap-2 rounded-full bg-emerald-100/80 border border-emerald-500/20 px-3.5 py-1.5 text-xs font-bold text-[#059669]">
-                    <span>✨ Marketplace Resmi SMK Plus Al Hilal</span>
+
+<!-- ========================================================================
+     1. BARIS IKLAN MITRA KERJASAMA SEKOLAH DI ATAS (ALA TOKOPEDIA BANNER SLIDER)
+     ======================================================================== -->
+@if(isset($partnerAds) && $partnerAds->count() > 0)
+<section class="bg-white border-b border-slate-200/70 pt-3 pb-4 sm:py-5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between gap-2 mb-2.5">
+            <div class="inline-flex items-center gap-2 text-[11px] font-bold text-slate-500">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 badge-blink"></span>
+                <span>MITRA & SPONSOR RESMI SMK PLUS AL HILAL</span>
+            </div>
+            <span class="text-[11px] text-slate-400 hidden sm:inline">
+                Bergantian otomatis sesuai durasi tayang CMS
+            </span>
+        </div>
+
+        <div id="partner-ad-carousel" class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-200/80 bg-slate-900">
+            @foreach($partnerAds as $idx => $ad)
+                @php
+                    $durationSec = max(1, (int) ($ad->duration_seconds ?: 5));
+                    $theme = $ad->theme_color ?: 'emerald';
+                    $bgGradient = match($theme) {
+                        'amber', 'bsi' => 'from-[#00615C] via-[#00827B] to-[#F39C12]',
+                        'blue', 'megamentari' => 'from-[#0F172A] via-[#1E3A8A] to-[#0284C7]',
+                        'rose', 'daihatsu' => 'from-[#7F1D1D] via-[#B91C1C] to-[#E11D48]',
+                        default => 'from-[#064E3B] via-[#0B6E4F] to-[#10B981]',
+                    };
+                    $accentBadge = match($theme) {
+                        'amber', 'bsi' => 'bg-amber-400 text-slate-950',
+                        'blue', 'megamentari' => 'bg-sky-400 text-slate-950',
+                        'rose', 'daihatsu' => 'bg-rose-400 text-slate-950',
+                        default => 'bg-emerald-300 text-slate-950',
+                    };
+                    $adImg = $ad->image
+                        ? (Str::startsWith($ad->image, 'http') ? $ad->image : (Str::startsWith($ad->image, 'images/') ? asset($ad->image) : asset('storage/' . $ad->image)))
+                        : null;
+                @endphp
+
+                <div class="partner-ad-slide {{ $idx === 0 ? 'block ad-slide-active' : 'hidden' }}"
+                     data-index="{{ $idx }}"
+                     data-duration="{{ $durationSec }}">
+                    <div class="relative bg-gradient-to-r {{ $bgGradient }} text-white p-5 sm:p-7 lg:px-10 lg:py-8 min-h-[165px] sm:min-h-[195px] flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+
+                        <!-- Dekorasi Cahaya Latar -->
+                        <div class="pointer-events-none absolute -right-12 -top-12 w-56 h-56 rounded-full bg-white/10 blur-2xl"></div>
+                        <div class="pointer-events-none absolute left-1/3 -bottom-16 w-48 h-48 rounded-full bg-black/15 blur-xl"></div>
+
+                        <!-- Konten Kiri Iklan Mitra -->
+                        <div class="relative z-10 space-y-2.5 max-w-2xl">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="inline-flex items-center gap-1.5 rounded-full {{ $accentBadge }} px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider shadow-xs badge-blink">
+                                    <span>★</span>
+                                    <span>{{ $ad->badge_text ?: 'MITRA KERJASAMA SMK PAL' }}</span>
+                                </span>
+
+                                @if($ad->partner_name)
+                                    <span class="rounded-full bg-white/15 backdrop-blur-xs border border-white/20 px-3 py-0.5 text-[11px] font-bold text-white">
+                                        {{ $ad->partner_name }}
+                                    </span>
+                                @endif
+
+                                <span class="rounded-full bg-black/25 px-2.5 py-0.5 text-[10px] font-medium text-white/90">
+                                    ⏱ {{ $durationSec }} detik
+                                    @if($ad->contract_end)
+                                        • Kontrak s/d {{ $ad->contract_end->format('d M Y') }}
+                                    @endif
+                                </span>
+                            </div>
+
+                            <h2 class="text-lg sm:text-2xl lg:text-3xl font-extrabold tracking-tight leading-snug">
+                                {{ $ad->title }}
+                            </h2>
+
+                            @if($ad->content)
+                                <p class="text-xs sm:text-sm text-white/90 leading-relaxed line-clamp-2">
+                                    {{ $ad->content }}
+                                </p>
+                            @endif
+                        </div>
+
+                        <!-- Kanan: Visual Gambar Iklan atau Kartu Badge Mitra + Tombol CTA -->
+                        <div class="relative z-10 flex items-center gap-4 self-stretch md:self-center justify-between md:justify-end w-full md:w-auto shrink-0">
+                            @if($adImg)
+                                <img src="{{ $adImg }}"
+                                     alt="{{ $ad->title }}"
+                                     class="h-20 sm:h-28 w-32 sm:w-44 rounded-2xl object-cover border-2 border-white/30 shadow-md bg-white p-1">
+                            @else
+                                <div class="hidden sm:flex flex-col items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 px-5 py-3.5 text-center min-w-[150px]">
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-white/80">Official Partner</span>
+                                    <span class="text-sm sm:text-base font-extrabold text-white mt-0.5">{{ $ad->partner_name ?: $ad->title }}</span>
+                                    <span class="text-[10px] text-white/80 mt-0.5">SMK Plus Al Hilal</span>
+                                </div>
+                            @endif
+
+                            @if($ad->link_url)
+                                <a href="{{ $ad->link_url }}"
+                                   class="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-xs font-extrabold text-slate-900 hover:bg-slate-100 transition shadow-sm shrink-0">
+                                    <span>Info Promo</span>
+                                    <span>→</span>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
                 </div>
-                <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                    Dukung & Miliki Karya Terbaik Siswa <span class="bg-gradient-to-r from-[#10B981] to-[#059669] bg-clip-text text-transparent">hilalkraft</span>
-                </h1>
-                <p class="text-base sm:text-lg text-slate-600 max-w-2xl leading-relaxed">
-                    Temukan produk kriya, kaligrafi, desain kreatif, busana, hingga kuliner halal hasil inovasi wirausaha muda <strong>SMK Plus Al Hilal</strong>. Transaksi mudah dan terhubung langsung dengan kreator siswa.
-                </p>
-                <div class="flex flex-wrap items-center gap-3 pt-2">
-                    <a href="#katalog-produk" class="rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
-                        Jelajahi Karya Siswa
-                    </a>
+            @endforeach
+
+            <!-- Progress Bar Durasi Tayang Slide Aktif -->
+            @if($partnerAds->count() > 1)
+                <div class="h-1 w-full bg-black/30">
+                    <div id="partner-ad-progress" class="h-full bg-white/90 transition-all ease-linear" style="width: 0%;"></div>
+                </div>
+
+                <!-- Navigasi Titik (Dots) & Tombol Prev/Next -->
+                <div class="absolute bottom-2.5 right-4 z-20 flex items-center gap-1.5">
+                    <button type="button" onclick="stepPartnerAd(-1)" class="w-6 h-6 rounded-full bg-black/35 text-white hover:bg-black/60 flex items-center justify-center text-xs transition" title="Iklan Sebelumnya">‹</button>
+                    @foreach($partnerAds as $idx => $ad)
+                        <button type="button"
+                                onclick="goToPartnerAd({{ $idx }})"
+                                class="partner-ad-dot h-2 rounded-full transition-all {{ $idx === 0 ? 'w-6 bg-white' : 'w-2 bg-white/50 hover:bg-white/80' }}"
+                                title="{{ $ad->partner_name ?: $ad->title }} ({{ $ad->duration_seconds ?: 5 }}s)">
+                        </button>
+                    @endforeach
+                    <button type="button" onclick="stepPartnerAd(1)" class="w-6 h-6 rounded-full bg-black/35 text-white hover:bg-black/60 flex items-center justify-center text-xs transition" title="Iklan Berikutnya">›</button>
+                </div>
+            @endif
+        </div>
+    </div>
+</section>
+@endif
+
+<!-- ========================================================================
+     2. HERO SECTION RINGKAS & ELEGAN (TERINTEGRASI CMS)
+     ======================================================================== -->
+@php
+    $heroBadge    = \App\Models\CmsContent::val('hero_badge', 'KARYA LOKAL, POTENSI BESAR.');
+    $heroTitle    = \App\Models\CmsContent::val('hero_title', 'Karya Inovatif Siswa SMK Plus Al Hilal');
+    $heroSubtitle = \App\Models\CmsContent::val('hero_subtitle', 'Temukan karya yang punya cerita. Dari kerajinan tangan hingga inovasi teknologi, dibuat dengan hati oleh talenta muda.');
+    $heroCtaText  = \App\Models\CmsContent::val('hero_cta_text', 'Jelajahi Produk');
+    $heroStats    = \App\Models\CmsContent::val('hero_stats_text', 'Siswa & Guru Berkarya');
+@endphp
+
+<section class="bg-gradient-to-b from-[#E6F7F0] via-[#F2FBF7] to-[#F8FAFC] border-b border-slate-200/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+
+            <!-- Kiri: Teks Utama Hero -->
+            <div class="lg:col-span-7 space-y-4">
+                @if($heroBadge !== '')
+                    <div class="inline-flex items-center gap-2 rounded-full bg-white border border-emerald-500/20 px-3 py-1 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#0B6E4F] shadow-2xs">
+                        <span>✦</span>
+                        <span>{{ $heroBadge }}</span>
+                    </div>
+                @endif
+
+                @if($heroTitle !== '')
+                    <h1 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-[#0F291E] tracking-tight leading-[1.15]">
+                        {{ $heroTitle }}
+                    </h1>
+                @endif
+
+                @if($heroSubtitle !== '')
+                    <p class="text-xs sm:text-sm lg:text-base text-slate-600 max-w-xl leading-relaxed">
+                        {{ $heroSubtitle }}
+                    </p>
+                @endif
+
+                <div class="flex flex-wrap items-center gap-3 pt-1">
+                    @if($heroCtaText !== '')
+                        <a href="#katalog-produk" class="inline-flex items-center gap-2 rounded-xl bg-[#0B6E4F] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-[#08583F] transition shadow-xs">
+                            <span>{{ $heroCtaText }}</span>
+                            <span>→</span>
+                        </a>
+                    @endif
                     @guest
-                        <a href="{{ route('register') }}" class="rounded-xl border border-emerald-500/30 bg-white px-6 py-3 text-sm font-bold text-[#059669] hover:bg-emerald-50 transition">
-                            Buka Toko Kreator
+                        <a href="{{ route('register') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#0F291E] hover:border-[#0B6E4F] transition">
+                            <span>Buka Toko Siswa / Daftar</span>
                         </a>
                     @endguest
                 </div>
-            </div>
 
-            <!-- Kartu Highlight Logo & Statistik -->
-            <div class="lg:col-span-5">
-                <div class="rounded-3xl bg-white p-6 sm:p-8 shadow-xl shadow-emerald-900/5 border border-emerald-500/15 relative">
-                    <div class="flex items-center gap-4">
-                        <img src="{{ asset('images/logo-hilalkraft.jpg') }}" alt="hilalkraft Logo" class="w-20 h-20 rounded-2xl object-contain border border-emerald-100 p-1">
-                        <div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-[#10B981]">Karya Siswa Berkah Bersama</span>
-                            <h2 class="text-xl font-extrabold text-slate-900 mt-0.5">Inkubator Bisnis SMK Plus Al Hilal</h2>
-                            <p class="text-xs text-slate-500 mt-1">Seluruh toko siswa telah melalui proses kurasi & verifikasi Admin Sekolah.</p>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-3 mt-6 pt-6 border-t border-slate-100 text-center">
-                        <div class="rounded-2xl bg-[#F8FAFC] p-3">
-                            <p class="text-lg font-extrabold text-[#059669]">100%</p>
-                            <p class="text-[11px] text-slate-500 font-medium">Karya Asli Siswa</p>
-                        </div>
-                        <div class="rounded-2xl bg-[#F8FAFC] p-3">
-                            <p class="text-lg font-extrabold text-[#059669]">Terverifikasi</p>
-                            <p class="text-[11px] text-slate-500 font-medium">Guru & Admin</p>
-                        </div>
-                        <div class="rounded-2xl bg-[#F8FAFC] p-3">
-                            <p class="text-lg font-extrabold text-amber-500">Langsung</p>
-                            <p class="text-[11px] text-slate-500 font-medium">Integrasi WA</p>
-                        </div>
-                    </div>
+                <!-- 3 Poin Nilai Utama Ringkas dalam 1 Baris -->
+                <div class="pt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-semibold text-slate-600">
+                    @if(\App\Models\CmsContent::val('value_1', 'Karya siswa asli') !== '')
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-4 h-4 rounded-full bg-[#D5F5E6] text-[#0B6E4F] flex items-center justify-center text-[10px]">✓</span>
+                            {{ \App\Models\CmsContent::val('value_1', 'Karya siswa asli') }}
+                        </span>
+                    @endif
+                    @if(\App\Models\CmsContent::val('value_2', 'Langsung ke kreator') !== '')
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-4 h-4 rounded-full bg-[#D5F5E6] text-[#0B6E4F] flex items-center justify-center text-[10px]">💬</span>
+                            {{ \App\Models\CmsContent::val('value_2', 'Langsung ke kreator') }}
+                        </span>
+                    @endif
+                    @if(\App\Models\CmsContent::val('value_3', 'Dukung talenta muda') !== '')
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-4 h-4 rounded-full bg-[#D5F5E6] text-[#0B6E4F] flex items-center justify-center text-[10px]">♡</span>
+                            {{ \App\Models\CmsContent::val('value_3', 'Dukung talenta muda') }}
+                        </span>
+                    @endif
                 </div>
             </div>
+
+            <!-- Kanan: Kartu Showcase Karya Unggulan -->
+            <div class="lg:col-span-5">
+                @php
+                    $heroImg = $featuredProduct
+                        ? (Str::startsWith($featuredProduct->image, 'http')
+                            ? $featuredProduct->image
+                            : (Str::startsWith($featuredProduct->image, 'images/') ? asset($featuredProduct->image) : asset('storage/' . $featuredProduct->image)))
+                        : asset('images/products/gantungan-kunci-bunga.jpg');
+                    $heroLink = $featuredProduct ? route('products.show', $featuredProduct->slug) : '#katalog-produk';
+                @endphp
+                <a href="{{ $heroLink }}" class="group block relative rounded-2xl overflow-hidden shadow-md bg-white border border-slate-200/80 aspect-[16/11]">
+                    <img
+                        src="{{ $heroImg }}"
+                        alt="{{ $featuredProduct->product_name ?? 'Karya Siswa SMK Plus Al Hilal' }}"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onerror="this.src='{{ asset('images/products/gantungan-kunci-bunga.jpg') }}'"
+                    >
+                    <div class="absolute inset-x-3 bottom-3 rounded-xl bg-white/95 backdrop-blur-md p-3.5 shadow-md border border-slate-100 flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <span class="block text-[10px] font-extrabold uppercase tracking-wider text-[#0B6E4F]">
+                                KARYA PILIHAN SISWA
+                            </span>
+                            <h3 class="text-xs sm:text-sm font-bold text-[#0F291E] truncate group-hover:text-[#0B6E4F] transition">
+                                {{ $featuredProduct->product_name ?? 'Gantungan Kunci Bunga' }}
+                            </h3>
+                            <p class="text-[11px] text-slate-500 truncate">
+                                {{ $featuredProduct->store->owner->name ?? 'Khoiriyah Muntazah' }} • {{ $featuredProduct->store->student_class ?? 'XI TKJT' }}
+                            </p>
+                        </div>
+                        <span class="shrink-0 rounded-lg bg-[#EBF9F2] px-2.5 py-1 text-xs font-extrabold text-[#0B6E4F]">
+                            {{ $featuredProduct->formatted_price ?? 'Rp 2.000' }}
+                        </span>
+                    </div>
+                </a>
+            </div>
+
         </div>
     </div>
 </section>
 
-<!-- Filter Kategori & Katalog Produk -->
-<section id="katalog-produk" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <!-- Baris Filter Kategori -->
-    <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+<!-- Banner Pengumuman Custom CMS (Bila Ditambahkan oleh Super Admin) -->
+@if(isset($customCmsBanners) && $customCmsBanners->count() > 0)
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+    <div class="grid grid-cols-1 md:grid-cols-{{ min(3, $customCmsBanners->count()) }} gap-4">
+        @foreach($customCmsBanners as $banner)
+            <div class="rounded-2xl bg-white border border-emerald-500/25 p-4 sm:p-5 flex items-start justify-between gap-4 shadow-2xs">
+                <div class="space-y-1">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-[#0B6E4F]">Info & Pengumuman</span>
+                    <h3 class="text-sm font-extrabold text-[#0F291E]">{{ $banner->title }}</h3>
+                    @if($banner->content)
+                        <p class="text-xs text-slate-600 leading-relaxed">{{ $banner->content }}</p>
+                    @endif
+                    @if($banner->link_url)
+                        <a href="{{ $banner->link_url }}" class="inline-block text-xs font-bold text-[#0B6E4F] hover:underline pt-1">Selengkapnya →</a>
+                    @endif
+                </div>
+                @if($banner->image)
+                    <img src="{{ Str::startsWith($banner->image, 'http') ? $banner->image : (Str::startsWith($banner->image, 'images/') ? asset($banner->image) : asset('storage/' . $banner->image)) }}"
+                         alt="{{ $banner->title }}"
+                         class="w-16 h-16 rounded-xl object-cover shrink-0">
+                @endif
+            </div>
+        @endforeach
+    </div>
+</section>
+@endif
+
+<!-- ========================================================================
+     3. KATALOG KARYA SISWA & FILTER KATEGORI DINAMIS
+     ======================================================================== -->
+<section id="katalog-produk" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-6">
+
+    <!-- Baris Filter Kategori & Pengurutan -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-extrabold text-slate-900">Galeri & Katalog Produk Siswa</h2>
-            <p class="text-sm text-slate-500">Menampilkan karya terbaik dari toko siswa terverifikasi</p>
+            <h2 class="text-lg sm:text-xl font-extrabold text-[#0F291E]">Katalog Karya Siswa</h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+                Menampilkan {{ $products->total() }} karya terkurasi beserta jumlah dilihat (👁️), suka (❤️), dan komentar (💬)
+            </p>
         </div>
 
-        <div class="flex items-center gap-2 overflow-x-auto pb-2">
-            <a href="{{ route('home') }}"
-               class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ !request('category') ? 'bg-gradient-to-r from-[#10B981] to-[#059669] text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-400' }}">
-                Semua Kategori
-            </a>
-            @foreach($categories as $cat)
-                <a href="{{ route('home', ['category' => $cat, 'q' => request('q')]) }}"
-                   class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ request('category') === $cat ? 'bg-gradient-to-r from-[#10B981] to-[#059669] text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-400' }}">
-                    {{ $cat }}
+        <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Filter Kategori (Dinamis dari Tabel Categories) -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                <a href="{{ route('home', ['q' => request('q'), 'sort' => request('sort')]) }}"
+                   class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition {{ !request('category') ? 'bg-[#0B6E4F] text-white shadow-2xs' : 'bg-white text-slate-600 border border-slate-200 hover:border-[#0B6E4F]' }}">
+                    <span>Semua</span>
                 </a>
-            @endforeach
+                @foreach($categories as $cat)
+                    <a href="{{ route('home', ['category' => $cat, 'q' => request('q'), 'sort' => request('sort')]) }}"
+                       class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition {{ request('category') === $cat ? 'bg-[#0B6E4F] text-white shadow-2xs' : 'bg-white text-slate-600 border border-slate-200 hover:border-[#0B6E4F]' }}">
+                        <span>{{ $cat }}</span>
+                    </a>
+                @endforeach
+            </div>
+
+            <!-- Dropdown Urutkan -->
+            <form action="{{ route('home') }}" method="GET" class="ml-auto md:ml-0">
+                @if(request('category'))
+                    <input type="hidden" name="category" value="{{ request('category') }}">
+                @endif
+                @if(request('q'))
+                    <input type="hidden" name="q" value="{{ request('q') }}">
+                @endif
+                <select name="sort" onchange="this.form.submit()" class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 focus:border-[#0B6E4F] focus:outline-none cursor-pointer">
+                    <option value="rekomendasi" @selected(request('sort', 'rekomendasi') === 'rekomendasi')>Urutkan: Rekomendasi</option>
+                    <option value="populer" @selected(request('sort') === 'populer')>Paling Banyak Dilihat (👁️)</option>
+                    <option value="disukai" @selected(request('sort') === 'disukai')>Paling Banyak Disukai (❤️)</option>
+                    <option value="terbaru" @selected(request('sort') === 'terbaru')>Terbaru</option>
+                </select>
+            </form>
         </div>
     </div>
 
-    <!-- Grid Card Produk -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <!-- Grid Kartu Produk Responsif -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         @forelse($products as $product)
-            <article class="group rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-500/40 transition-all duration-300 flex flex-col">
-                <!-- Foto Produk -->
-                <a href="{{ route('products.show', $product->slug) }}" class="relative aspect-[4/3] bg-slate-100 overflow-hidden block">
-                    <img
-                        src="{{ Str::startsWith($product->image, 'http') ? $product->image : asset('storage/' . $product->image) }}"
-                        alt="{{ $product->product_name }}"
-                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        onerror="this.src='https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80'"
-                    >
-                    <span class="absolute top-3 left-3 rounded-lg bg-white/90 backdrop-blur px-2.5 py-1 text-[11px] font-bold text-[#059669] shadow-sm">
-                        {{ $product->category }}
-                    </span>
-                </a>
+            @php
+                $fallbackImage = asset('images/products/gantungan-kunci-bunga.jpg');
+                $cardImage = Str::startsWith($product->image, 'http')
+                    ? $product->image
+                    : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image));
+            @endphp
+            <article class="group rounded-2xl bg-white border border-slate-200/80 overflow-hidden hover:shadow-md hover:border-[#0B6E4F]/40 transition-all duration-300 flex flex-col">
+                <div class="relative aspect-square bg-slate-100 overflow-hidden">
+                    <a href="{{ route('products.show', $product->slug) }}" class="block w-full h-full">
+                        <img
+                            src="{{ $cardImage }}"
+                            alt="{{ $product->product_name }}"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            onerror="this.src='{{ $fallbackImage }}'"
+                        >
+                    </a>
 
-                <!-- Konten Card -->
-                <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
-                    <div>
-                        <!-- Nama Toko / Siswa -->
-                        <div class="flex items-center gap-1.5 text-xs text-slate-500 mb-1">
-                            <span class="inline-block w-2 h-2 rounded-full bg-[#10B981]"></span>
-                            <span class="font-semibold text-slate-700 truncate">{{ $product->store->store_name }}</span>
-                            <span>•</span>
-                            <span class="truncate">{{ $product->store->owner->name }}</span>
+                    <form action="{{ route('products.like', $product->slug) }}" method="POST" class="absolute top-3 right-3">
+                        @csrf
+                        <button type="submit" class="w-8 h-8 rounded-full bg-white/95 backdrop-blur-xs shadow-xs flex items-center justify-center text-slate-600 hover:text-rose-500 transition" title="Sukai karya ini">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="p-4 flex-1 flex flex-col justify-between space-y-2.5">
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="inline-block rounded-md bg-[#EBF9F2] px-2 py-0.5 text-[10px] font-bold text-[#0B6E4F] truncate">
+                                {{ $product->store->student_class ?: ($product->category ?: 'Karya Siswa') }}
+                            </span>
+                            <span class="text-[10px] font-medium text-slate-400 truncate">
+                                {{ $product->store->owner->name ?? $product->store->store_name }}
+                            </span>
                         </div>
 
-                        <!-- Nama Produk -->
-                        <h3 class="font-bold text-slate-900 text-base leading-snug line-clamp-2 group-hover:text-[#059669] transition">
+                        <h3 class="font-bold text-[#0F291E] text-sm sm:text-base leading-snug line-clamp-1 group-hover:text-[#0B6E4F] transition">
                             <a href="{{ route('products.show', $product->slug) }}">
                                 {{ $product->product_name }}
                             </a>
                         </h3>
+
+                        <p class="text-sm sm:text-base font-extrabold text-[#0B6E4F]">
+                            {{ $product->formatted_price }}
+                        </p>
                     </div>
 
-                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <div>
-                            <span class="text-[11px] text-slate-400 block">Harga Karya</span>
-                            <span class="text-lg font-extrabold text-[#059669]">
-                                {{ $product->formatted_price }}
+                    <!-- Baris Bawah: Chat Penjual + Ikon Lihat (👁️), Suka (❤️), Komentar (💬) -->
+                    <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 text-[11px]">
+                        <a href="{{ route('products.show', $product->slug) }}" class="inline-flex items-center gap-1 font-semibold text-[#0B6E4F] hover:underline">
+                            <span>💬</span>
+                            <span>Detail & Pesan</span>
+                        </a>
+
+                        <div class="flex items-center gap-2 font-medium text-slate-400">
+                            <span class="inline-flex items-center gap-0.5" title="Dilihat">
+                                👁️ {{ number_format($product->views_count ?? 0) }}
+                            </span>
+                            <span class="inline-flex items-center gap-0.5 text-rose-500" title="Disukai">
+                                ❤️ {{ number_format($product->likes_count ?? 0) }}
+                            </span>
+                            <span class="inline-flex items-center gap-0.5 text-slate-500" title="Komentar">
+                                💬 {{ number_format($product->comments_count ?? 0) }}
                             </span>
                         </div>
-                        <a href="{{ route('products.show', $product->slug) }}"
-                           class="rounded-xl bg-emerald-50 px-3.5 py-2 text-xs font-bold text-[#059669] group-hover:bg-gradient-to-r group-hover:from-[#10B981] group-hover:to-[#059669] group-hover:text-white transition">
-                            Detail
-                        </a>
                     </div>
                 </div>
             </article>
         @empty
-            <div class="col-span-full rounded-3xl bg-white border border-slate-200 p-12 text-center space-y-3">
-                <p class="text-lg font-bold text-slate-800">Belum ada produk yang ditemukan</p>
-                <p class="text-sm text-slate-500">Coba gunakan kata kunci pencarian lain atau pilih kategori berbeda.</p>
-                <a href="{{ route('home') }}" class="inline-block rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] px-5 py-2.5 text-xs font-bold text-white">
-                    Reset Pencarian
-                </a>
+            <div class="col-span-full rounded-2xl bg-white border border-slate-200/80 p-10 text-center space-y-2">
+                <p class="text-sm font-bold text-[#0F291E]">Belum ada karya produk yang ditemukan</p>
+                <p class="text-xs text-slate-500">Silakan reset pencarian atau tambahkan karya baru melalui Dashboard Toko / Super Admin.</p>
             </div>
         @endforelse
     </div>
 
-    <div class="mt-8">
-        {{ $products->links() }}
-    </div>
+    @if($products->hasPages())
+        <div class="pt-4">
+            {{ $products->links() }}
+        </div>
+    @endif
+
 </section>
+
+<!-- Script Rotasi Otomatis Baris Iklan Mitra Sesuai Durasi Masing-Masing Iklan -->
+<script>
+    (function () {
+        const slides = Array.from(document.querySelectorAll('.partner-ad-slide'));
+        const dots = Array.from(document.querySelectorAll('.partner-ad-dot'));
+        const progressBar = document.getElementById('partner-ad-progress');
+
+        if (slides.length <= 1) return;
+
+        let currentIndex = 0;
+        let timerId = null;
+
+        function activateSlide(index) {
+            currentIndex = (index + slides.length) % slides.length;
+
+            slides.forEach((slide, idx) => {
+                if (idx === currentIndex) {
+                    slide.classList.remove('hidden');
+                    slide.classList.remove('ad-slide-active');
+                    void slide.offsetWidth; // Reflow agar efek kedip/pulse berulang
+                    slide.classList.add('block', 'ad-slide-active');
+                } else {
+                    slide.classList.add('hidden');
+                    slide.classList.remove('block', 'ad-slide-active');
+                }
+            });
+
+            dots.forEach((dot, idx) => {
+                if (idx === currentIndex) {
+                    dot.classList.add('w-6', 'bg-white');
+                    dot.classList.remove('w-2', 'bg-white/50');
+                } else {
+                    dot.classList.remove('w-6', 'bg-white');
+                    dot.classList.add('w-2', 'bg-white/50');
+                }
+            });
+
+            const durationSeconds = parseInt(slides[currentIndex].getAttribute('data-duration') || '5', 10);
+            const durationMs = Math.max(1000, durationSeconds * 1000);
+
+            if (progressBar) {
+                progressBar.style.transition = 'none';
+                progressBar.style.width = '0%';
+                void progressBar.offsetWidth;
+                progressBar.style.transition = `width ${durationMs}ms linear`;
+                progressBar.style.width = '100%';
+            }
+
+            if (timerId) clearTimeout(timerId);
+            timerId = setTimeout(() => {
+                activateSlide(currentIndex + 1);
+            }, durationMs);
+        }
+
+        window.goToPartnerAd = function (idx) {
+            activateSlide(idx);
+        };
+
+        window.stepPartnerAd = function (delta) {
+            activateSlide(currentIndex + delta);
+        };
+
+        activateSlide(0);
+    })();
+</script>
 @endsection

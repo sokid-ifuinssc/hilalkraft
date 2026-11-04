@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BazaarEvent;
 use App\Models\Category;
+use App\Models\ClassMajor;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
@@ -13,23 +15,149 @@ use Illuminate\View\View;
 
 /**
  * ============================================================================
- * CONTROLLER: SELLER PRODUCT CONTROLLER (MANAJEMEN PRODUK PEMILIK TOKO)
+ * CONTROLLER: SELLER PRODUCT CONTROLLER (SATU TOKO SATU AKUN, DISKON & PROGRES)
  * ============================================================================
  * Fungsi:
- *   Mengelola seluruh aktivitas Pemilik Toko (Siswa, Guru, maupun Jurusan):
- *   melihat statistik toko, menambah karya produk baru dengan pilihan kategori
- *   dinamis dari database, mengedit/menghapus produk, dan mengelola pesanan.
+ *   Mengelola dashboard Pemilik Toko (baik Siswa maupun Guru), termasuk:
+ *   1. Mengelola Profil Toko & Edit Profil Lengkap Pemilik Toko (Satu Toko Satu Akun).
+ *   2. Mengelola Skema Diskon Jenis Pembeli (Pelajar, Keluarga SMK, Alumni, Umum)
+ *      dan Diskon Tambahan saat Bazar SMK (`updateDiscounts`).
+ *   3. Mengelola Progres Pesanan 4 Tahap:
+ *      `pesan` (Dipesan) -> `kemas` (Dikemas) -> `kirim` (Dikirim / Dalam Perjalanan) -> `sampai` (Sampai).
+ *   4. CRUD Produk Karya.
  * ============================================================================
  */
 class SellerProductController extends Controller
 {
     public function index(Request $request): View
     {
-        $store = $request->user()->store()->withCount(['products', 'orders'])->firstOrFail();
-        $products = $store->products()->latest()->paginate(10);
-        $orders = $store->orders()->with(['buyer', 'items.product'])->latest()->take(10)->get();
+        $user = $request->user();
 
-        return view('seller.dashboard', compact('store', 'products', 'orders'));
+        // Pastikan prinsip Satu Toko Satu Akun (1-to-1)
+        $store = $user->store()->withCount(['products', 'orders', 'comments'])->first();
+        if (! $store) {
+            $store = $user->store()->create([
+                'store_name'     => 'Toko ' . $user->name,
+                'slug'           => Str::slug('toko-' . $user->name) . '-' . Str::lower(Str::random(4)),
+                'seller_type'    => $user->is_teacher ? 'guru' : ($user->user_subtype ?? 'siswa'),
+                'student_class'  => trim(($user->class_name ?? '') . ' ' . ($user->major_name ?? 'SMK Plus Al Hilal')),
+                'description'    => 'Toko Karya Resmi SMK Plus Al Hilal',
+                'contact_number' => $user->phone ?? '081234567890',
+                'is_verified'    => false,
+            ]);
+            $store->loadCount(['products', 'orders', 'comments']);
+        }
+
+        $products = $store->products()->withCount('comments')->latest()->paginate(10);
+        $orders = $store->orders()->with(['buyer', 'items.product', 'bazaarEvent'])->latest()->get();
+        $activeBazaarEvents = BazaarEvent::activeEvents();
+
+        $classMajors = ClassMajor::where('is_active', true)->orderBy('class_name')->orderBy('major_name')->get();
+        $classList = $classMajors->pluck('class_name')->unique()->values();
+        $majorList = $classMajors->pluck('major_name')->unique()->values();
+
+        return view('seller.dashboard', compact('user', 'store', 'products', 'orders', 'classList', 'majorList', 'activeBazaarEvents'));
+    }
+
+    /**
+     * Fungsi:
+     *   Menyimpan skema persentase diskon berdasarkan Jenis Pembeli (Pelajar, Keluarga SMK,
+     *   Alumni, Umum) serta diskon ekstra toko saat acara Bazar SMK berlangsung.
+     *
+     * Algoritma:
+     *   1. Validasi persentase diskon antara 0% sampai 90%.
+     *   2. Simpan pada model `Store` milik penjual yang sedang login.
+     */
+    public function updateDiscounts(Request $request): RedirectResponse
+    {
+        $store = $request->user()->store;
+        abort_unless($store !== null, 403);
+
+        $validated = $request->validate([
+            'discount_pelajar'     => ['required', 'integer', 'min:0', 'max:90'],
+            'discount_keluarga'    => ['required', 'integer', 'min:0', 'max:90'],
+            'discount_alumni'      => ['required', 'integer', 'min:0', 'max:90'],
+            'discount_umum'        => ['required', 'integer', 'min:0', 'max:90'],
+            'discount_bazar_extra' => ['required', 'integer', 'min:0', 'max:90'],
+        ]);
+
+        $store->update($validated);
+
+        return back()->with('success', 'Skema diskon jenis pembeli & diskon bazar toko berhasil disimpan!');
+    }
+
+    /**
+     * Fungsi:
+     *   Memperbarui Profil Lengkap Pemilik Toko (Siswa/Guru) sekaligus Profil Toko
+     *   dengan menjaga aturan Satu Toko Satu Akun.
+     *
+     * Algoritma (Role-Specific Profile Validation & 1-to-1 Sync):
+     *   1. Mengecek apakah pemilik toko adalah Siswa (`seller_type === 'siswa'`) atau Guru (`guru`).
+     *   2. Jika Siswa: wajib mengisi `name`, `nis_nisn`, `class_name`, `major_name`,
+     *      `desa`, `kecamatan`, `kabupaten`, `kode_pos`, `phone`.
+     *   3. Jika Guru: wajib mengisi `name`, `nuptk`, `desa`, `kecamatan`, `kabupaten`,
+     *      `kode_pos`, `phone`.
+     *   4. Memperbarui record `User` dan record tunggal `Store` miliknya.
+     */
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $store = $user->store;
+        $sellerType = $request->input('seller_type', $store?->seller_type ?? 'siswa');
+
+        $rules = [
+            'name'           => ['required', 'string', 'max:120'],
+            'phone'          => ['required', 'string', 'max:25'],
+            'seller_type'    => ['required', 'in:siswa,guru'],
+            'desa'           => ['required', 'string', 'max:100'],
+            'kecamatan'      => ['required', 'string', 'max:100'],
+            'kabupaten'      => ['required', 'string', 'max:100'],
+            'kode_pos'       => ['required', 'string', 'max:15'],
+            'address_detail' => ['nullable', 'string', 'max:255'],
+            'store_name'     => ['required', 'string', 'max:120'],
+            'description'    => ['required', 'string', 'max:500'],
+        ];
+
+        if ($sellerType === 'siswa') {
+            $rules['nis_nisn']   = ['required', 'string', 'max:30'];
+            $rules['class_name'] = ['required', 'string', 'max:50'];
+            $rules['major_name'] = ['required', 'string', 'max:120'];
+        } else {
+            $rules['nuptk']      = ['required', 'string', 'max:30'];
+            $rules['major_name'] = ['nullable', 'string', 'max:120'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $user->update([
+            'name'           => $validated['name'],
+            'phone'          => $validated['phone'],
+            'user_subtype'   => $sellerType,
+            'is_teacher'     => $sellerType === 'guru',
+            'nis_nisn'       => $sellerType === 'siswa' ? $validated['nis_nisn'] : $user->nis_nisn,
+            'nuptk'          => $sellerType === 'guru' ? $validated['nuptk'] : $user->nuptk,
+            'class_name'     => $sellerType === 'siswa' ? $validated['class_name'] : $user->class_name,
+            'major_name'     => $validated['major_name'] ?? $user->major_name,
+            'desa'           => $validated['desa'],
+            'kecamatan'      => $validated['kecamatan'],
+            'kabupaten'      => $validated['kabupaten'],
+            'kode_pos'       => $validated['kode_pos'],
+            'address_detail' => $validated['address_detail'] ?? null,
+        ]);
+
+        $studentClassLabel = $sellerType === 'siswa'
+            ? trim(($validated['class_name'] ?? '') . ' - ' . ($validated['major_name'] ?? ''))
+            : 'Guru / Pembina ' . ($validated['major_name'] ?? 'SMK Plus Al Hilal');
+
+        $store->update([
+            'store_name'     => $validated['store_name'],
+            'seller_type'    => $sellerType,
+            'student_class'  => $studentClassLabel,
+            'description'    => $validated['description'],
+            'contact_number' => $validated['phone'],
+        ]);
+
+        return back()->with('success', 'Profil lengkap pemilik toko & identitas toko berhasil diperbarui!');
     }
 
     public function create(Request $request): View
@@ -129,17 +257,64 @@ class SellerProductController extends Controller
             ->with('success', 'Produk berhasil dihapus dari toko Anda.');
     }
 
+    /**
+     * Fungsi:
+     *   Memperbarui progres pesanan pada toko (`pesan` -> `kemas` -> `kirim` -> `sampai` -> `dibatalkan`)
+     *   beserta catatan progres/pengiriman untuk pembeli.
+     *
+     * Algoritma:
+     *   1. Pastikan pesanan milik toko penjual yang sedang login.
+     *   2. Validasi `progress_status` (atau fallback `status` lama) dan `progress_note`.
+     *   3. Sinkronkan `progress_status` dengan kolom `status` serta timestamp tahapan
+     *      (`packed_at`, `shipped_at`, `delivered_at`).
+     */
     public function updateOrderStatus(Request $request, Order $order): RedirectResponse
     {
         abort_unless($order->store_id === $request->user()->store?->id, 403);
 
         $validated = $request->validate([
-            'status' => ['required', 'in:pending,confirmed,completed,cancelled'],
+            'progress_status' => ['nullable', 'in:pesan,kemas,kirim,sampai,dibatalkan'],
+            'status'          => ['nullable', 'in:pending,confirmed,completed,cancelled'],
+            'progress_note'   => ['nullable', 'string', 'max:255'],
         ]);
 
-        $order->update(['status' => $validated['status']]);
+        $progress = $validated['progress_status'] ?? match ($validated['status'] ?? 'pending') {
+            'confirmed' => 'kemas',
+            'completed' => 'sampai',
+            'cancelled' => 'dibatalkan',
+            default     => 'pesan',
+        };
 
-        return back()->with('success', 'Status pesanan berhasil diperbarui.');
+        $legacyStatus = match ($progress) {
+            'kemas', 'kirim' => 'confirmed',
+            'sampai'         => 'completed',
+            'dibatalkan'     => 'cancelled',
+            default          => 'pending',
+        };
+
+        $updatePayload = [
+            'progress_status' => $progress,
+            'status'          => $legacyStatus,
+        ];
+
+        if ($request->has('progress_note')) {
+            $updatePayload['progress_note'] = $validated['progress_note'];
+        }
+
+        if ($progress === 'kemas' && ! $order->packed_at) {
+            $updatePayload['packed_at'] = now();
+        } elseif ($progress === 'kirim') {
+            $updatePayload['packed_at'] = $order->packed_at ?? now();
+            $updatePayload['shipped_at'] = $order->shipped_at ?? now();
+        } elseif ($progress === 'sampai') {
+            $updatePayload['packed_at'] = $order->packed_at ?? now();
+            $updatePayload['shipped_at'] = $order->shipped_at ?? now();
+            $updatePayload['delivered_at'] = $order->delivered_at ?? now();
+        }
+
+        $order->update($updatePayload);
+
+        return back()->with('success', "Progres pesanan #{$order->order_code} berhasil diperbarui ke tahap: {$order->progress_label}.");
     }
 
     private function authorizeProductOwner(Request $request, Product $product): void

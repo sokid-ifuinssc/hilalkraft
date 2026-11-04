@@ -9,18 +9,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * ============================================================================
- * MODEL: PRODUCT (PRODUK KARYA SISWA)
+ * MODEL: PRODUCT (PRODUK KARYA + DETEKSI VIEWS IKON MATA, LIKE & KOMENTAR)
  * ============================================================================
  * Fungsi:
- *   Merepresentasikan entitas produk karya siswa di tabel `products`, mengatur
- *   relasi ke `Store` dan `OrderItem`, serta memformat tampilan harga Rupiah.
- *
- * Algoritma (Currency Formatting Accessor):
- *   Pada `getFormattedPriceAttribute()`:
- *   1. Mengambil nilai numerik `price` dan melakukan type-casting ke `float`.
- *   2. Menggunakan algoritma pemisah ribuan `number_format($price, 0, ',', '.')`
- *      untuk mengelompokkan setiap 3 digit dari kanan dengan titik (`.`) dan
- *      menambahkan prefix `'Rp '`.
+ *   Merepresentasikan entitas produk karya di tabel `products`, mengatur relasi
+ *   ke `Store`, `OrderItem`, `ProductComment` (komentar pengunjung berakun),
+ *   dan `ProductLike` (suka pengunjung), serta penghitung `views_count` (ikon mata).
  * ============================================================================
  */
 class Product extends Model
@@ -37,41 +31,49 @@ class Product extends Model
         'image',
         'category',
         'is_active',
+        'views_count',
+        'likes_count',
     ];
 
     protected function casts(): array
     {
         return [
-            'price'     => 'decimal:2',
-            'stock'     => 'integer',
-            'is_active' => 'boolean',
+            'price'       => 'decimal:2',
+            'stock'       => 'integer',
+            'is_active'   => 'boolean',
+            'views_count' => 'integer',
+            'likes_count' => 'integer',
         ];
     }
 
-    /**
-     * Fungsi: Mengambil data toko pemilik produk.
-     * Algoritma: BelongsTo Foreign Key Lookup (`stores.id = products.store_id`).
-     */
     public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
     }
 
-    /**
-     * Fungsi: Mengambil daftar item transaksi yang memuat produk ini.
-     * Algoritma: One-to-Many Lookup (`order_items.product_id = products.id`).
-     */
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    /**
-     * Fungsi: Memformat angka harga menjadi teks Rupiah (contoh: Rp 185.000).
-     * Algoritma: Pengelompokan 3 digit ribuan menggunakan `number_format`.
-     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(ProductComment::class)->latest();
+    }
+
+    public function likes(): HasMany
+    {
+        return $this->hasMany(ProductLike::class);
+    }
+
     public function getFormattedPriceAttribute(): string
     {
         return 'Rp ' . number_format((float) $this->price, 0, ',', '.');
+    }
+
+    public function getAverageRatingAttribute(): float
+    {
+        $avg = $this->comments()->avg('rating');
+        return $avg ? round((float) $avg, 1) : 5.0;
     }
 }

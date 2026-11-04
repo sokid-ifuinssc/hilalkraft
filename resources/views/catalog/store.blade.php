@@ -41,10 +41,10 @@ Algoritma:
         @forelse($store->products as $product)
             <article class="rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition flex flex-col">
                 <a href="{{ route('products.show', $product->slug) }}" class="aspect-[4/3] bg-slate-100 block overflow-hidden">
-                    <img src="{{ Str::startsWith($product->image, 'http') ? $product->image : asset('storage/' . $product->image) }}"
+                    <img src="{{ Str::startsWith($product->image, 'http') ? $product->image : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image)) }}"
                          alt="{{ $product->product_name }}"
                          class="w-full h-full object-cover"
-                         onerror="this.src='https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80'">
+                         onerror="this.src='{{ asset('images/logo-hilalkraf.jpg') }}'">
                 </a>
                 <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
                     <h3 class="font-bold text-slate-900 text-sm line-clamp-2">

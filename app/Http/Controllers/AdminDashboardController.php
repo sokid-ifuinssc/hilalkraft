@@ -2,31 +2,39 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BazaarEvent;
 use App\Models\Category;
 use App\Models\ClassMajor;
+use App\Models\CmsContent;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductComment;
 use App\Models\Store;
 use App\Models\User;
+use App\Models\VisitorLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
  * ============================================================================
- * CONTROLLER: ADMIN DASHBOARD CONTROLLER (SUPER ADMIN & ADMIN MODERATOR)
+ * CONTROLLER: ADMIN DASHBOARD & CMS CONTROLLER (SUPER ADMIN & ADMIN)
  * ============================================================================
  * Fungsi:
- *   Mengelola seluruh fitur administrasi sistem untuk Super Admin & Admin:
- *   1. CRUD Pengguna & Kredensial Realtime (termasuk pembuatan akun Toko untuk
- *      Siswa, Guru, dan Jurusan).
- *   2. Validasi & Kurasi Toko (Siswa, Guru, Jurusan).
- *   3. CRUD Kategori Produk (Tambah, Ubah dengan Cascade Update, Hapus).
- *   4. CRUD Kelas & Jurusan (Tambah, Ubah, Hapus).
+ *   Mengelola seluruh fitur CMS (Content Management System), administrasi,
+ *   laporan, bazar diskon SMK, dan analitik untuk Super Admin & Admin:
+ *   1. CMS Konten Website (`storeCms`, `updateCms`, `destroyCms`).
+ *   2. CMS Karya Siswa / Produk (`storeProduct`, `updateProduct`, `destroyProduct`).
+ *   3. Grafik Analitik & Filter Toko Teratas (Pelihat Terbanyak 👁️, Like Terbanyak ❤️,
+ *      Komentar Terbanyak 💬, Rating Bintang Teratas ★, Pesanan Terbanyak 🛒).
+ *   4. Skema Bazar & Event Diskon SMK (`storeBazaarEvent`, `updateBazaarEvent`, `destroyBazaarEvent`).
+ *   5. Laporan Pengunjung, Penetapan Guru sebagai Admin, CRUD Pengguna, Kategori, Kelas & Jurusan.
  * ============================================================================
  */
 class AdminDashboardController extends Controller
@@ -41,33 +49,335 @@ class AdminDashboardController extends Controller
         }
 
         $users = $usersQuery->paginate(10);
-        $stores = Store::with('owner')->withCount('products')->latest()->get();
+
+        $stores = Store::with(['owner', 'products', 'orders', 'comments'])
+            ->withCount(['products', 'orders', 'comments'])
+            ->get()
+            ->map(function (Store $store) {
+                $productViews = (int) $store->products->sum('views_count');
+                $store->metric_views = (int) $store->views_count + $productViews;
+                $store->metric_comments = (int) $store->comments_count;
+                $store->metric_likes = (int) $store->products->sum('likes_count');
+                $store->metric_orders = (int) $store->orders_count;
+                $store->metric_revenue = (float) $store->orders->sum('total_price');
+
+                $orderRatings = $store->orders->whereNotNull('buyer_rating')->pluck('buyer_rating')->filter(fn ($v) => (int) $v > 0);
+                $commentRatings = $store->comments->whereNotNull('rating')->pluck('rating')->filter(fn ($v) => (int) $v > 0);
+                $allRatings = $orderRatings->concat($commentRatings);
+
+                $store->metric_rating = $allRatings->isNotEmpty() ? round((float) $allRatings->avg(), 1) : 0.0;
+                $store->metric_rating_count = $allRatings->count();
+
+                return $store;
+            })
+            ->sortByDesc('metric_views')
+            ->values();
+
+        $chartData = [
+            'labels'          => $stores->pluck('store_name')->values(),
+            'views'           => $stores->pluck('metric_views')->values(),
+            'comments'        => $stores->pluck('metric_comments')->values(),
+            'likes'           => $stores->pluck('metric_likes')->values(),
+            'orders'          => $stores->pluck('metric_orders')->values(),
+            'ratings'         => $stores->pluck('metric_rating')->values(),
+            'rating_counts'   => $stores->pluck('metric_rating_count')->values(),
+            'revenues'        => $stores->pluck('metric_revenue')->values(),
+            'seller_types'    => $stores->pluck('seller_type')->values(),
+            'student_classes' => $stores->pluck('student_class')->values(),
+        ];
+
+        $registeredVisitors = User::whereIn('role', ['buyer', 'seller'])
+            ->latest()
+            ->get();
+
+        $visitorByCategory = [
+            'Pelajar'                    => User::where('user_subtype', 'pelajar')->count(),
+            'Keluarga SMK Plus Al Hilal' => User::where('user_subtype', 'keluarga')->count(),
+            'Alumni'                     => User::where('user_subtype', 'alumni')->count(),
+            'Pengunjung Umum'            => User::where('user_subtype', 'umum')->count(),
+            'Siswa Pemilik Toko'         => User::where('user_subtype', 'siswa')->count(),
+            'Guru SMK Plus Al Hilal'     => User::where('is_teacher', true)->orWhere('user_subtype', 'guru')->count(),
+            'Kunjungan Tamu (Guest)'     => VisitorLog::where('visitor_type', 'guest')->count(),
+        ];
+
+        $visitorByRegion = User::whereNotNull('kabupaten')
+            ->where('kabupaten', '!=', '')
+            ->select('kabupaten', 'kecamatan', DB::raw('count(*) as total'))
+            ->groupBy('kabupaten', 'kecamatan')
+            ->orderByDesc('total')
+            ->get();
+
+        $recentVisitorLogs = VisitorLog::with(['product', 'store', 'user'])
+            ->latest()
+            ->take(15)
+            ->get();
+
+        $teachers = User::with('store')
+            ->where(function ($q) {
+                $q->where('is_teacher', true)
+                  ->orWhere('user_subtype', 'guru')
+                  ->orWhereNotNull('nuptk');
+            })
+            ->get();
+
         $categories = Category::orderBy('name')->get();
         $classMajors = ClassMajor::orderBy('class_name')->orderBy('major_name')->get();
 
+        $cmsContents = Schema::hasTable('cms_contents')
+            ? CmsContent::orderBy('sort_order')->orderBy('id')->get()
+            : collect();
+
+        $bazaarEvents = Schema::hasTable('bazaar_events')
+            ? BazaarEvent::latest()->get()
+            : collect();
+
+        $allProducts = Product::with(['store.owner'])
+            ->withCount('comments')
+            ->latest()
+            ->get();
+
         $stats = [
-            'total_users'      => User::count(),
-            'total_stores'     => Store::count(),
-            'pending_stores'   => Store::where('is_verified', false)->count(),
-            'total_products'   => Product::count(),
-            'total_categories' => $categories->count(),
-            'total_orders'     => Order::count(),
+            'total_users'    => User::count(),
+            'total_stores'   => Store::count(),
+            'pending_stores' => Store::where('is_verified', false)->count(),
+            'total_products' => Product::count(),
+            'total_views'    => (int) Product::sum('views_count') + (int) Store::sum('views_count'),
+            'total_likes'    => (int) Product::sum('likes_count'),
+            'total_comments' => ProductComment::count(),
+            'total_orders'   => Order::count(),
         ];
 
-        return view('admin.dashboard', compact('users', 'stores', 'categories', 'classMajors', 'stats'));
+        return view('admin.dashboard', compact(
+            'users',
+            'stores',
+            'chartData',
+            'registeredVisitors',
+            'visitorByCategory',
+            'visitorByRegion',
+            'recentVisitorLogs',
+            'teachers',
+            'categories',
+            'classMajors',
+            'cmsContents',
+            'bazaarEvents',
+            'allProducts',
+            'stats'
+        ));
     }
 
     /**
-     * Fungsi: Membuat pengguna baru (dan otomatis membuat Toko jika role = `seller`,
-     * baik untuk Siswa, Guru, maupun Jurusan).
-     *
-     * Algoritma (ACID User + Store Provisioning):
-     *   1. Memastikan role yang dibuat sesuai hirarki (`super_admin` vs `admin`).
-     *   2. Menyimpan `User` beserta `password_plain`.
-     *   3. Jika `role === 'seller'`, otomatis membuat record `Store` dengan
-     *      `seller_type` (`siswa`, `guru`, atau `jurusan`), `store_name`, dan
-     *      `student_class` (Kelas/Jurusan) serta langsung terverifikasi (`is_verified = true`).
+     * Fungsi: Menambahkan konten / seksi / iklan mitra baru ke dalam CMS Website.
+     * Algoritma: Validasi payload (termasuk durasi tampil & masa kontrak iklan) -> Upload gambar jika ada -> Simpan ke `cms_contents`.
      */
+    public function storeCms(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title'            => ['required', 'string', 'max:150'],
+            'section'          => ['required', 'string', 'max:50'],
+            'key'              => ['nullable', 'string', 'max:100'],
+            'partner_name'     => ['nullable', 'string', 'max:120'],
+            'badge_text'       => ['nullable', 'string', 'max:100'],
+            'content'          => ['nullable', 'string'],
+            'image_url'        => ['nullable', 'string', 'max:500'],
+            'image_file'       => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'link_url'         => ['nullable', 'string', 'max:255'],
+            'duration_seconds' => ['nullable', 'integer', 'min:1', 'max:120'],
+            'contract_start'   => ['nullable', 'date'],
+            'contract_end'     => ['nullable', 'date'],
+            'theme_color'      => ['nullable', 'string', 'max:40'],
+        ]);
+
+        $prefix = $validated['section'] === 'iklan' ? 'iklan_' : 'cms_';
+        $key = ! empty($validated['key'])
+            ? Str::slug($validated['key'], '_')
+            : $prefix . Str::slug($validated['title'], '_') . '_' . Str::lower(Str::random(4));
+
+        $imagePath = $validated['image_url'] ?? null;
+        if ($request->hasFile('image_file')) {
+            $imagePath = $request->file('image_file')->store('cms', 'public');
+        }
+
+        CmsContent::updateOrCreate(
+            ['key' => $key],
+            [
+                'section'          => $validated['section'],
+                'title'            => $validated['title'],
+                'partner_name'     => $validated['partner_name'] ?? null,
+                'badge_text'       => $validated['badge_text'] ?? null,
+                'content'          => $validated['content'] ?? '',
+                'image'            => $imagePath,
+                'link_url'         => $validated['link_url'] ?? null,
+                'duration_seconds' => (int) ($validated['duration_seconds'] ?? 5),
+                'contract_start'   => $validated['contract_start'] ?? null,
+                'contract_end'     => $validated['contract_end'] ?? null,
+                'theme_color'      => $validated['theme_color'] ?? 'emerald',
+                'is_active'        => true,
+                'sort_order'       => (int) CmsContent::max('sort_order') + 1,
+            ]
+        );
+
+        CmsContent::clearCache();
+        \Database\Seeders\DatabaseSeeder::syncLiveSnapshotToStorage();
+
+        return back()->with('success', "Konten / Iklan CMS '{$validated['title']}' berhasil ditambahkan.");
+    }
+
+    /**
+     * Fungsi: Mengedit konten atau iklan mitra CMS yang sudah ada.
+     */
+    public function updateCms(Request $request, CmsContent $cmsContent): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title'            => ['required', 'string', 'max:150'],
+            'section'          => ['required', 'string', 'max:50'],
+            'partner_name'     => ['nullable', 'string', 'max:120'],
+            'badge_text'       => ['nullable', 'string', 'max:100'],
+            'content'          => ['nullable', 'string'],
+            'image_url'        => ['nullable', 'string', 'max:500'],
+            'image_file'       => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'link_url'         => ['nullable', 'string', 'max:255'],
+            'duration_seconds' => ['nullable', 'integer', 'min:1', 'max:120'],
+            'contract_start'   => ['nullable', 'date'],
+            'contract_end'     => ['nullable', 'date'],
+            'theme_color'      => ['nullable', 'string', 'max:40'],
+            'is_active'        => ['nullable', 'boolean'],
+        ]);
+
+        $imagePath = $cmsContent->image;
+        if ($request->filled('image_url')) {
+            $imagePath = $validated['image_url'];
+        }
+        if ($request->hasFile('image_file')) {
+            $imagePath = $request->file('image_file')->store('cms', 'public');
+        }
+
+        $cmsContent->update([
+            'title'            => $validated['title'],
+            'section'          => $validated['section'],
+            'partner_name'     => $validated['partner_name'] ?? $cmsContent->partner_name,
+            'badge_text'       => $validated['badge_text'] ?? $cmsContent->badge_text,
+            'content'          => $validated['content'] ?? '',
+            'image'            => $imagePath,
+            'link_url'         => $validated['link_url'] ?? null,
+            'duration_seconds' => (int) ($validated['duration_seconds'] ?? $cmsContent->duration_seconds ?? 5),
+            'contract_start'   => $validated['contract_start'] ?? null,
+            'contract_end'     => $validated['contract_end'] ?? null,
+            'theme_color'      => $validated['theme_color'] ?? $cmsContent->theme_color ?? 'emerald',
+            'is_active'        => $request->has('is_active') ? $request->boolean('is_active') : $cmsContent->is_active,
+        ]);
+
+        CmsContent::clearCache();
+        \Database\Seeders\DatabaseSeeder::syncLiveSnapshotToStorage();
+
+        return back()->with('success', "Konten / Iklan CMS '{$cmsContent->title}' berhasil diperbarui.");
+    }
+
+    /**
+     * Fungsi: Menghapus item konten CMS.
+     */
+    public function destroyCms(CmsContent $cmsContent): RedirectResponse
+    {
+        $title = $cmsContent->title;
+        $cmsContent->delete();
+        CmsContent::clearCache();
+        \Database\Seeders\DatabaseSeeder::syncLiveSnapshotToStorage();
+
+        return back()->with('success', "Konten CMS '{$title}' berhasil dihapus.");
+    }
+
+    /**
+     * Fungsi: Menambahkan Karya Siswa / Produk baru langsung dari CMS Super Admin / Admin.
+     */
+    public function storeProduct(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'store_id'     => ['required', 'exists:stores,id'],
+            'product_name' => ['required', 'string', 'max:150'],
+            'category'     => ['required', 'string', 'max:100'],
+            'price'        => ['required', 'numeric', 'min:1000'],
+            'stock'        => ['required', 'integer', 'min:0'],
+            'description'  => ['required', 'string'],
+            'image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'image_url'    => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $imagePath = $validated['image_url'] ?? '/images/product-karya-1.jpg';
+        if ($request->hasFile('image_file')) {
+            $imagePath = $request->file('image_file')->store('products', 'public');
+        }
+
+        Product::create([
+            'store_id'     => $validated['store_id'],
+            'product_name' => $validated['product_name'],
+            'slug'         => Str::slug($validated['product_name']) . '-' . Str::lower(Str::random(4)),
+            'category'     => $validated['category'],
+            'price'        => $validated['price'],
+            'stock'        => $validated['stock'],
+            'description'  => $validated['description'],
+            'image'        => $imagePath,
+            'is_active'    => true,
+        ]);
+
+        return back()->with('success', "Karya produk '{$validated['product_name']}' berhasil ditambahkan melalui CMS.");
+    }
+
+    /**
+     * Fungsi: Mengedit Karya Siswa / Produk langsung dari CMS Super Admin / Admin.
+     */
+    public function updateProduct(Request $request, Product $product): RedirectResponse
+    {
+        $validated = $request->validate([
+            'store_id'     => ['required', 'exists:stores,id'],
+            'product_name' => ['required', 'string', 'max:150'],
+            'category'     => ['required', 'string', 'max:100'],
+            'price'        => ['required', 'numeric', 'min:1000'],
+            'stock'        => ['required', 'integer', 'min:0'],
+            'description'  => ['required', 'string'],
+            'image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'image_url'    => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $imagePath = $product->image;
+        if ($request->filled('image_url')) {
+            $imagePath = $validated['image_url'];
+        }
+        if ($request->hasFile('image_file')) {
+            if ($product->image && ! Str::startsWith($product->image, 'http')) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $imagePath = $request->file('image_file')->store('products', 'public');
+        }
+
+        $product->update([
+            'store_id'     => $validated['store_id'],
+            'product_name' => $validated['product_name'],
+            'category'     => $validated['category'],
+            'price'        => $validated['price'],
+            'stock'        => $validated['stock'],
+            'description'  => $validated['description'],
+            'image'        => $imagePath,
+        ]);
+
+        return back()->with('success', "Karya produk '{$product->product_name}' berhasil diperbarui melalui CMS.");
+    }
+
+    public function promoteTeacherToAdmin(Request $request, User $user): RedirectResponse
+    {
+        abort_unless($request->user()->role === 'super_admin', 403, 'Hanya Super Admin yang dapat menetapkan Guru sebagai Admin.');
+
+        $newRole = $user->role === 'admin' ? 'seller' : 'admin';
+        $user->update([
+            'role'       => $newRole,
+            'is_teacher' => true,
+        ]);
+
+        $msg = $newRole === 'admin'
+            ? "Guru '{$user->name}' berhasil ditetapkan sebagai Admin Sekolah oleh Super Admin!"
+            : "Hak akses Admin untuk Guru '{$user->name}' telah dikembalikan menjadi Pemilik Toko.";
+
+        return back()->with('success', $msg);
+    }
+
     public function storeUser(Request $request): RedirectResponse
     {
         $currentUser = $request->user();
@@ -84,14 +394,31 @@ class AdminDashboardController extends Controller
             'seller_type'   => ['nullable', 'in:siswa,guru,jurusan'],
             'store_name'    => ['nullable', 'string', 'max:120'],
             'student_class' => ['nullable', 'string', 'max:150'],
+            'nis_nisn'      => ['nullable', 'string', 'max:30'],
+            'nuptk'         => ['nullable', 'string', 'max:30'],
+            'desa'          => ['nullable', 'string', 'max:100'],
+            'kecamatan'     => ['nullable', 'string', 'max:100'],
+            'kabupaten'     => ['nullable', 'string', 'max:100'],
+            'kode_pos'      => ['nullable', 'string', 'max:15'],
         ]);
 
         DB::transaction(function () use ($validated) {
+            $sellerType = $validated['seller_type'] ?? 'siswa';
+            $isTeacher = ($validated['role'] === 'seller' && $sellerType === 'guru') || ! empty($validated['nuptk']);
+
             $user = User::create([
                 'name'           => $validated['name'],
                 'email'          => $validated['email'],
                 'phone'          => $validated['phone'] ?? null,
                 'role'           => $validated['role'],
+                'user_subtype'   => $validated['role'] === 'seller' ? $sellerType : 'umum',
+                'is_teacher'     => $isTeacher,
+                'nis_nisn'       => $validated['nis_nisn'] ?? null,
+                'nuptk'          => $validated['nuptk'] ?? null,
+                'desa'           => $validated['desa'] ?? null,
+                'kecamatan'      => $validated['kecamatan'] ?? null,
+                'kabupaten'      => $validated['kabupaten'] ?? null,
+                'kode_pos'       => $validated['kode_pos'] ?? null,
                 'password'       => Hash::make($validated['password']),
                 'password_plain' => $validated['password'],
                 'is_active'      => true,
@@ -106,21 +433,18 @@ class AdminDashboardController extends Controller
                     'user_id'        => $user->id,
                     'store_name'     => $storeName,
                     'slug'           => Str::slug($storeName) . '-' . Str::lower(Str::random(4)),
-                    'seller_type'    => $validated['seller_type'] ?? 'siswa',
+                    'seller_type'    => $sellerType,
                     'student_class'  => $validated['student_class'] ?? 'SMK Plus Al Hilal',
-                    'description'    => 'Toko resmi ' . ($validated['seller_type'] ?? 'siswa') . ' di hilalkraft SMK Plus Al Hilal.',
+                    'description'    => 'Toko resmi ' . $sellerType . ' di hilalkraft SMK Plus Al Hilal.',
                     'contact_number' => $validated['phone'] ?? '081234567890',
                     'is_verified'    => true,
                 ]);
             }
         });
 
-        return back()->with('success', 'Pengguna baru (beserta profil toko jika Pemilik Toko) berhasil ditambahkan.');
+        return back()->with('success', 'Pengguna baru berhasil ditambahkan.');
     }
 
-    /**
-     * Fungsi: Memperbarui data pengguna, kredensial realtime, serta profil toko.
-     */
     public function updateUser(Request $request, User $user): RedirectResponse
     {
         $currentUser = $request->user();
@@ -191,19 +515,9 @@ class AdminDashboardController extends Controller
     public function destroyProduct(Product $product): RedirectResponse
     {
         $product->delete();
-        return back()->with('success', 'Konten produk berhasil dihapus oleh moderator.');
+        return back()->with('success', 'Karya produk berhasil dihapus.');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | MANAJEMEN KATEGORI PRODUK (TAMBAH, UBAH, HAPUS OLEH SUPER ADMIN & ADMIN)
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * Fungsi: Menambahkan kategori produk baru.
-     * Algoritma: Validasi keunikan nama kategori + pembuatan slug otomatis (`Str::slug`).
-     */
     public function storeCategory(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -220,14 +534,6 @@ class AdminDashboardController extends Controller
         return back()->with('success', "Kategori produk '{$validated['name']}' berhasil ditambahkan.");
     }
 
-    /**
-     * Fungsi: Mengubah nama/deskripsi kategori produk dan memperbarui produk terkait.
-     * Algoritma (Referential Category Cascade Update):
-     *   1. Menyimpan nama kategori lama (`$oldName`).
-     *   2. Memperbarui record di tabel `categories`.
-     *   3. Jika nama kategori berubah, jalankan query `Product::where('category', $oldName)->update()`
-     *      agar seluruh produk yang memakai kategori lama otomatis ikut terupdate.
-     */
     public function updateCategory(Request $request, Category $category): RedirectResponse
     {
         $validated = $request->validate([
@@ -250,9 +556,6 @@ class AdminDashboardController extends Controller
         return back()->with('success', "Kategori produk berhasil diperbarui menjadi '{$validated['name']}'.");
     }
 
-    /**
-     * Fungsi: Menghapus kategori produk.
-     */
     public function destroyCategory(Category $category): RedirectResponse
     {
         $name = $category->name;
@@ -261,15 +564,6 @@ class AdminDashboardController extends Controller
         return back()->with('success', "Kategori produk '{$name}' berhasil dihapus.");
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | MANAJEMEN KELAS & JURUSAN (TAMBAH, UBAH, HAPUS OLEH SUPER ADMIN & ADMIN)
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * Fungsi: Menambahkan master data Kelas & Jurusan / Unit baru.
-     */
     public function storeClassMajor(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -286,9 +580,6 @@ class AdminDashboardController extends Controller
         return back()->with('success', "Data Kelas/Unit '{$validated['class_name']} - {$validated['major_name']}' berhasil ditambahkan.");
     }
 
-    /**
-     * Fungsi: Mengubah data Kelas & Jurusan / Unit yang sudah ada.
-     */
     public function updateClassMajor(Request $request, ClassMajor $classMajor): RedirectResponse
     {
         $validated = $request->validate([
@@ -306,12 +597,94 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Data Kelas & Jurusan berhasil diperbarui.');
     }
 
-    /**
-     * Fungsi: Menghapus data Kelas & Jurusan.
-     */
     public function destroyClassMajor(ClassMajor $classMajor): RedirectResponse
     {
         $classMajor->delete();
         return back()->with('success', 'Data Kelas & Jurusan berhasil dihapus.');
+    }
+
+    /**
+     * Fungsi:
+     *   Menambahkan Acara Bazar / Event Diskon SMK Plus Al Hilal.
+     *
+     * Algoritma:
+     *   1. Validasi nama acara bazar, kode voucher (`voucher_code`), lokasi,
+     *      persentase diskon (`discount_percent`), batas maksimum potongan (`max_discount_amount`),
+     *      serta rentang tanggal berlaku (`start_date` s/d `end_date`).
+     *   2. Simpan ke tabel `bazaar_events`.
+     */
+    public function storeBazaarEvent(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title'               => ['required', 'string', 'max:150'],
+            'voucher_code'        => ['required', 'string', 'max:40'],
+            'location'            => ['nullable', 'string', 'max:150'],
+            'description'         => ['nullable', 'string', 'max:500'],
+            'discount_percent'    => ['required', 'integer', 'min:1', 'max:90'],
+            'max_discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'start_date'          => ['nullable', 'date'],
+            'end_date'            => ['nullable', 'date'],
+        ]);
+
+        BazaarEvent::updateOrCreate(
+            ['voucher_code' => strtoupper(trim($validated['voucher_code']))],
+            [
+                'title'               => $validated['title'],
+                'location'            => $validated['location'] ?? 'Halaman Utama SMK Plus Al Hilal (SMK PAL)',
+                'description'         => $validated['description'] ?? 'Dapatkan diskon spesial dengan berbelanja langsung atau memasukkan kode bazar pada acara resmi SMK Plus Al Hilal.',
+                'discount_percent'    => (int) $validated['discount_percent'],
+                'max_discount_amount' => $validated['max_discount_amount'] ?? null,
+                'start_date'          => $validated['start_date'] ?? null,
+                'end_date'            => $validated['end_date'] ?? null,
+                'is_active'           => true,
+            ]
+        );
+
+        return back()->with('success', "Acara Bazar / Event '{$validated['title']}' (Kode: " . strtoupper(trim($validated['voucher_code'])) . ") berhasil disimpan!");
+    }
+
+    /**
+     * Fungsi:
+     *   Memperbarui Acara Bazar / Event Diskon SMK Plus Al Hilal.
+     */
+    public function updateBazaarEvent(Request $request, BazaarEvent $bazaarEvent): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title'               => ['required', 'string', 'max:150'],
+            'voucher_code'        => ['required', 'string', 'max:40', Rule::unique('bazaar_events', 'voucher_code')->ignore($bazaarEvent->id)],
+            'location'            => ['nullable', 'string', 'max:150'],
+            'description'         => ['nullable', 'string', 'max:500'],
+            'discount_percent'    => ['required', 'integer', 'min:1', 'max:90'],
+            'max_discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'start_date'          => ['nullable', 'date'],
+            'end_date'            => ['nullable', 'date'],
+            'is_active'           => ['nullable', 'boolean'],
+        ]);
+
+        $bazaarEvent->update([
+            'title'               => $validated['title'],
+            'voucher_code'        => strtoupper(trim($validated['voucher_code'])),
+            'location'            => $validated['location'] ?? $bazaarEvent->location,
+            'description'         => $validated['description'] ?? $bazaarEvent->description,
+            'discount_percent'    => (int) $validated['discount_percent'],
+            'max_discount_amount' => $validated['max_discount_amount'] ?? null,
+            'start_date'          => $validated['start_date'] ?? null,
+            'end_date'            => $validated['end_date'] ?? null,
+            'is_active'           => $request->has('is_active') ? $request->boolean('is_active') : $bazaarEvent->is_active,
+        ]);
+
+        return back()->with('success', "Acara Bazar '{$bazaarEvent->title}' berhasil diperbarui.");
+    }
+
+    /**
+     * Fungsi:
+     *   Menghapus Acara Bazar / Event Diskon SMK Plus Al Hilal.
+     */
+    public function destroyBazaarEvent(BazaarEvent $bazaarEvent): RedirectResponse
+    {
+        $title = $bazaarEvent->title;
+        $bazaarEvent->delete();
+
+        return back()->with('success', "Acara Bazar '{$title}' berhasil dihapus.");
     }
 }
