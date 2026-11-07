@@ -489,31 +489,41 @@ Algoritma:
                             @endif
 
                             <!-- Form Kontrol Ubah Tahap Progres oleh Pemilik Toko -->
-                            <form action="{{ route('seller.orders.status', $order) }}" method="POST" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
-                                @csrf
-                                @method('PATCH')
-                                <div class="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                                    <div class="sm:w-56">
-                                        <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Tahap Progres Barang</label>
-                                        <select name="progress_status" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
-                                            <option value="pesan" @selected($effProgress === 'pesan')>1. Pesan (Pesanan Diterima)</option>
-                                            <option value="kemas" @selected($effProgress === 'kemas')>2. Kemas (Sedang Dikemas)</option>
-                                            <option value="kirim" @selected($effProgress === 'kirim')>3. Kirim (Dalam Perjalanan / COD)</option>
-                                            <option value="sampai" @selected($effProgress === 'sampai')>4. Sampai (Diterima Pembeli)</option>
-                                            <option value="dibatalkan" @selected($effProgress === 'dibatalkan')>✕ Batalkan Pesanan</option>
-                                        </select>
-                                    </div>
-                                    <div class="flex-1">
-                                        <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Catatan Progres / Pengiriman (Opsional)</label>
-                                        <input type="text" name="progress_note" value="{{ $order->progress_note }}" placeholder="Contoh: Barang sedang dikemas rapi / Diantar ke Stand Bazar SMK..." class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
-                                    </div>
+                            @if($effProgress === 'sampai')
+                                <div class="rounded-xl bg-[#EBF9F2] border border-[#B8E8D2] px-4 py-2.5 text-xs text-[#0B6E4F] font-bold flex items-center justify-between">
+                                    <span>✅ Pesanan ini telah selesai (Sampai) dan tidak dapat dibatalkan.</span>
                                 </div>
-                                <div class="flex items-end gap-2 pt-2 sm:pt-4">
-                                    <button type="submit" class="w-full sm:w-auto rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-sm">
-                                        ✓ Simpan Progres
-                                    </button>
+                            @elseif($effProgress === 'dibatalkan')
+                                <div class="rounded-xl bg-rose-50 border border-rose-200 px-4 py-2.5 text-xs text-rose-700 font-bold flex items-center justify-between">
+                                    <span>✕ Pesanan ini telah dibatalkan.</span>
                                 </div>
-                            </form>
+                            @else
+                                <form action="{{ route('seller.orders.status', $order) }}" method="POST" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+                                    @csrf
+                                    @method('PATCH')
+                                    <div class="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                                        <div class="sm:w-56">
+                                            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Tahap Progres Barang</label>
+                                            <select name="progress_status" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
+                                                <option value="pesan" @selected($effProgress === 'pesan')>1. Pesan (Pesanan Diterima)</option>
+                                                <option value="kemas" @selected($effProgress === 'kemas')>2. Kemas (Sedang Dikemas)</option>
+                                                <option value="kirim" @selected($effProgress === 'kirim')>3. Kirim (Dalam Perjalanan / COD)</option>
+                                                <option value="sampai" @selected($effProgress === 'sampai')>4. Sampai (Diterima Pembeli)</option>
+                                                <option value="dibatalkan">✕ Batalkan Pesanan</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Catatan Progres / Pengiriman (Opsional)</label>
+                                            <input type="text" name="progress_note" value="{{ $order->progress_note }}" placeholder="Contoh: Barang sedang dikemas rapi / Diantar ke Stand Bazar SMK..." class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
+                                        </div>
+                                    </div>
+                                    <div class="flex items-end gap-2 pt-2 sm:pt-4">
+                                        <button type="submit" class="w-full sm:w-auto rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-sm">
+                                            ✓ Simpan Progres
+                                        </button>
+                                    </div>
+                                </form>
+                            @endif
                         </div>
                     @empty
                         <div class="rounded-2xl border border-dashed border-slate-200 p-10 text-center space-y-2">

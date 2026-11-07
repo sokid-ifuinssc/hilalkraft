@@ -111,6 +111,20 @@ Fungsi:
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
+                        @if($effProgress === 'pesan')
+                            <form action="{{ route('buyer.orders.cancel', $order) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan #{{ $order->order_code }}?');">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="rounded-xl border border-rose-300 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 hover:border-rose-400 transition shadow-2xs">
+                                    ✕ Batalkan Pesanan
+                                </button>
+                            </form>
+                        @elseif($effProgress === 'kemas' || $effProgress === 'kirim')
+                            <span class="rounded-xl bg-slate-100 border border-slate-200 px-3 py-1.5 text-[11px] text-slate-500 font-semibold" title="Pesanan sudah dalam tahap pengemasan/pengiriman dan tidak dapat dibatalkan">
+                                🔒 Tidak bisa dibatalkan (sedang diproses)
+                            </span>
+                        @endif
+
                         @if($effProgress !== 'sampai' && $effProgress !== 'dibatalkan')
                             <form action="{{ route('buyer.orders.delivered', $order) }}" method="POST">
                                 @csrf
@@ -161,8 +175,11 @@ Fungsi:
                         </div>
                     </div>
                 @else
-                    <div class="rounded-xl bg-rose-50 border border-rose-200 p-3.5 text-xs font-bold text-rose-700">
-                        ✕ Pesanan ini telah dibatalkan.
+                    <div class="rounded-xl bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-700 space-y-1">
+                        <p class="font-bold">✕ Pesanan ini telah dibatalkan.</p>
+                        @if($order->progress_note)
+                            <p class="text-[11px] text-rose-600">Keterangan: {{ $order->progress_note }}</p>
+                        @endif
                     </div>
                 @endif
 

@@ -281,6 +281,42 @@ class BuyerOrderController extends Controller
 
     /**
      * Fungsi:
+     *   Pembeli membatalkan pesanan yang belum dikemas (tahap 'pesan').
+     *
+     * Algoritma:
+     *   1. Pastikan pesanan milik pembeli yang sedang login.
+     *   2. Validasi tahap: hanya boleh dibatalkan jika belum dikemas ($order->effective_progress === 'pesan').
+     *   3. Jika sudah 'kemas', 'kirim', atau 'sampai', tolak pembatalan.
+     *   4. Kembalikan kuantitas stok produk yang sebelumnya dikurangi.
+     *   5. Ubah status pesanan menjadi 'cancelled' & progress_status 'dibatalkan'.
+     */
+    public function cancelOrder(Request $request, Order $order): RedirectResponse
+    {
+        abort_unless($order->buyer_id === $request->user()->id, 403);
+
+        if ($order->effective_progress !== 'pesan') {
+            return back()->with('error', 'Pesanan tidak dapat dibatalkan karena sudah dalam proses pengemasan/pengiriman atau telah selesai.');
+        }
+
+        DB::transaction(function () use ($order) {
+            foreach ($order->items as $item) {
+                if ($item->product) {
+                    $item->product->increment('stock', $item->quantity);
+                }
+            }
+
+            $order->update([
+                'status'          => 'cancelled',
+                'progress_status' => 'dibatalkan',
+                'progress_note'   => 'Pesanan dibatalkan oleh pembeli sebelum barang dikemas.',
+            ]);
+        });
+
+        return back()->with('success', "Pesanan #{$order->order_code} berhasil dibatalkan dan stok produk telah dikembalikan.");
+    }
+
+    /**
+     * Fungsi:
      *   Pembeli memberikan Rating Bintang (★ 1..5) & Ulasan setelah transaksi.
      *
      * Algoritma:

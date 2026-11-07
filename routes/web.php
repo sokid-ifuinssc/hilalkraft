@@ -67,6 +67,7 @@ Route::middleware(['auth', 'role:buyer,seller,admin,super_admin'])->prefix('pemb
     Route::post('/checkout', [BuyerOrderController::class, 'checkout'])->name('checkout');
     Route::post('/pesan-langsung/{product}', [BuyerOrderController::class, 'directOrder'])->name('direct-order');
     Route::patch('/pesanan/{order}/sampai', [BuyerOrderController::class, 'markDelivered'])->name('orders.delivered');
+    Route::patch('/pesanan/{order}/batal', [BuyerOrderController::class, 'cancelOrder'])->name('orders.cancel');
     Route::post('/pesanan/{order}/rating', [BuyerOrderController::class, 'rateOrder'])->name('orders.rate');
 });
 

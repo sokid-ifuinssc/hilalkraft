@@ -285,6 +285,11 @@ class SellerProductController extends Controller
             default     => 'pesan',
         };
 
+        // Aturan: Penjual tidak dapat membatalkan pesanan jika pesanan sudah selesai (Sampai)
+        if ($progress === 'dibatalkan' && ($order->effective_progress === 'sampai' || $order->status === 'completed')) {
+            return back()->with('error', 'Pesanan yang sudah selesai (Sampai) tidak dapat dibatalkan.');
+        }
+
         $legacyStatus = match ($progress) {
             'kemas', 'kirim' => 'confirmed',
             'sampai'         => 'completed',
@@ -310,6 +315,15 @@ class SellerProductController extends Controller
             $updatePayload['packed_at'] = $order->packed_at ?? now();
             $updatePayload['shipped_at'] = $order->shipped_at ?? now();
             $updatePayload['delivered_at'] = $order->delivered_at ?? now();
+        } elseif ($progress === 'dibatalkan') {
+            // Kembalikan stok jika pesanan dibatalkan oleh penjual
+            if ($order->effective_progress !== 'dibatalkan') {
+                foreach ($order->items as $item) {
+                    if ($item->product) {
+                        $item->product->increment('stock', $item->quantity);
+                    }
+                }
+            }
         }
 
         $order->update($updatePayload);
