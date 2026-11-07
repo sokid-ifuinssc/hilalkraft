@@ -31,7 +31,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete(); // Relasi 1-to-1 ke tabel users
             $table->string('store_name'); // Nama toko karya siswa
             $table->string('slug')->unique(); // URL-friendly identifier unik
-            $table->string('student_class', 50)->nullable()->comment('Jurusan / Kelas Siswa SMK Plus Al Hilal');
+            $table->string('student_class', 255)->nullable()->comment('Jurusan / Kelas Siswa SMK Plus Al Hilal');
             $table->text('description')->nullable(); // Deskripsi singkat profil toko
             $table->string('contact_number', 20); // Nomor WhatsApp untuk integrasi tombol kontak
             $table->string('logo')->nullable(); // Path file logo toko

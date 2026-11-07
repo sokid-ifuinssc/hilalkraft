@@ -183,7 +183,7 @@ class AuthController extends Controller
                     'store_name'     => $validated['store_name'],
                     'slug'           => Str::slug($validated['store_name']) . '-' . Str::lower(Str::random(4)),
                     'seller_type'    => $sellerType,
-                    'student_class'  => $studentClassLabel,
+                    'student_class'  => Str::limit($studentClassLabel, 250, ''),
                     'description'    => $validated['description'] ?? 'Toko Resmi ' . ucfirst($sellerType) . ' SMK Plus Al Hilal',
                     'contact_number' => $validated['phone'],
                     'is_verified'    => false,

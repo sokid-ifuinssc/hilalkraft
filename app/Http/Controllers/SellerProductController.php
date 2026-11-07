@@ -152,7 +152,7 @@ class SellerProductController extends Controller
         $store->update([
             'store_name'     => $validated['store_name'],
             'seller_type'    => $sellerType,
-            'student_class'  => $studentClassLabel,
+            'student_class'  => Str::limit($studentClassLabel, 250, ''),
             'description'    => $validated['description'],
             'contact_number' => $validated['phone'],
         ]);
