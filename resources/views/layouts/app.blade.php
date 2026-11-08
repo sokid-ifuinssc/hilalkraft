@@ -223,7 +223,7 @@ Algoritma:
     @endunless
 
     <!-- Flash Notifications -->
-    @if(session('success') || session('error') || $errors->any())
+    @if(session('success') || session('error') || (isset($errors) && $errors->any()))
         <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
             @if(session('success'))
                 <div class="rounded-xl bg-[#EBF9F2] border border-[#B8E8D2] px-4 py-2.5 text-xs sm:text-sm text-[#0B6E4F] font-medium">
@@ -235,7 +235,7 @@ Algoritma:
                     {{ session('error') }}
                 </div>
             @endif
-            @if($errors->any())
+            @if(isset($errors) && $errors->any())
                 <div class="rounded-xl bg-rose-50 border border-rose-200 px-4 py-2.5 text-xs sm:text-sm text-rose-800">
                     <ul class="list-disc list-inside space-y-0.5">
                         @foreach($errors->all() as $err)

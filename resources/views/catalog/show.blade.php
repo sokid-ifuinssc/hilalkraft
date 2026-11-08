@@ -83,7 +83,7 @@ Algoritma:
                     {{ $product->category }} • Buatan tangan
                 </span>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 sm:gap-2">
                     <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600" title="Jumlah dilihat">
                         👁️ {{ number_format($product->views_count ?? 0) }}
                     </span>
@@ -96,6 +96,16 @@ Algoritma:
                             ❤️ {{ number_format($product->likes_count ?? 0) }}
                         </button>
                     </form>
+                    <!-- Tombol Menu Bagikan Produk -->
+                    <button type="button"
+                            onclick="openShareModal()"
+                            class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-[#EBF9F2] px-3 py-1 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition shadow-2xs"
+                            title="Bagikan link produk">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                        </svg>
+                        <span>Bagikan</span>
+                    </button>
                 </div>
             </div>
 
@@ -229,6 +239,16 @@ Algoritma:
                         </a>
                     </div>
                 @endauth
+
+                <!-- Tombol Menu Bagikan Produk Langsung -->
+                <button type="button"
+                        onclick="openShareModal()"
+                        class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-[#EBF9F2]/60 hover:bg-[#EBF9F2] px-4 py-2.5 text-xs font-bold text-[#0B6E4F] transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                    </svg>
+                    <span>Bagikan Link Produk ke Teman / Media Sosial</span>
+                </button>
 
                 <p class="text-[11px] text-slate-500 flex items-center gap-1.5">
                     <span class="text-[#0B6E4F] font-bold">✓</span>
@@ -414,6 +434,120 @@ Algoritma:
         </div>
     @endif
 
+    <!-- ========================================================================
+         MODAL / DRAWER MENU BAGIKAN PRODUK (SEBAGAIMANA MARKETPLACE LAIN)
+         ======================================================================== -->
+    <div id="share-product-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 transition-all">
+        <div class="relative w-full max-w-md rounded-2xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200/80 space-y-4 animate-scale-up">
+            <!-- Header Modal -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-full bg-[#EBF9F2] text-[#0B6E4F] flex items-center justify-center font-bold text-sm">
+                        ↗
+                    </span>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-[#0F291E]">Bagikan Produk</h3>
+                        <p class="text-[11px] text-slate-400">Bagikan karya ini ke media sosial atau teman Anda</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeShareModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold text-base flex items-center justify-center transition">
+                    &times;
+                </button>
+            </div>
+
+            <!-- Kartu Cuplikan Produk -->
+            <div class="flex items-center gap-3 rounded-xl bg-[#F8FAFC] border border-slate-200/80 p-3">
+                <img src="{{ $mainImg }}" alt="{{ $product->product_name }}" class="w-14 h-14 rounded-lg object-cover bg-white shrink-0 border border-slate-200" onerror="this.src='{{ $fallbackImg }}'">
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold text-[#0F291E] line-clamp-1">{{ $product->product_name }}</p>
+                    <p class="text-xs font-extrabold text-[#0B6E4F] mt-0.5">{{ $product->formatted_price }}</p>
+                    <p class="text-[10px] text-slate-400 truncate mt-0.5">{{ $product->store->store_name }} • SMK Plus Al Hilal</p>
+                </div>
+            </div>
+
+            <!-- Input Salin Link Langsung -->
+            <div class="space-y-1.5">
+                <label class="block text-[11px] font-bold text-slate-600">Salin Tautan / Link Produk</label>
+                <div class="flex items-center gap-2">
+                    <input type="text"
+                           id="share-product-url-input"
+                           value="{{ url()->current() }}"
+                           readonly
+                           class="flex-1 rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 text-xs text-slate-700 font-mono focus:outline-none">
+                    <button type="button"
+                            id="btn-copy-share-link"
+                            onclick="copyShareLink()"
+                            class="rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shrink-0 shadow-xs">
+                        Salin
+                    </button>
+                </div>
+                <p id="share-copy-feedback" class="text-[11px] font-semibold text-[#0B6E4F] hidden">✓ Link berhasil disalin ke clipboard!</p>
+            </div>
+
+            <!-- Pilihan Cepat Bagikan ke Platform Lain -->
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Bagikan Ke</p>
+                <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                    <!-- WhatsApp -->
+                    @php
+                        $waShareText = urlencode("Yuk lihat karya siswa SMK Plus Al Hilal:\n*{$product->product_name}*\nHarga: {$product->formatted_price}\n\nKunjungi produk di hilalkraft:\n" . url()->current());
+                    @endphp
+                    <a href="https://api.whatsapp.com/send?text={{ $waShareText }}"
+                       target="_blank"
+                       rel="noopener"
+                       class="flex flex-col items-center gap-1 p-2 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition group">
+                        <span class="w-10 h-10 rounded-full bg-[#25D366]/15 text-[#25D366] group-hover:scale-110 flex items-center justify-center font-bold text-lg transition">
+                            💬
+                        </span>
+                        <span class="text-[10px] font-bold text-slate-700">WhatsApp</span>
+                    </a>
+
+                    <!-- Telegram -->
+                    <a href="https://t.me/share/url?url={{ urlencode(url()->current()) }}&text={{ urlencode("Karya Siswa SMK Plus Al Hilal: {$product->product_name} ({$product->formatted_price})") }}"
+                       target="_blank"
+                       rel="noopener"
+                       class="flex flex-col items-center gap-1 p-2 rounded-xl border border-slate-200 hover:border-sky-500 hover:bg-sky-50/50 transition group">
+                        <span class="w-10 h-10 rounded-full bg-[#0088cc]/15 text-[#0088cc] group-hover:scale-110 flex items-center justify-center font-bold text-lg transition">
+                            ✈️
+                        </span>
+                        <span class="text-[10px] font-bold text-slate-700">Telegram</span>
+                    </a>
+
+                    <!-- Facebook -->
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}"
+                       target="_blank"
+                       rel="noopener"
+                       class="flex flex-col items-center gap-1 p-2 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition group">
+                        <span class="w-10 h-10 rounded-full bg-[#1877F2]/15 text-[#1877F2] group-hover:scale-110 flex items-center justify-center font-bold text-lg transition">
+                            f
+                        </span>
+                        <span class="text-[10px] font-bold text-slate-700">Facebook</span>
+                    </a>
+
+                    <!-- Twitter / X -->
+                    <a href="https://twitter.com/intent/tweet?text={{ urlencode("Karya Siswa SMK Plus Al Hilal: {$product->product_name}") }}&url={{ urlencode(url()->current()) }}"
+                       target="_blank"
+                       rel="noopener"
+                       class="flex flex-col items-center gap-1 p-2 rounded-xl border border-slate-200 hover:border-slate-800 hover:bg-slate-50 transition group">
+                        <span class="w-10 h-10 rounded-full bg-slate-900/10 text-slate-900 group-hover:scale-110 flex items-center justify-center font-bold text-base transition">
+                            𝕏
+                        </span>
+                        <span class="text-[10px] font-bold text-slate-700">Twitter / X</span>
+                    </a>
+                </div>
+
+                <!-- Tombol Web Share Native untuk Smartphone -->
+                <button type="button"
+                        id="btn-native-share"
+                        onclick="triggerNativeShare()"
+                        class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 py-2 text-xs font-bold text-slate-700 transition">
+                    <span>📱</span>
+                    <span>Bagikan ke Aplikasi Lain di Ponsel</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -445,5 +579,87 @@ Algoritma:
             ? 'pb-3 border-b-2 border-[#0B6E4F] text-[#0B6E4F] transition'
             : 'pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-700 transition';
     }
+
+    // Fungsi Menu Bagikan Produk
+    function openShareModal() {
+        const modal = document.getElementById('share-product-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Cek apakah browser mendukung Web Share API
+            const nativeBtn = document.getElementById('btn-native-share');
+            if (nativeBtn && !navigator.share) {
+                nativeBtn.style.display = 'none';
+            }
+        }
+    }
+
+    function closeShareModal() {
+        const modal = document.getElementById('share-product-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    // Salin link produk ke clipboard
+    function copyShareLink() {
+        const input = document.getElementById('share-product-url-input');
+        const btn = document.getElementById('btn-copy-share-link');
+        const feedback = document.getElementById('share-copy-feedback');
+
+        if (!input) return;
+
+        input.select();
+        input.setSelectionRange(0, 99999); // Untuk perangkat mobile
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(input.value).then(onCopySuccess).catch(() => {
+                document.execCommand('copy');
+                onCopySuccess();
+            });
+        } else {
+            document.execCommand('copy');
+            onCopySuccess();
+        }
+
+        function onCopySuccess() {
+            if (btn) {
+                btn.textContent = '✓ Tersalin!';
+                btn.classList.remove('bg-[#0B6E4F]');
+                btn.classList.add('bg-emerald-700');
+                setTimeout(() => {
+                    btn.textContent = 'Salin';
+                    btn.classList.remove('bg-emerald-700');
+                    btn.classList.add('bg-[#0B6E4F]');
+                }, 2500);
+            }
+            if (feedback) {
+                feedback.classList.remove('hidden');
+                setTimeout(() => feedback.classList.add('hidden'), 3500);
+            }
+        }
+    }
+
+    // Native Web Share API untuk HP/browser pendukung
+    function triggerNativeShare() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ addslashes($product->product_name) }}',
+                text: 'Yuk lihat karya siswa SMK Plus Al Hilal: {{ addslashes($product->product_name) }} ({{ $product->formatted_price }}) di hilalkraft!',
+                url: window.location.href,
+            }).catch(() => {});
+        } else {
+            copyShareLink();
+        }
+    }
+
+    // Tutup modal jika klik di luar box
+    document.addEventListener('click', (e) => {
+        const modal = document.getElementById('share-product-modal');
+        if (modal && e.target === modal) {
+            closeShareModal();
+        }
+    });
 </script>
 @endsection

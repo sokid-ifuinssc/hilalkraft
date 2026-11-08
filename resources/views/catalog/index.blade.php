@@ -35,16 +35,9 @@ Algoritma:
      1. BARIS IKLAN MITRA KERJASAMA SEKOLAH DI ATAS (ALA TOKOPEDIA BANNER SLIDER)
      ======================================================================== -->
 @if(isset($partnerAds) && $partnerAds->count() > 0)
-<section class="bg-white border-b border-slate-200/70 pt-3 pb-4 sm:py-5">
+<section class="bg-white border-b border-slate-200/70 py-2 sm:py-2.5">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between gap-2 mb-2.5">
-            <div class="inline-flex items-center gap-2 text-[11px] font-bold text-slate-500">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>MITRA & SPONSOR RESMI SMK PLUS AL HILAL</span>
-            </div>
-        </div>
-
-        <div id="partner-ad-carousel" class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-200/80 bg-slate-900">
+        <div id="partner-ad-carousel" class="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-2xs border border-slate-200/80 bg-slate-900">
             @foreach($partnerAds as $idx => $ad)
                 @php
                     $durationSec = max(1, (int) ($ad->duration_seconds ?: 5));
@@ -69,63 +62,53 @@ Algoritma:
                 <div class="partner-ad-slide {{ $idx === 0 ? 'block ad-slide-active' : 'hidden' }}"
                      data-index="{{ $idx }}"
                      data-duration="{{ $durationSec }}">
-                    <div class="relative bg-gradient-to-r {{ $bgGradient }} text-white p-5 sm:p-7 lg:px-10 lg:py-8 min-h-[165px] sm:min-h-[195px] flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+                    <div class="relative bg-gradient-to-r {{ $bgGradient }} text-white p-3 sm:py-3.5 sm:px-6 flex flex-row items-center justify-between gap-3 sm:gap-6">
 
-                        <!-- Dekorasi Cahaya Latar -->
-                        <div class="pointer-events-none absolute -right-12 -top-12 w-56 h-56 rounded-full bg-white/10 blur-2xl"></div>
-                        <div class="pointer-events-none absolute left-1/3 -bottom-16 w-48 h-48 rounded-full bg-black/15 blur-xl"></div>
+                        <!-- Dekorasi Cahaya Latar Halus -->
+                        <div class="pointer-events-none absolute -right-8 -top-8 w-28 h-28 rounded-full bg-white/10 blur-xl"></div>
 
-                        <!-- Konten Kiri Iklan Mitra -->
-                        <div class="relative z-10 space-y-2.5 max-w-2xl">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span class="inline-flex items-center gap-1.5 rounded-full {{ $accentBadge }} px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider shadow-xs badge-blink">
+                        <!-- Konten Kiri Iklan Mitra Ringkas -->
+                        <div class="relative z-10 space-y-1 min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="inline-flex items-center gap-1 rounded-full {{ $accentBadge }} px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider shadow-2xs">
                                     <span>★</span>
-                                    <span>{{ $ad->badge_text ?: 'MITRA KERJASAMA SMK PAL' }}</span>
+                                    <span>{{ $ad->badge_text ?: 'Mitra Resmi' }}</span>
                                 </span>
 
                                 @if($ad->partner_name)
-                                    <span class="rounded-full bg-white/15 backdrop-blur-xs border border-white/20 px-3 py-0.5 text-[11px] font-bold text-white">
+                                    <span class="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-white truncate max-w-[150px]">
                                         {{ $ad->partner_name }}
                                     </span>
                                 @endif
 
-                                <span class="rounded-full bg-black/25 px-2.5 py-0.5 text-[10px] font-medium text-white/90">
-                                    ⏱ {{ $durationSec }} detik
-                                    @if($ad->contract_end)
-                                        • Kontrak s/d {{ $ad->contract_end->format('d M Y') }}
-                                    @endif
+                                <span class="hidden sm:inline-block rounded-full bg-black/25 px-2 py-0.5 text-[9px] text-white/80">
+                                    ⏱ {{ $durationSec }}s
                                 </span>
                             </div>
 
-                            <h2 class="text-lg sm:text-2xl lg:text-3xl font-extrabold tracking-tight leading-snug">
+                            <h2 class="text-xs sm:text-base font-extrabold tracking-tight leading-snug line-clamp-1">
                                 {{ $ad->title }}
                             </h2>
 
                             @if($ad->content)
-                                <p class="text-xs sm:text-sm text-white/90 leading-relaxed line-clamp-2">
+                                <p class="text-[10px] sm:text-xs text-white/90 leading-tight line-clamp-1">
                                     {{ $ad->content }}
                                 </p>
                             @endif
                         </div>
 
-                        <!-- Kanan: Visual Gambar Iklan atau Kartu Badge Mitra + Tombol CTA -->
-                        <div class="relative z-10 flex items-center gap-4 self-stretch md:self-center justify-between md:justify-end w-full md:w-auto shrink-0">
+                        <!-- Kanan: Visual Gambar Iklan Kecil Setengahnya & Tombol CTA -->
+                        <div class="relative z-10 flex items-center gap-2 sm:gap-3 shrink-0">
                             @if($adImg)
                                 <img src="{{ $adImg }}"
                                      alt="{{ $ad->title }}"
-                                     class="h-20 sm:h-28 w-32 sm:w-44 rounded-2xl object-cover border-2 border-white/30 shadow-md bg-white p-1">
-                            @else
-                                <div class="hidden sm:flex flex-col items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 px-5 py-3.5 text-center min-w-[150px]">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-white/80">Official Partner</span>
-                                    <span class="text-sm sm:text-base font-extrabold text-white mt-0.5">{{ $ad->partner_name ?: $ad->title }}</span>
-                                    <span class="text-[10px] text-white/80 mt-0.5">SMK Plus Al Hilal</span>
-                                </div>
+                                     class="h-10 sm:h-14 w-16 sm:w-24 rounded-lg object-contain border border-white/40 shadow-xs bg-white p-0.5">
                             @endif
 
                             @if($ad->link_url)
                                 <a href="{{ $ad->link_url }}"
-                                   class="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-xs font-extrabold text-slate-900 hover:bg-slate-100 transition shadow-sm shrink-0">
-                                    <span>Info Promo</span>
+                                   class="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-[10px] sm:text-xs font-bold text-slate-900 hover:bg-slate-100 transition shadow-2xs shrink-0">
+                                    <span>Info</span>
                                     <span>→</span>
                                 </a>
                             @endif
@@ -136,23 +119,27 @@ Algoritma:
 
             <!-- Progress Bar Durasi Tayang Slide Aktif -->
             @if($partnerAds->count() > 1)
-                <div class="h-1 w-full bg-black/30">
+                <div class="h-0.5 w-full bg-black/30">
                     <div id="partner-ad-progress" class="h-full bg-white/90 transition-all ease-linear" style="width: 0%;"></div>
                 </div>
 
                 <!-- Navigasi Titik (Dots) & Tombol Prev/Next -->
-                <div class="absolute bottom-2.5 right-4 z-20 flex items-center gap-1.5">
-                    <button type="button" onclick="stepPartnerAd(-1)" class="w-6 h-6 rounded-full bg-black/35 text-white hover:bg-black/60 flex items-center justify-center text-xs transition" title="Iklan Sebelumnya">‹</button>
+                <div class="absolute bottom-1.5 right-3 z-20 flex items-center gap-1">
+                    <button type="button" onclick="stepPartnerAd(-1)" class="w-5 h-5 rounded-full bg-black/35 text-white hover:bg-black/60 flex items-center justify-center text-[10px] transition" title="Iklan Sebelumnya">‹</button>
                     @foreach($partnerAds as $idx => $ad)
                         <button type="button"
                                 onclick="goToPartnerAd({{ $idx }})"
-                                class="partner-ad-dot h-2 rounded-full transition-all {{ $idx === 0 ? 'w-6 bg-white' : 'w-2 bg-white/50 hover:bg-white/80' }}"
-                                title="{{ $ad->partner_name ?: $ad->title }} ({{ $ad->duration_seconds ?: 5 }}s)">
+                                class="partner-ad-dot h-1.5 rounded-full transition-all {{ $idx === 0 ? 'w-4 bg-white' : 'w-1.5 bg-white/50 hover:bg-white/80' }}"
+                                title="{{ $ad->partner_name ?: $ad->title }}">
                         </button>
                     @endforeach
-                    <button type="button" onclick="stepPartnerAd(1)" class="w-6 h-6 rounded-full bg-black/35 text-white hover:bg-black/60 flex items-center justify-center text-xs transition" title="Iklan Berikutnya">›</button>
+                    <button type="button" onclick="stepPartnerAd(1)" class="w-5 h-5 rounded-full bg-black/35 text-white hover:bg-black/60 flex items-center justify-center text-[10px] transition" title="Iklan Berikutnya">›</button>
                 </div>
             @endif
+        </div>
+    </div>
+</section>
+@endif
         </div>
     </div>
 </section>
@@ -365,6 +352,16 @@ Algoritma:
                         >
                     </a>
 
+                    <!-- Tombol Cepat Bagikan Link Produk -->
+                    <button type="button"
+                            onclick="shareQuickProduct('{{ route('products.show', $product->slug) }}', '{{ addslashes($product->product_name) }}', '{{ $product->formatted_price }}')"
+                            class="absolute top-2 left-2 sm:top-3 sm:left-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 backdrop-blur-xs shadow-xs flex items-center justify-center text-slate-600 hover:text-[#0B6E4F] transition"
+                            title="Bagikan link produk">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                        </svg>
+                    </button>
+
                     <form action="{{ route('products.like', $product->slug) }}" method="POST" class="absolute top-2 right-2 sm:top-3 sm:right-3">
                         @csrf
                         <button type="submit" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 backdrop-blur-xs shadow-xs flex items-center justify-center text-slate-600 hover:text-rose-500 transition" title="Sukai karya ini">
@@ -484,5 +481,54 @@ Algoritma:
 
         activateSlide(0);
     })();
+
+    // Fungsi Bagikan Cepat Link Produk dari Katalog
+    function shareQuickProduct(url, title, price) {
+        if (navigator.share) {
+            navigator.share({
+                title: title,
+                text: 'Yuk lihat karya siswa SMK Plus Al Hilal: ' + title + ' (' + price + ') di hilalkraft!',
+                url: url,
+            }).catch(() => {});
+        } else {
+            // Salin link ke clipboard
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(showToast).catch(() => {
+                    fallbackCopy(url);
+                });
+            } else {
+                fallbackCopy(url);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast();
+        }
+
+        function showToast() {
+            let toast = document.getElementById('quick-share-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'quick-share-toast';
+                toast.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 z-[9999] bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 border border-slate-700 transition-all duration-300';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = '<span>🔗</span><span>Link produk berhasil disalin ke clipboard!</span>';
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, 0)';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, 10px)';
+            }, 3000);
+        }
+    }
 </script>
 @endsection

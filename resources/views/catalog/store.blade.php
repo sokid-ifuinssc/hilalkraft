@@ -32,9 +32,14 @@ Algoritma:
                 <p class="text-xs text-emerald-100 mt-2 max-w-2xl">{{ $store->description }}</p>
             @endif
         </div>
-        <a href="{{ $store->whatsapp_url }}" target="_blank" class="rounded-xl bg-white px-5 py-3 text-xs font-extrabold text-[#059669] shadow-md hover:bg-emerald-50 transition">
-            💬 Hubungi WhatsApp Toko
-        </a>
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="copyStoreLink()" class="rounded-xl border border-white/40 bg-white/15 px-4 py-3 text-xs font-bold text-white hover:bg-white/25 transition">
+                ↗ Bagikan Toko
+            </button>
+            <a href="{{ $store->whatsapp_url }}" target="_blank" class="rounded-xl bg-white px-5 py-3 text-xs font-extrabold text-[#059669] shadow-md hover:bg-emerald-50 transition">
+                💬 Hubungi WhatsApp Toko
+            </a>
+        </div>
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
@@ -60,7 +65,15 @@ Algoritma:
                     </div>
                     <div class="pt-2 sm:pt-3 border-t border-slate-100 flex items-center justify-between">
                         <span class="text-xs sm:text-sm font-extrabold text-[#059669]">{{ $product->formatted_price }}</span>
-                        <a href="{{ route('products.show', $product->slug) }}" class="text-[10px] sm:text-xs font-bold text-[#059669] hover:underline">Detail →</a>
+                        <div class="flex items-center gap-2">
+                            <button type="button"
+                                    onclick="copyProductUrl('{{ route('products.show', $product->slug) }}', '{{ addslashes($product->product_name) }}')"
+                                    class="text-[10px] sm:text-xs font-semibold text-slate-500 hover:text-[#0B6E4F] transition"
+                                    title="Bagikan produk">
+                                ↗ Bagikan
+                            </button>
+                            <a href="{{ route('products.show', $product->slug) }}" class="text-[10px] sm:text-xs font-bold text-[#059669] hover:underline">Detail →</a>
+                        </div>
                     </div>
                 </div>
             </article>
@@ -71,5 +84,25 @@ Algoritma:
         @endforelse
     </div>
 </div>
+
+<script>
+    function copyStoreLink() {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(window.location.href);
+        }
+        alert('Tautan toko berhasil disalin!');
+    }
+
+    function copyProductUrl(url, name) {
+        if (navigator.share) {
+            navigator.share({ title: name, url: url }).catch(() => {});
+        } else {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url);
+            }
+            alert('Tautan produk "' + name + '" berhasil disalin!');
+        }
+    }
+</script>
 @endsection
 
