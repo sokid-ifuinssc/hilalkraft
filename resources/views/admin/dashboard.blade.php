@@ -155,6 +155,52 @@ Algoritma:
             </div>
         </header>
 
+        <!-- Floating Toast Notifikasi Sukses / Gagal (Tetap Terlihat Di Mana Pun Posisi Scroll) -->
+        @if(session('success') || session('error') || $errors->any())
+            <div id="admin-floating-toast" class="fixed top-5 right-5 z-[9999] max-w-md w-[92vw] sm:w-[420px] transition-all duration-300">
+                @if(session('success'))
+                    <div class="rounded-2xl bg-white border-2 border-[#10B981] p-4 shadow-2xl flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-[#EBF9F2] text-[#0B6E4F] flex items-center justify-center font-bold text-base shrink-0">
+                            ✓
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-extrabold text-[#0B6E4F] uppercase tracking-wider">Perubahan Berhasil Disimpan</p>
+                            <p class="text-xs text-slate-700 font-medium mt-0.5 leading-snug">{{ session('success') }}</p>
+                        </div>
+                        <button type="button" onclick="document.getElementById('admin-floating-toast').remove()" class="text-slate-400 hover:text-slate-700 font-bold text-lg leading-none shrink-0">&times;</button>
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="rounded-2xl bg-white border-2 border-rose-500 p-4 shadow-2xl flex items-start gap-3 mt-2">
+                        <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-base shrink-0">
+                            ✕
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-extrabold text-rose-600 uppercase tracking-wider">Perhatian / Gagal</p>
+                            <p class="text-xs text-slate-700 font-medium mt-0.5 leading-snug">{{ session('error') }}</p>
+                        </div>
+                        <button type="button" onclick="document.getElementById('admin-floating-toast').remove()" class="text-slate-400 hover:text-slate-700 font-bold text-lg leading-none shrink-0">&times;</button>
+                    </div>
+                @endif
+                @if($errors->any())
+                    <div class="rounded-2xl bg-white border-2 border-rose-500 p-4 shadow-2xl flex items-start gap-3 mt-2">
+                        <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-base shrink-0">
+                            !
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-extrabold text-rose-600 uppercase tracking-wider">Terdapat Kesalahan Input</p>
+                            <ul class="text-xs text-slate-700 font-medium mt-0.5 list-disc list-inside space-y-0.5">
+                                @foreach($errors->all() as $err)
+                                    <li>{{ $err }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        <button type="button" onclick="document.getElementById('admin-floating-toast').remove()" class="text-slate-400 hover:text-slate-700 font-bold text-lg leading-none shrink-0">&times;</button>
+                    </div>
+                @endif
+            </div>
+        @endif
+
         <!-- Area Konten -->
         <div class="p-6 sm:p-10 space-y-8 max-w-6xl w-full mx-auto">
 
@@ -586,6 +632,15 @@ Algoritma:
                  3. MANAJEMEN USER, GURU ADMIN, & KREDENSIAL REALTIME SUPER ADMIN
                  ================================================================= -->
             <div id="sec-manajemen-user" class="rounded-2xl bg-white border border-slate-200/80 overflow-hidden">
+                @if(session('success'))
+                    <div class="m-6 mb-0 rounded-xl bg-[#EBF9F2] border border-[#B8E8D2] p-3.5 text-xs text-[#0B6E4F] font-bold flex items-center justify-between gap-3 shadow-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-[#0B6E4F] text-white flex items-center justify-center text-[10px]">✓</span>
+                            <span>{{ session('success') }}</span>
+                        </div>
+                        <span class="text-[10px] text-[#0B6E4F]/70 font-normal">Tersimpan</span>
+                    </div>
+                @endif
                 <div class="p-6 space-y-4 border-b border-slate-100">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div>
@@ -2028,5 +2083,35 @@ Algoritma:
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     }
+
+    // Auto-scroll ke section hash setelah simpan tanpa reload melompat
+    window.addEventListener('DOMContentLoaded', () => {
+        // 1. Cek apakah ada hash di URL (misal: #sec-manajemen-user)
+        if (window.location.hash) {
+            const targetEl = document.querySelector(window.location.hash);
+            if (targetEl) {
+                setTimeout(() => {
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+            }
+        }
+
+        // 2. Auto-dismiss floating toast setelah 5 detik
+        const toast = document.getElementById('admin-floating-toast');
+        if (toast) {
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 5000);
+        }
+
+        // 3. Simpan posisi scroll sebelum submit form apa pun di admin dashboard
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', () => {
+                sessionStorage.setItem('admin_last_scroll_y', window.scrollY);
+            });
+        });
+    });
 </script>
 @endsection

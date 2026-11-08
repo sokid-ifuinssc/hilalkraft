@@ -83,7 +83,7 @@ class SellerProductController extends Controller
 
         $store->update($validated);
 
-        return back()->with('success', 'Skema diskon jenis pembeli & diskon bazar toko berhasil disimpan!');
+        return redirect()->to(route('seller.dashboard') . '#section-diskon')->with('success', 'Skema diskon jenis pembeli & diskon bazar toko berhasil disimpan!');
     }
 
     /**
@@ -157,7 +157,7 @@ class SellerProductController extends Controller
             'contact_number' => $validated['phone'],
         ]);
 
-        return back()->with('success', 'Profil lengkap pemilik toko & identitas toko berhasil diperbarui!');
+        return redirect()->to(route('seller.dashboard') . '#section-profil')->with('success', 'Profil lengkap pemilik toko & identitas toko berhasil disimpan!');
     }
 
     public function create(Request $request): View
@@ -328,7 +328,7 @@ class SellerProductController extends Controller
 
         $order->update($updatePayload);
 
-        return back()->with('success', "Progres pesanan #{$order->order_code} berhasil diperbarui ke tahap: {$order->progress_label}.");
+        return redirect()->to(route('seller.dashboard') . '#section-pesanan')->with('success', "Progres pesanan #{$order->order_code} berhasil disimpan (Tahap: {$order->progress_label}).");
     }
 
     private function authorizeProductOwner(Request $request, Product $product): void

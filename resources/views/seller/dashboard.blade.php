@@ -142,6 +142,52 @@ Algoritma:
             </div>
         </header>
 
+        <!-- Floating Toast Notifikasi Sukses / Gagal Realtime -->
+        @if(session('success') || session('error') || $errors->any())
+            <div id="seller-floating-toast" class="fixed top-5 right-5 z-[9999] max-w-md w-[92vw] sm:w-[420px] transition-all duration-300">
+                @if(session('success'))
+                    <div class="rounded-2xl bg-white border-2 border-[#10B981] p-4 shadow-2xl flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-[#EBF9F2] text-[#0B6E4F] flex items-center justify-center font-bold text-base shrink-0">
+                            ✓
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-extrabold text-[#0B6E4F] uppercase tracking-wider">Perubahan Berhasil Disimpan</p>
+                            <p class="text-xs text-slate-700 font-medium mt-0.5 leading-snug">{{ session('success') }}</p>
+                        </div>
+                        <button type="button" onclick="document.getElementById('seller-floating-toast').remove()" class="text-slate-400 hover:text-slate-700 font-bold text-lg leading-none shrink-0">&times;</button>
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="rounded-2xl bg-white border-2 border-rose-500 p-4 shadow-2xl flex items-start gap-3 mt-2">
+                        <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-base shrink-0">
+                            ✕
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-extrabold text-rose-600 uppercase tracking-wider">Perhatian / Gagal</p>
+                            <p class="text-xs text-slate-700 font-medium mt-0.5 leading-snug">{{ session('error') }}</p>
+                        </div>
+                        <button type="button" onclick="document.getElementById('seller-floating-toast').remove()" class="text-slate-400 hover:text-slate-700 font-bold text-lg leading-none shrink-0">&times;</button>
+                    </div>
+                @endif
+                @if($errors->any())
+                    <div class="rounded-2xl bg-white border-2 border-rose-500 p-4 shadow-2xl flex items-start gap-3 mt-2">
+                        <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-base shrink-0">
+                            !
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-extrabold text-rose-600 uppercase tracking-wider">Terdapat Kesalahan Input</p>
+                            <ul class="text-xs text-slate-700 font-medium mt-0.5 list-disc list-inside space-y-0.5">
+                                @foreach($errors->all() as $err)
+                                    <li>{{ $err }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        <button type="button" onclick="document.getElementById('seller-floating-toast').remove()" class="text-slate-400 hover:text-slate-700 font-bold text-lg leading-none shrink-0">&times;</button>
+                    </div>
+                @endif
+            </div>
+        @endif
+
         <!-- Isi Halaman -->
         <div class="p-6 sm:p-10 space-y-8 max-w-6xl w-full mx-auto">
 
@@ -791,5 +837,26 @@ Algoritma:
                 : 'seller-order-tab rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 transition';
         });
     }
+
+    // Auto-scroll ke section setelah submit & auto-dismiss toast
+    window.addEventListener('DOMContentLoaded', () => {
+        if (window.location.hash) {
+            const targetEl = document.querySelector(window.location.hash);
+            if (targetEl) {
+                setTimeout(() => {
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+            }
+        }
+
+        const toast = document.getElementById('seller-floating-toast');
+        if (toast) {
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 5000);
+        }
+    });
 </script>
 @endsection

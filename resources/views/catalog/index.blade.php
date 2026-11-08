@@ -345,8 +345,8 @@ Algoritma:
         </div>
     </div>
 
-    <!-- Grid Kartu Produk Responsif -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+    <!-- Grid Kartu Produk Responsif (Mobile 2 Kolom Berjajar Ringkas & Desktop 4 Kolom) -->
+    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-5">
         @forelse($products as $product)
             @php
                 $fallbackImage = asset('images/products/gantungan-kunci-bunga.jpg');
@@ -354,7 +354,7 @@ Algoritma:
                     ? $product->image
                     : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image));
             @endphp
-            <article class="group rounded-2xl bg-white border border-slate-200/80 overflow-hidden hover:shadow-md hover:border-[#0B6E4F]/40 transition-all duration-300 flex flex-col">
+            <article class="group rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 overflow-hidden hover:shadow-md hover:border-[#0B6E4F]/40 transition-all duration-300 flex flex-col">
                 <div class="relative aspect-square bg-slate-100 overflow-hidden">
                     <a href="{{ route('products.show', $product->slug) }}" class="block w-full h-full">
                         <img
@@ -365,46 +365,52 @@ Algoritma:
                         >
                     </a>
 
-                    <form action="{{ route('products.like', $product->slug) }}" method="POST" class="absolute top-3 right-3">
+                    <form action="{{ route('products.like', $product->slug) }}" method="POST" class="absolute top-2 right-2 sm:top-3 sm:right-3">
                         @csrf
-                        <button type="submit" class="w-8 h-8 rounded-full bg-white/95 backdrop-blur-xs shadow-xs flex items-center justify-center text-slate-600 hover:text-rose-500 transition" title="Sukai karya ini">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button type="submit" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 backdrop-blur-xs shadow-xs flex items-center justify-center text-slate-600 hover:text-rose-500 transition" title="Sukai karya ini">
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                             </svg>
                         </button>
                     </form>
                 </div>
 
-                <div class="p-4 flex-1 flex flex-col justify-between space-y-2.5">
-                    <div class="space-y-1.5">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="inline-block rounded-md bg-[#EBF9F2] px-2 py-0.5 text-[10px] font-bold text-[#0B6E4F] truncate">
+                <div class="p-2.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2">
+                    <div class="space-y-1 sm:space-y-1.5">
+                        <div class="flex items-center justify-between gap-1 sm:gap-2">
+                            <span class="inline-block rounded bg-[#EBF9F2] px-1.5 py-0.5 sm:px-2 text-[9px] sm:text-[10px] font-bold text-[#0B6E4F] truncate max-w-[58%]">
                                 {{ $product->store->student_class ?: ($product->category ?: 'Karya Siswa') }}
                             </span>
-                            <span class="text-[10px] font-medium text-slate-400 truncate">
+                            <span class="text-[9px] sm:text-[10px] font-medium text-slate-400 truncate max-w-[40%] text-right">
                                 {{ $product->store->owner->name ?? $product->store->store_name }}
                             </span>
                         </div>
 
-                        <h3 class="font-bold text-[#0F291E] text-sm sm:text-base leading-snug line-clamp-1 group-hover:text-[#0B6E4F] transition">
+                        <h3 class="font-bold text-[#0F291E] text-xs sm:text-base leading-snug line-clamp-1 group-hover:text-[#0B6E4F] transition">
                             <a href="{{ route('products.show', $product->slug) }}">
                                 {{ $product->product_name }}
                             </a>
                         </h3>
 
-                        <p class="text-sm sm:text-base font-extrabold text-[#0B6E4F]">
+                        <!-- Cuplikan Deskripsi Produk (Diperlihatkan Sedikit / 2 Baris) -->
+                        <p class="text-[10px] sm:text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                            {{ $product->description ?: 'Karya kreatif dan inovatif buatan siswa SMK Plus Al Hilal.' }}
+                        </p>
+
+                        <p class="text-xs sm:text-base font-extrabold text-[#0B6E4F] pt-0.5">
                             {{ $product->formatted_price }}
                         </p>
                     </div>
 
-                    <!-- Baris Bawah: Chat Penjual + Ikon Lihat (👁️), Suka (❤️), Komentar (💬) -->
-                    <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 text-[11px]">
-                        <a href="{{ route('products.show', $product->slug) }}" class="inline-flex items-center gap-1 font-semibold text-[#0B6E4F] hover:underline">
+                    <!-- Baris Bawah: Tombol Detail & Interaksi (Lihat, Suka, Komentar) -->
+                    <div class="pt-2 sm:pt-2.5 border-t border-slate-100 flex items-center justify-between gap-1 text-[10px] sm:text-[11px]">
+                        <a href="{{ route('products.show', $product->slug) }}" class="inline-flex items-center gap-0.5 sm:gap-1 font-semibold text-[#0B6E4F] hover:underline">
                             <span>💬</span>
-                            <span>Detail & Pesan</span>
+                            <span class="hidden xs:inline sm:inline">Detail</span>
+                            <span class="xs:hidden sm:hidden">Pesan</span>
                         </a>
 
-                        <div class="flex items-center gap-2 font-medium text-slate-400">
+                        <div class="flex items-center gap-1.5 sm:gap-2 font-medium text-slate-400 text-[9px] sm:text-[11px]">
                             <span class="inline-flex items-center gap-0.5" title="Dilihat">
                                 👁️ {{ number_format($product->views_count ?? 0) }}
                             </span>

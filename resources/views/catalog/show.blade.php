@@ -381,25 +381,30 @@ Algoritma:
                 <a href="{{ route('home') }}" class="text-xs font-bold text-[#0B6E4F] hover:underline">Jelajahi semua →</a>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-5">
                 @foreach($relatedProducts as $rel)
-                    <article class="group rounded-2xl bg-white border border-slate-200/80 overflow-hidden hover:shadow-md transition flex flex-col">
+                    <article class="group rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 overflow-hidden hover:shadow-md transition flex flex-col">
                         <a href="{{ route('products.show', $rel->slug) }}" class="relative aspect-square bg-slate-100 overflow-hidden block">
                             <img src="{{ Str::startsWith($rel->image, 'http') ? $rel->image : asset('storage/' . $rel->image) }}"
                                  alt="{{ $rel->product_name }}"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                  onerror="this.src='{{ $fallbackImg }}'">
                         </a>
-                        <div class="p-4 space-y-1.5">
-                            <span class="inline-block rounded-md bg-[#EBF9F2] px-2 py-0.5 text-[10px] font-bold text-[#0B6E4F]">
-                                {{ $rel->store->student_class ?: $rel->category }}
-                            </span>
-                            <h3 class="font-bold text-[#0F291E] text-sm line-clamp-1">
-                                <a href="{{ route('products.show', $rel->slug) }}">{{ $rel->product_name }}</a>
-                            </h3>
-                            <p class="text-sm font-extrabold text-[#0B6E4F]">{{ $rel->formatted_price }}</p>
-                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                                <span class="text-[#0B6E4F] font-semibold">💬 Chat penjual</span>
+                        <div class="p-2.5 sm:p-4 space-y-1 sm:space-y-1.5 flex-1 flex flex-col justify-between">
+                            <div>
+                                <span class="inline-block rounded bg-[#EBF9F2] px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-[#0B6E4F] truncate max-w-full">
+                                    {{ $rel->store->student_class ?: $rel->category }}
+                                </span>
+                                <h3 class="font-bold text-[#0F291E] text-xs sm:text-sm line-clamp-1 hover:text-[#0B6E4F] transition mt-1">
+                                    <a href="{{ route('products.show', $rel->slug) }}">{{ $rel->product_name }}</a>
+                                </h3>
+                                <p class="text-[10px] sm:text-xs text-slate-500 line-clamp-2 leading-relaxed mt-0.5">
+                                    {{ $rel->description ?: 'Karya siswa SMK Plus Al Hilal.' }}
+                                </p>
+                                <p class="text-xs sm:text-sm font-extrabold text-[#0B6E4F] mt-1">{{ $rel->formatted_price }}</p>
+                            </div>
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-400">
+                                <span class="text-[#0B6E4F] font-semibold">💬 Chat</span>
                                 <span>👁️ {{ $rel->views_count ?? 0 }} • ❤️ {{ $rel->likes_count ?? 0 }}</span>
                             </div>
                         </div>

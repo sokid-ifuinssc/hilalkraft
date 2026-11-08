@@ -226,7 +226,7 @@ class AdminDashboardController extends Controller
         CmsContent::clearCache();
         \Database\Seeders\DatabaseSeeder::syncLiveSnapshotToStorage();
 
-        return back()->with('success', "Konten / Iklan CMS '{$validated['title']}' berhasil ditambahkan.");
+        return redirect()->to(route('admin.dashboard') . '#sec-cms')->with('success', "Konten / Iklan CMS '{$validated['title']}' berhasil ditambahkan dan disimpan.");
     }
 
     /**
@@ -276,7 +276,7 @@ class AdminDashboardController extends Controller
         CmsContent::clearCache();
         \Database\Seeders\DatabaseSeeder::syncLiveSnapshotToStorage();
 
-        return back()->with('success', "Konten / Iklan CMS '{$cmsContent->title}' berhasil diperbarui.");
+        return redirect()->to(route('admin.dashboard') . '#sec-cms')->with('success', "Konten / Iklan CMS '{$cmsContent->title}' berhasil disimpan.");
     }
 
     /**
@@ -289,7 +289,7 @@ class AdminDashboardController extends Controller
         CmsContent::clearCache();
         \Database\Seeders\DatabaseSeeder::syncLiveSnapshotToStorage();
 
-        return back()->with('success', "Konten CMS '{$title}' berhasil dihapus.");
+        return redirect()->to(route('admin.dashboard') . '#sec-cms')->with('success', "Konten CMS '{$title}' berhasil dihapus.");
     }
 
     /**
@@ -325,7 +325,7 @@ class AdminDashboardController extends Controller
             'is_active'    => true,
         ]);
 
-        return back()->with('success', "Karya produk '{$validated['product_name']}' berhasil ditambahkan melalui CMS.");
+        return redirect()->to(route('admin.dashboard') . '#sec-cms-produk')->with('success', "Karya produk '{$validated['product_name']}' berhasil ditambahkan dan disimpan melalui CMS.");
     }
 
     /**
@@ -365,7 +365,7 @@ class AdminDashboardController extends Controller
             'image'        => $imagePath,
         ]);
 
-        return back()->with('success', "Karya produk '{$product->product_name}' berhasil diperbarui melalui CMS.");
+        return redirect()->to(route('admin.dashboard') . '#sec-cms-produk')->with('success', "Karya produk '{$product->product_name}' berhasil disimpan melalui CMS.");
     }
 
     public function promoteTeacherToAdmin(Request $request, User $user): RedirectResponse
@@ -382,7 +382,7 @@ class AdminDashboardController extends Controller
             ? "Guru '{$user->name}' berhasil ditetapkan sebagai Admin Sekolah oleh Super Admin!"
             : "Hak akses Admin untuk Guru '{$user->name}' telah dikembalikan menjadi Pemilik Toko.";
 
-        return back()->with('success', $msg);
+        return redirect()->to(route('admin.dashboard') . '#sec-manajemen-user')->with('success', $msg);
     }
 
     public function storeUser(Request $request): RedirectResponse
@@ -400,7 +400,7 @@ class AdminDashboardController extends Controller
             'password'      => ['required', 'string', 'min:6'],
             'seller_type'   => ['nullable', 'in:siswa,guru,jurusan'],
             'store_name'    => ['nullable', 'string', 'max:120'],
-            'student_class' => ['nullable', 'string', 'max:150'],
+            'student_class' => ['nullable', 'string', 'max:250'],
             'nis_nisn'      => ['nullable', 'string', 'max:30'],
             'nuptk'         => ['nullable', 'string', 'max:30'],
             'desa'          => ['nullable', 'string', 'max:100'],
@@ -449,7 +449,7 @@ class AdminDashboardController extends Controller
             }
         });
 
-        return back()->with('success', 'Pengguna baru berhasil ditambahkan.');
+        return redirect()->to(route('admin.dashboard') . '#sec-manajemen-user')->with('success', 'Pengguna baru berhasil ditambahkan dan disimpan.');
     }
 
     public function updateUser(Request $request, User $user): RedirectResponse
@@ -488,7 +488,7 @@ class AdminDashboardController extends Controller
 
         $user->update($updateData);
 
-        return back()->with('success', "Data & kredensial akun '{$user->name}' berhasil diperbarui secara realtime.");
+        return redirect()->to(route('admin.dashboard') . '#sec-manajemen-user')->with('success', "Data & kredensial akun '{$user->name}' berhasil disimpan.");
     }
 
     public function destroyUser(Request $request, User $user): RedirectResponse
@@ -496,7 +496,7 @@ class AdminDashboardController extends Controller
         $currentUser = $request->user();
 
         if ($user->id === $currentUser->id) {
-            return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+            return redirect()->to(route('admin.dashboard') . '#sec-manajemen-user')->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
 
         if ($currentUser->role === 'admin' && in_array($user->role, ['super_admin', 'admin'], true)) {
@@ -505,7 +505,7 @@ class AdminDashboardController extends Controller
 
         $user->delete();
 
-        return back()->with('success', 'Pengguna berhasil dihapus.');
+        return redirect()->to(route('admin.dashboard') . '#sec-manajemen-user')->with('success', 'Pengguna berhasil dihapus.');
     }
 
     public function toggleVerifyStore(Store $store): RedirectResponse
@@ -516,13 +516,13 @@ class AdminDashboardController extends Controller
             ? "Toko '{$store->store_name}' telah diverifikasi dan aktif di katalog."
             : "Status verifikasi toko '{$store->store_name}' dinonaktifkan.";
 
-        return back()->with('success', $message);
+        return redirect()->to(route('admin.dashboard') . '#sec-kelola-toko')->with('success', $message);
     }
 
     public function destroyProduct(Product $product): RedirectResponse
     {
         $product->delete();
-        return back()->with('success', 'Karya produk berhasil dihapus.');
+        return redirect()->to(route('admin.dashboard') . '#sec-cms-produk')->with('success', 'Karya produk berhasil dihapus.');
     }
 
     public function storeCategory(Request $request): RedirectResponse
@@ -538,7 +538,7 @@ class AdminDashboardController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        return back()->with('success', "Kategori produk '{$validated['name']}' berhasil ditambahkan.");
+        return redirect()->to(route('admin.dashboard') . '#sec-master-data')->with('success', "Kategori produk '{$validated['name']}' berhasil ditambahkan dan disimpan.");
     }
 
     public function updateCategory(Request $request, Category $category): RedirectResponse
@@ -560,7 +560,7 @@ class AdminDashboardController extends Controller
             Product::where('category', $oldName)->update(['category' => $validated['name']]);
         }
 
-        return back()->with('success', "Kategori produk berhasil diperbarui menjadi '{$validated['name']}'.");
+        return redirect()->to(route('admin.dashboard') . '#sec-master-data')->with('success', "Kategori produk berhasil disimpan menjadi '{$validated['name']}'.");
     }
 
     public function destroyCategory(Category $category): RedirectResponse
@@ -568,7 +568,7 @@ class AdminDashboardController extends Controller
         $name = $category->name;
         $category->delete();
 
-        return back()->with('success', "Kategori produk '{$name}' berhasil dihapus.");
+        return redirect()->to(route('admin.dashboard') . '#sec-master-data')->with('success', "Kategori produk '{$name}' berhasil dihapus.");
     }
 
     public function storeClassMajor(Request $request): RedirectResponse
@@ -584,7 +584,7 @@ class AdminDashboardController extends Controller
             'is_active'  => true,
         ]);
 
-        return back()->with('success', "Data Kelas/Unit '{$validated['class_name']} - {$validated['major_name']}' berhasil ditambahkan.");
+        return redirect()->to(route('admin.dashboard') . '#sec-master-data')->with('success', "Data Kelas/Unit '{$validated['class_name']} - {$validated['major_name']}' berhasil ditambahkan dan disimpan.");
     }
 
     public function updateClassMajor(Request $request, ClassMajor $classMajor): RedirectResponse
@@ -601,13 +601,13 @@ class AdminDashboardController extends Controller
             'is_active'  => $request->has('is_active') ? $request->boolean('is_active') : true,
         ]);
 
-        return back()->with('success', 'Data Kelas & Jurusan berhasil diperbarui.');
+        return redirect()->to(route('admin.dashboard') . '#sec-master-data')->with('success', 'Data Kelas & Jurusan berhasil disimpan.');
     }
 
     public function destroyClassMajor(ClassMajor $classMajor): RedirectResponse
     {
         $classMajor->delete();
-        return back()->with('success', 'Data Kelas & Jurusan berhasil dihapus.');
+        return redirect()->to(route('admin.dashboard') . '#sec-master-data')->with('success', 'Data Kelas & Jurusan berhasil dihapus.');
     }
 
     /**
@@ -647,7 +647,7 @@ class AdminDashboardController extends Controller
             ]
         );
 
-        return back()->with('success', "Acara Bazar / Event '{$validated['title']}' (Kode: " . strtoupper(trim($validated['voucher_code'])) . ") berhasil disimpan!");
+        return redirect()->to(route('admin.dashboard') . '#sec-bazar-event')->with('success', "Acara Bazar / Event '{$validated['title']}' (Kode: " . strtoupper(trim($validated['voucher_code'])) . ") berhasil disimpan!");
     }
 
     /**
@@ -680,7 +680,7 @@ class AdminDashboardController extends Controller
             'is_active'           => $request->has('is_active') ? $request->boolean('is_active') : $bazaarEvent->is_active,
         ]);
 
-        return back()->with('success', "Acara Bazar '{$bazaarEvent->title}' berhasil diperbarui.");
+        return redirect()->to(route('admin.dashboard') . '#sec-bazar-event')->with('success', "Acara Bazar '{$bazaarEvent->title}' berhasil disimpan.");
     }
 
     /**
@@ -692,6 +692,6 @@ class AdminDashboardController extends Controller
         $title = $bazaarEvent->title;
         $bazaarEvent->delete();
 
-        return back()->with('success', "Acara Bazar '{$title}' berhasil dihapus.");
+        return redirect()->to(route('admin.dashboard') . '#sec-bazar-event')->with('success', "Acara Bazar '{$title}' berhasil dihapus.");
     }
 }
