@@ -78,6 +78,13 @@ Algoritma:
                     <span>📊</span>
                     <span>Laporan & Rekap</span>
                 </a>
+                <a href="{{ route('admin.logs') }}" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
+                    <span class="flex items-center gap-3">
+                        <span>📋</span>
+                        <span>Log Akses & Audit</span>
+                    </span>
+                    <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Sistem</span>
+                </a>
                 <a href="#sec-cms" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span>✨</span>
                     <span>CMS Konten Website</span>
@@ -215,6 +222,9 @@ Algoritma:
                     <a href="{{ route('admin.reports') }}" class="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
                         📊 Laporan & Rekap
                     </a>
+                    <a href="{{ route('admin.logs') }}" class="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
+                        📋 Log Audit
+                    </a>
                     <a href="#sec-cms" class="rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] px-3.5 py-2 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
                         ✨ CMS Website
                     </a>
@@ -237,11 +247,15 @@ Algoritma:
 
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
                     <div class="flex items-center justify-between text-xs text-slate-400">
-                        <span>Total Stores</span>
+                        <span>Status & Data Toko</span>
                         <span class="text-[#0B6E4F]">🏪</span>
                     </div>
                     <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ number_format($stats['total_stores']) }}</p>
-                    <p class="text-[11px] font-semibold text-[#0B6E4F]">{{ $stats['pending_stores'] }} menunggu verifikasi</p>
+                    <p class="text-[11px] font-semibold text-slate-500">
+                        <span class="text-emerald-700 font-bold">🟢 {{ $stats['active_stores'] }} Aktif</span> • 
+                        <span class="text-amber-700 font-bold">🟡 {{ $stats['inactive_stores'] }} Nonaktif</span> • 
+                        <span class="text-rose-700 font-bold">🔴 {{ $stats['deleted_stores'] }} Terhapus</span>
+                    </p>
                 </div>
 
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
@@ -981,11 +995,11 @@ Algoritma:
                 <div class="p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <span class="inline-flex items-center gap-1 rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0B6E4F] mb-1">
-                            🏆 LEADERBOARD & VALIDASI TOKO
+                            🏆 MANAJEMEN TOKO & AUDIT STATUS
                         </span>
-                        <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Peringkat Toko Teratas & Validasi Toko</h2>
+                        <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Daftar, Peringkat & Status Kelola Toko</h2>
                         <p class="text-xs text-slate-400">
-                            Filter dan urutkan toko berdasarkan Pelihat Terbanyak (👁️), Like Terbanyak (❤️), Komentar Terbanyak (💬), Rating Bintang Teratas (★), atau Pesanan Terbanyak (🛒).
+                            Pantau toko aktif, toko nonaktif (menunggu verifikasi), dan toko yang terhapus lengkap dengan tanggal histori dan aksi kelola.
                         </p>
                     </div>
 
@@ -996,9 +1010,33 @@ Algoritma:
                             <option value="comments">Urutkan: 💬 Komentar Terbanyak</option>
                             <option value="ratings">Urutkan: ★ Rating Bintang Teratas</option>
                             <option value="orders">Urutkan: 🛒 Pesanan Terbanyak</option>
+                            <option value="created">Urutkan: 📅 Pendaftaran Terbaru</option>
                         </select>
-                        <input type="search" id="table-store-search" oninput="sortAdminStoresTable()" placeholder="Cari nama toko / pemilik..." class="rounded-xl border border-slate-200 bg-[#F8FAFC] px-3.5 py-2 text-xs focus:bg-white focus:border-[#0B6E4F] focus:outline-none">
+                        <input type="search" id="table-store-search" oninput="sortAdminStoresTable()" placeholder="Cari nama toko / pemilik / kelas..." class="rounded-xl border border-slate-200 bg-[#F8FAFC] px-3.5 py-2 text-xs focus:bg-white focus:border-[#0B6E4F] focus:outline-none w-48 sm:w-60">
                     </div>
+                </div>
+
+                {{-- Tab Filter Status Toko: Semua, Aktif, Non-Aktif, Terhapus --}}
+                <div class="px-6 py-3 bg-[#F8FAFC]/80 border-b border-slate-100 flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="filterAdminStoreTab('all', this)" class="admin-store-tab-btn rounded-xl px-3.5 py-1.5 text-xs font-bold transition bg-[#0B6E4F] text-white shadow-sm flex items-center gap-1.5" data-tab="all">
+                        <span>Semua Toko</span>
+                        <span class="rounded-full bg-white/25 px-2 py-0.2 text-[10px] font-extrabold">{{ $stats['total_stores'] }}</span>
+                    </button>
+                    <button type="button" onclick="filterAdminStoreTab('active', this)" class="admin-store-tab-btn rounded-xl px-3.5 py-1.5 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center gap-1.5" data-tab="active">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>Toko Aktif</span>
+                        <span class="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.2 text-[10px] font-extrabold">{{ $stats['active_stores'] }}</span>
+                    </button>
+                    <button type="button" onclick="filterAdminStoreTab('inactive', this)" class="admin-store-tab-btn rounded-xl px-3.5 py-1.5 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center gap-1.5" data-tab="inactive">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Non-Aktif / Menunggu</span>
+                        <span class="rounded-full bg-amber-100 text-amber-800 px-2 py-0.2 text-[10px] font-extrabold">{{ $stats['inactive_stores'] }}</span>
+                    </button>
+                    <button type="button" onclick="filterAdminStoreTab('deleted', this)" class="admin-store-tab-btn rounded-xl px-3.5 py-1.5 text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center gap-1.5" data-tab="deleted">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span>Toko Terhapus</span>
+                        <span class="rounded-full bg-rose-100 text-rose-800 px-2 py-0.2 text-[10px] font-extrabold">{{ $stats['deleted_stores'] }}</span>
+                    </button>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -1007,47 +1045,99 @@ Algoritma:
                             <tr class="bg-[#F8FAFC] border-b border-slate-100 text-[10px] font-bold uppercase text-slate-400">
                                 <th class="py-3 px-4">#</th>
                                 <th class="py-3 px-4">NAMA TOKO</th>
-                                <th class="py-3 px-4">PEMILIK</th>
-                                <th class="py-3 px-3 text-center">👁️ DILIHAT</th>
-                                <th class="py-3 px-3 text-center">❤️ DISUKAI</th>
-                                <th class="py-3 px-3 text-center">💬 KOMENTAR</th>
-                                <th class="py-3 px-3 text-center">★ RATING</th>
-                                <th class="py-3 px-3 text-center">🛒 PESANAN</th>
-                                <th class="py-3 px-3">🏷️ SKEMA DISKON</th>
+                                <th class="py-3 px-4">PEMILIK & KELAS</th>
+                                <th class="py-3 px-3">HISTORI TANGGAL</th>
                                 <th class="py-3 px-3">STATUS</th>
+                                <th class="py-3 px-3 text-center">PERFORMA & INTERAKSI</th>
+                                <th class="py-3 px-3">🏷️ DISKON</th>
                                 <th class="py-3 px-4 text-right">AKSI</th>
                             </tr>
                         </thead>
                         <tbody id="admin-store-tbody" class="divide-y divide-slate-100">
                             @forelse($stores as $idx => $store)
-                                <tr class="admin-store-row hover:bg-slate-50/70 transition"
+                                <tr class="admin-store-row hover:bg-slate-50/70 transition {{ $store->trashed() ? 'bg-rose-50/20' : '' }}"
+                                    data-state="{{ $store->store_state }}"
                                     data-search="{{ strtolower($store->store_name . ' ' . ($store->owner->name ?? '') . ' ' . ($store->student_class ?? '')) }}"
                                     data-views="{{ $store->metric_views }}"
                                     data-likes="{{ $store->metric_likes }}"
                                     data-comments="{{ $store->metric_comments }}"
                                     data-ratings="{{ $store->metric_rating }}"
-                                    data-orders="{{ $store->metric_orders }}">
+                                    data-orders="{{ $store->metric_orders }}"
+                                    data-created="{{ $store->created_at ? $store->created_at->timestamp : 0 }}">
                                     <td class="py-3.5 px-4 font-extrabold text-slate-400 store-rank-cell">
                                         #{{ $idx + 1 }}
                                     </td>
                                     <td class="py-3.5 px-4 font-bold text-[#0F291E]">
-                                        <a href="{{ route('stores.show', $store->slug) }}" class="hover:text-[#0B6E4F] hover:underline">{{ $store->store_name }}</a>
-                                        <span class="block text-[10px] font-medium text-[#0B6E4F]">{{ $store->seller_type_label }}</span>
+                                        @if($store->trashed())
+                                            <span class="text-slate-500 line-through">{{ $store->store_name }}</span>
+                                        @else
+                                            <a href="{{ route('stores.show', $store->slug) }}" target="_blank" class="hover:text-[#0B6E4F] hover:underline flex items-center gap-1">
+                                                <span>{{ $store->store_name }}</span>
+                                                <span class="text-[10px] text-slate-400">↗</span>
+                                            </a>
+                                        @endif
+                                        <div class="flex items-center gap-1.5 mt-0.5">
+                                            <span class="text-[10px] font-semibold text-[#0B6E4F]">{{ $store->seller_type_label }}</span>
+                                            <span class="text-slate-300">•</span>
+                                            <span class="text-[10px] text-slate-400 font-mono">{{ $store->slug }}</span>
+                                        </div>
                                     </td>
                                     <td class="py-3.5 px-4 text-slate-600">
-                                        {{ $store->owner->name }}
-                                        <span class="block text-[10px] text-slate-400">{{ $store->student_class ?? '-' }}</span>
+                                        <div class="font-bold text-slate-800">{{ $store->owner->name ?? '-' }}</div>
+                                        <div class="text-[10px] text-slate-500">{{ $store->student_class ?? ($store->owner->role ?? '-') }}</div>
+                                        @if($store->contact_number)
+                                            <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $store->contact_number) }}" target="_blank" class="text-[10px] text-emerald-700 hover:underline inline-flex items-center gap-1 mt-0.5">
+                                                <span>💬 {{ $store->contact_number }}</span>
+                                            </a>
+                                        @endif
                                     </td>
-                                    <td class="py-3.5 px-3 text-center font-extrabold text-[#0B6E4F]">{{ number_format($store->metric_views) }}</td>
-                                    <td class="py-3.5 px-3 text-center font-extrabold text-rose-500">{{ number_format($store->metric_likes) }}</td>
-                                    <td class="py-3.5 px-3 text-center font-bold text-slate-700">{{ number_format($store->metric_comments) }}</td>
+                                    <td class="py-3.5 px-3 text-[10px] text-slate-600 space-y-1">
+                                        <div class="flex items-center gap-1" title="Tanggal Pemilik Mendaftar Akun">
+                                            <span class="text-slate-400">👤 Daftar Akun:</span>
+                                            <span class="font-medium text-slate-700">{{ $store->owner?->created_at ? $store->owner->created_at->format('d/m/Y H:i') : '-' }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1" title="Tanggal Pendaftaran Toko">
+                                            <span class="text-slate-400">🏪 Buat Toko:</span>
+                                            <span class="font-semibold text-slate-800">{{ $store->created_at ? $store->created_at->format('d/m/Y H:i') : '-' }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1" title="Tanggal Terakhir Toko Diperbarui">
+                                            <span class="text-slate-400">✏️ Diedit:</span>
+                                            <span class="text-slate-600">{{ $store->updated_at ? $store->updated_at->format('d/m/Y H:i') : '-' }}</span>
+                                        </div>
+                                        @if($store->trashed())
+                                            <div class="flex items-center gap-1 text-rose-600 font-bold" title="Tanggal Toko Dihapus">
+                                                <span>🗑️ Dihapus:</span>
+                                                <span>{{ $store->deleted_at ? $store->deleted_at->format('d/m/Y H:i') : '-' }}</span>
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="py-3.5 px-3">
+                                        @if($store->trashed())
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-1 text-[10px] font-extrabold text-rose-700">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+                                                Terhapus
+                                            </span>
+                                        @elseif($store->is_verified)
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                                Aktif & Terverifikasi
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-[10px] font-extrabold text-amber-700">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                Non-Aktif / Menunggu
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="py-3.5 px-3 text-center">
-                                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[11px] font-extrabold text-amber-700">
-                                            ★ {{ number_format($store->metric_rating, 1, ',', '.') }}
-                                        </span>
-                                        <span class="block text-[10px] text-slate-400 mt-0.5">{{ $store->metric_rating_count }} nilai</span>
+                                        <div class="inline-flex flex-wrap items-center justify-center gap-1.5 text-[10px]">
+                                            <span class="rounded bg-slate-100 px-1.5 py-0.5 font-bold text-slate-700" title="Total Dilihat">👁️ {{ number_format($store->metric_views) }}</span>
+                                            <span class="rounded bg-rose-50 px-1.5 py-0.5 font-bold text-rose-600" title="Total Suka">❤️ {{ number_format($store->metric_likes) }}</span>
+                                            <span class="rounded bg-blue-50 px-1.5 py-0.5 font-bold text-blue-700" title="Total Komentar">💬 {{ number_format($store->metric_comments) }}</span>
+                                            <span class="rounded bg-amber-50 px-1.5 py-0.5 font-bold text-amber-700" title="Rating">★ {{ number_format($store->metric_rating, 1, ',', '.') }}</span>
+                                            <span class="rounded bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-700" title="Pesanan">🛒 {{ number_format($store->metric_orders) }}</span>
+                                        </div>
                                     </td>
-                                    <td class="py-3.5 px-3 text-center font-extrabold text-[#0F291E]">{{ number_format($store->metric_orders) }}</td>
                                     <td class="py-3.5 px-3 text-[10px] text-slate-600 space-y-0.5">
                                         <div>🎓 Pelajar: <strong>{{ $store->discount_pelajar ?? 0 }}%</strong></div>
                                         <div>🏫 Keluarga SMK: <strong>{{ $store->discount_keluarga ?? 0 }}%</strong></div>
@@ -1055,26 +1145,58 @@ Algoritma:
                                             <div class="text-amber-700 font-bold">🎪 Bazar: +{{ $store->discount_bazar_extra }}%</div>
                                         @endif
                                     </td>
-                                    <td class="py-3.5 px-3">
-                                        <span class="rounded-md px-2.5 py-1 text-[10px] font-bold {{ $store->is_verified ? 'bg-[#EBF9F2] text-[#0B6E4F]' : 'bg-amber-50 text-amber-700' }}">
-                                            {{ $store->is_verified ? 'Terverifikasi' : 'Menunggu' }}
-                                        </span>
-                                    </td>
                                     <td class="py-3.5 px-4 text-right">
-                                        <form action="{{ route('admin.stores.verify', $store) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="rounded-xl px-3 py-1.5 text-xs font-semibold {{ $store->is_verified ? 'border border-slate-200 text-slate-600' : 'bg-[#0B6E4F] text-white' }}">
-                                                {{ $store->is_verified ? 'Nonaktifkan' : '✓ Verifikasi' }}
-                                            </button>
-                                        </form>
+                                        <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                                            @if(!$store->trashed())
+                                                {{-- Toggle Verifikasi / Nonaktifkan --}}
+                                                <form action="{{ route('admin.stores.verify', $store->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="rounded-xl px-2.5 py-1 text-xs font-semibold transition {{ $store->is_verified ? 'border border-slate-200 text-slate-600 hover:bg-slate-100' : 'bg-[#0B6E4F] text-white hover:bg-[#08583F]' }}" title="{{ $store->is_verified ? 'Nonaktifkan toko ini' : 'Verifikasi dan aktifkan toko' }}">
+                                                        {{ $store->is_verified ? 'Nonaktifkan' : '✓ Verifikasi' }}
+                                                    </button>
+                                                </form>
+
+                                                {{-- Hapus Toko (Soft Delete) --}}
+                                                <form action="{{ route('admin.stores.destroy', $store->id) }}" method="POST" class="inline" onsubmit="return confirm('Pindahkan toko \'{{ addslashes($store->store_name) }}\' ke daftar Toko Terhapus?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="rounded-xl px-2.5 py-1 text-xs font-semibold border border-rose-200 text-rose-600 hover:bg-rose-50 transition" title="Hapus toko">
+                                                        🗑️ Hapus
+                                                    </button>
+                                                </form>
+                                            @else
+                                                {{-- Pulihkan Toko Terhapus --}}
+                                                <form action="{{ route('admin.stores.restore', $store->id) }}" method="POST" class="inline" onsubmit="return confirm('Pulihkan kembali toko \'{{ addslashes($store->store_name) }}\' agar aktif?')">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="rounded-xl px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition" title="Pulihkan toko ini">
+                                                        ♻️ Pulihkan
+                                                    </button>
+                                                </form>
+
+                                                {{-- Hapus Permanen (Super Admin) --}}
+                                                @if(auth()->user()->isSuperAdmin())
+                                                    <form action="{{ route('admin.stores.force-delete', $store->id) }}" method="POST" class="inline" onsubmit="return confirm('PERINGATAN: Hapus permanen toko \'{{ addslashes($store->store_name) }}\'? Semua produk terkait juga akan terhapus. Tindakan tidak dapat dibatalkan!')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="rounded-xl px-2.5 py-1 text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700 transition" title="Hapus permanen">
+                                                            💥 Permanen
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
-                                <tr>
-                                    <td colspan="11" class="py-8 text-center text-slate-400">Belum ada toko yang terdaftar.</td>
+                                <tr id="admin-store-empty-row">
+                                    <td colspan="8" class="py-8 text-center text-slate-400">Belum ada data toko yang terdaftar.</td>
                                 </tr>
                             @endforelse
+                            <tr id="admin-store-empty-filter-row" style="display: none;">
+                                <td colspan="8" class="py-8 text-center text-slate-400">Tidak ada toko yang cocok dengan filter atau kata kunci pencarian.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -1887,6 +2009,21 @@ Algoritma:
         }
     }
 
+    let currentStoreTab = 'all';
+
+    function filterAdminStoreTab(tab, btn) {
+        currentStoreTab = tab;
+        document.querySelectorAll('.admin-store-tab-btn').forEach(b => {
+            b.classList.remove('bg-[#0B6E4F]', 'text-white', 'shadow-sm');
+            b.classList.add('bg-slate-100', 'text-slate-600');
+        });
+        if (btn) {
+            btn.classList.remove('bg-slate-100', 'text-slate-600');
+            btn.classList.add('bg-[#0B6E4F]', 'text-white', 'shadow-sm');
+        }
+        sortAdminStoresTable(false);
+    }
+
     function sortAdminStoresTable(syncChart = true) {
         const tbody = document.getElementById('admin-store-tbody');
         if (!tbody) return;
@@ -1902,18 +2039,29 @@ Algoritma:
         });
 
         let rank = 1;
+        let visibleCount = 0;
         rows.forEach(row => {
-            const text = row.getAttribute('data-search') || '';
-            const visible = text.includes(query);
+            const text = (row.getAttribute('data-search') || '').toLowerCase();
+            const state = row.getAttribute('data-state') || '';
+            const matchesQuery = text.includes(query);
+            const matchesTab = (currentStoreTab === 'all') || (state === currentStoreTab);
+            const visible = matchesQuery && matchesTab;
+
             row.style.display = visible ? '' : 'none';
             if (visible) {
+                visibleCount++;
                 const rankCell = row.querySelector('.store-rank-cell');
                 if (rankCell) rankCell.textContent = '#' + rank++;
             }
             tbody.appendChild(row);
         });
 
-        if (syncChart) {
+        const emptyFilterRow = document.getElementById('admin-store-empty-filter-row');
+        if (emptyFilterRow) {
+            emptyFilterRow.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+        }
+
+        if (syncChart && ['views', 'likes', 'comments', 'ratings', 'orders'].includes(sortKey)) {
             const chartSort = document.getElementById('chart-sort-metric');
             if (chartSort && chartSort.value !== sortKey) {
                 chartSort.value = sortKey;

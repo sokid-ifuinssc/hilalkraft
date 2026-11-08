@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\ClassMajor;
 use App\Models\Store;
 use App\Models\User;
@@ -49,6 +50,13 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             $user = $request->user();
+
+            ActivityLog::record(
+                'login',
+                'User Masuk Sistem',
+                "Pengguna '{$user->name}' ({$user->role}) berhasil masuk ke sistem.",
+                $user
+            );
 
             return match ($user->role) {
                 'super_admin', 'admin' => redirect()->intended(route('admin.dashboard')),
@@ -187,8 +195,23 @@ class AuthController extends Controller
                     'description'    => $validated['description'] ?? 'Toko Resmi ' . ucfirst($sellerType) . ' SMK Plus Al Hilal',
                     'contact_number' => $validated['phone'],
                     'is_verified'    => false,
+                    'status'         => 'active',
                 ]);
+
+                ActivityLog::record(
+                    'store_create',
+                    'Pendaftaran Toko Baru',
+                    "Toko baru '{$validated['store_name']}' berhasil dibuat oleh {$user->name} ({$sellerType}).",
+                    $user
+                );
             }
+
+            ActivityLog::record(
+                'register',
+                'Pendaftaran Akun Baru',
+                "Pendaftaran akun baru: '{$user->name}' sebagai '{$user->role}' ({$user->subtype_label}).",
+                $user
+            );
 
             return $user;
         });
@@ -202,6 +225,16 @@ class AuthController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        if ($user) {
+            ActivityLog::record(
+                'logout',
+                'User Keluar Sistem',
+                "Pengguna '{$user->name}' ({$user->role}) keluar dari sistem.",
+                $user
+            );
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

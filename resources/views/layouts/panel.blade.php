@@ -34,6 +34,7 @@ Penggunaan:
         'admin' => [
             ['⊞',  'Ringkasan',          route('admin.dashboard'),                              false],
             ['📊', 'Laporan & Rekap',    route('admin.reports'),                                request()->routeIs('admin.reports')],
+            ['📋', 'Log Akses & Audit',   route('admin.logs'),                                   request()->routeIs('admin.logs')],
             ['✨', 'CMS Konten Website', route('admin.dashboard') . '#sec-cms',                  false],
             ['👥', 'Manajemen User',     route('admin.dashboard') . '#sec-manajemen-user',       false],
             ['🏪', 'Kelola Toko',        route('admin.dashboard') . '#sec-kelola-toko',          false],

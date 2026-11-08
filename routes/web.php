@@ -97,6 +97,7 @@ Route::middleware(['auth', 'role:seller,admin,super_admin'])->prefix('toko-saya'
 Route::middleware(['auth', 'role:super_admin,admin'])->prefix('panel-admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/laporan', [ReportController::class, 'admin'])->name('reports');
+    Route::get('/log-aktivitas', [AdminDashboardController::class, 'activityLogs'])->name('logs');
 
     // CMS Konten Website (Tambah, Edit, Hapus Konten & Iklan Mitra)
     Route::post('/cms', [AdminDashboardController::class, 'storeCms'])->name('cms.store');
@@ -108,8 +109,12 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('panel-admin')->na
     Route::put('/bazaar-events/{bazaarEvent}', [AdminDashboardController::class, 'updateBazaarEvent'])->name('bazaar.update');
     Route::delete('/bazaar-events/{bazaarEvent}', [AdminDashboardController::class, 'destroyBazaarEvent'])->name('bazaar.destroy');
 
-    // CMS Karya Siswa / Produk & Validasi Toko
+    // CMS Karya Siswa / Produk & Kelola Status/Hapus Toko
     Route::patch('/stores/{store}/verify', [AdminDashboardController::class, 'toggleVerifyStore'])->name('stores.verify');
+    Route::delete('/stores/{id}', [AdminDashboardController::class, 'destroyStore'])->name('stores.destroy');
+    Route::patch('/stores/{id}/restore', [AdminDashboardController::class, 'restoreStore'])->name('stores.restore');
+    Route::delete('/stores/{id}/force', [AdminDashboardController::class, 'forceDeleteStore'])->name('stores.force-delete');
+
     Route::post('/products', [AdminDashboardController::class, 'storeProduct'])->name('products.store');
     Route::put('/products/{product}', [AdminDashboardController::class, 'updateProduct'])->name('products.update');
     Route::delete('/products/{product}', [AdminDashboardController::class, 'destroyProduct'])->name('products.destroy');

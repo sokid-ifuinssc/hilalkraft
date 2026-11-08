@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\BazaarEvent;
 use App\Models\Category;
 use App\Models\ClassMajor;
@@ -41,10 +42,10 @@ class AdminDashboardController extends Controller
 {
     public function index(Request $request): View
     {
-        $currentUser = $request->user();
+        $currentUser = $request->user() ?: auth()->user();
 
         $usersQuery = User::with('store')->latest('updated_at');
-        if ($currentUser->role === 'admin') {
+        if ($currentUser && $currentUser->role === 'admin') {
             $usersQuery->whereIn('role', ['seller', 'buyer']);
         }
 
@@ -57,7 +58,8 @@ class AdminDashboardController extends Controller
 
         $users = $usersQuery->paginate(50);
 
-        $stores = Store::with(['owner', 'products', 'orders', 'comments'])
+        $stores = Store::withTrashed()
+            ->with(['owner', 'products', 'orders', 'comments'])
             ->withCount(['products', 'orders', 'comments'])
             ->get()
             ->map(function (Store $store) {
@@ -144,14 +146,17 @@ class AdminDashboardController extends Controller
             ->get();
 
         $stats = [
-            'total_users'    => User::count(),
-            'total_stores'   => Store::count(),
-            'pending_stores' => Store::where('is_verified', false)->count(),
-            'total_products' => Product::count(),
-            'total_views'    => (int) Product::sum('views_count') + (int) Store::sum('views_count'),
-            'total_likes'    => (int) Product::sum('likes_count'),
-            'total_comments' => ProductComment::count(),
-            'total_orders'   => Order::count(),
+            'total_users'     => User::count(),
+            'total_stores'    => Store::withTrashed()->count(),
+            'active_stores'   => Store::where('is_verified', true)->count(),
+            'inactive_stores' => Store::where('is_verified', false)->count(),
+            'deleted_stores'  => Store::onlyTrashed()->count(),
+            'pending_stores'  => Store::where('is_verified', false)->count(),
+            'total_products'  => Product::count(),
+            'total_views'     => (int) Product::sum('views_count') + (int) Store::sum('views_count'),
+            'total_likes'     => (int) Product::sum('likes_count'),
+            'total_comments'  => ProductComment::count(),
+            'total_orders'    => Order::count(),
         ];
 
         return view('admin.dashboard', compact(
@@ -510,13 +515,85 @@ class AdminDashboardController extends Controller
 
     public function toggleVerifyStore(Store $store): RedirectResponse
     {
-        $store->update(['is_verified' => ! $store->is_verified]);
+        $store->update([
+            'is_verified' => ! $store->is_verified,
+            'status'      => (! $store->is_verified) ? 'active' : 'inactive',
+        ]);
 
         $message = $store->is_verified
             ? "Toko '{$store->store_name}' telah diverifikasi dan aktif di katalog."
-            : "Status verifikasi toko '{$store->store_name}' dinonaktifkan.";
+            : "Status toko '{$store->store_name}' dinonaktifkan dari katalog.";
+
+        ActivityLog::record(
+            'store_update',
+            'Perubahan Status Toko',
+            "Status toko '{$store->store_name}' diubah menjadi: " . ($store->is_verified ? 'Aktif' : 'Non-Aktif') . " oleh " . auth()->user()->name,
+            auth()->user()
+        );
 
         return redirect()->to(route('admin.dashboard') . '#sec-kelola-toko')->with('success', $message);
+    }
+
+    /**
+     * Fungsi: Menghapus toko (Soft Delete) dan memindahkan ke daftar Toko Terhapus.
+     */
+    public function destroyStore(Request $request, $id): RedirectResponse
+    {
+        $store = Store::withTrashed()->findOrFail($id);
+        $storeName = $store->store_name;
+        $store->delete(); // Soft delete
+
+        ActivityLog::record(
+            'store_delete',
+            'Penghapusan Toko',
+            "Toko '{$storeName}' dipindahkan ke daftar Toko Terhapus oleh " . $request->user()->name . " ({$request->user()->role}).",
+            $request->user()
+        );
+
+        return redirect()->to(route('admin.dashboard') . '#sec-kelola-toko')
+            ->with('success', "Toko '{$storeName}' berhasil dihapus dan dipindahkan ke daftar Toko Terhapus.");
+    }
+
+    /**
+     * Fungsi: Memulihkan toko dari status terhapus kembali ke daftar toko.
+     */
+    public function restoreStore(Request $request, $id): RedirectResponse
+    {
+        $store = Store::onlyTrashed()->findOrFail($id);
+        $storeName = $store->store_name;
+        $store->restore();
+
+        ActivityLog::record(
+            'store_restore',
+            'Pemulihan Toko Terhapus',
+            "Toko '{$storeName}' berhasil dipulihkan kembali oleh " . $request->user()->name . " ({$request->user()->role}).",
+            $request->user()
+        );
+
+        return redirect()->to(route('admin.dashboard') . '#sec-kelola-toko')
+            ->with('success', "Toko '{$storeName}' berhasil dipulihkan kembali.");
+    }
+
+    /**
+     * Fungsi: Menghapus toko secara permanen dari database (Khusus Super Admin).
+     */
+    public function forceDeleteStore(Request $request, $id): RedirectResponse
+    {
+        abort_unless($request->user()->role === 'super_admin', 403, 'Hanya Super Admin yang diizinkan menghapus toko secara permanen.');
+
+        $store = Store::onlyTrashed()->findOrFail($id);
+        $storeName = $store->store_name;
+        $store->forceDelete();
+
+        ActivityLog::record(
+            'store_delete',
+            'Penghapusan Toko Permanen',
+            "Toko '{$storeName}' telah dihapus secara permanen dari basis data oleh Super Admin (" . $request->user()->name . ").",
+            $request->user()
+        );
+
+        return redirect()->to(route('admin.dashboard') . '#sec-kelola-toko')
+            ->with('success', "Toko '{$storeName}' telah dihapus secara permanen.");
     }
 
     public function destroyProduct(Product $product): RedirectResponse
@@ -693,5 +770,62 @@ class AdminDashboardController extends Controller
         $bazaarEvent->delete();
 
         return redirect()->to(route('admin.dashboard') . '#sec-bazar-event')->with('success', "Acara Bazar '{$title}' berhasil dihapus.");
+    }
+
+    /**
+     * ========================================================================
+     * MENU LOG: DETEKSI SIAPA SAJA YANG MASUK & MENGAKSES (SEPERTI HILALEDU)
+     * ========================================================================
+     * Fungsi:
+     *   Menampilkan halaman log sistem lengkap untuk Admin & Super Admin:
+     *   - Siapa yang masuk / login / logout / registrasi akun
+     *   - Kapan mengakses (tanggal & jam lengkap)
+     *   - Dari alamat IP mana
+     *   - Perangkat & browser apa yang digunakan (Windows, Android, iOS, Chrome, dll.)
+     *   - Aktivitas apa yang dilakukan (Kelola Toko, Produk, CMS, Transaksi, dll.)
+     *   - Dilengkapi filter pencarian, filter role, filter jenis aksi, dan filter tanggal.
+     * ========================================================================
+     */
+    public function activityLogs(Request $request): View
+    {
+        $query = ActivityLog::with('user')->latest();
+
+        if ($request->filled('q')) {
+            $search = trim($request->query('q'));
+            $query->where(function ($q) use ($search) {
+                $q->where('user_name', 'like', "%{$search}%")
+                  ->orWhere('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('ip_address', 'like', "%{$search}%")
+                  ->orWhere('device', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('type') && $request->query('type') !== 'all') {
+            $query->where('activity_type', $request->query('type'));
+        }
+
+        if ($request->filled('role') && $request->query('role') !== 'all') {
+            $query->where('user_role', $request->query('role'));
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->query('start_date'));
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->query('end_date'));
+        }
+
+        $logs = $query->paginate(35)->withQueryString();
+
+        $stats = [
+            'total_logs'   => ActivityLog::count(),
+            'today_logs'   => ActivityLog::whereDate('created_at', today())->count(),
+            'logins_today' => ActivityLog::where('activity_type', 'login')->whereDate('created_at', today())->count(),
+            'unique_users' => ActivityLog::whereNotNull('user_id')->distinct('user_id')->count('user_id'),
+            'unique_ips'   => ActivityLog::whereNotNull('ip_address')->distinct('ip_address')->count('ip_address'),
+        ];
+
+        return view('admin.logs', compact('logs', 'stats'));
     }
 }

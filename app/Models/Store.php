@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * ============================================================================
@@ -31,7 +32,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  */
 class Store extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -43,6 +44,7 @@ class Store extends Model
         'contact_number',
         'logo',
         'is_verified',
+        'status',
         'views_count',
         'discount_pelajar',
         'discount_keluarga',
@@ -61,7 +63,32 @@ class Store extends Model
             'discount_alumni'      => 'integer',
             'discount_umum'        => 'integer',
             'discount_bazar_extra' => 'integer',
+            'deleted_at'           => 'datetime',
         ];
+    }
+
+    /**
+     * Klasifikasi Status Toko: 'aktif', 'nonaktif', 'terhapus'
+     */
+    public function getStoreStateAttribute(): string
+    {
+        if ($this->trashed()) {
+            return 'terhapus';
+        }
+        if ($this->is_verified && ($this->status ?? 'active') === 'active') {
+            return 'aktif';
+        }
+        return 'nonaktif';
+    }
+
+    public function getStateBadgeAttribute(): array
+    {
+        return match ($this->store_state) {
+            'aktif'    => ['label' => 'Toko Aktif',    'color' => 'bg-emerald-100 text-emerald-800 border-emerald-300'],
+            'nonaktif' => ['label' => 'Toko Non-Aktif', 'color' => 'bg-amber-100 text-amber-800 border-amber-300'],
+            'terhapus' => ['label' => 'Toko Terhapus',  'color' => 'bg-rose-100 text-rose-800 border-rose-300'],
+            default    => ['label' => 'Status Lain',   'color' => 'bg-slate-100 text-slate-700 border-slate-300'],
+        };
     }
 
     public function owner(): BelongsTo
