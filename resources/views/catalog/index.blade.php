@@ -140,10 +140,6 @@ Algoritma:
     </div>
 </section>
 @endif
-        </div>
-    </div>
-</section>
-@endif
 
 <!-- ========================================================================
      2. HERO SECTION RINGKAS & ELEGAN (TERINTEGRASI CMS)
