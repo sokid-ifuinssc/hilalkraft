@@ -25,12 +25,45 @@ Algoritma:
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'hilalkraf — Marketplace Karya Siswa SMK Plus Al Hilal')</title>
 
+    @php
+        $pageTitle = trim($__env->yieldContent('title', 'hilalkraf — Marketplace Karya Siswa SMK Plus Al Hilal'));
+        $ogTitle = trim($__env->yieldContent('og_title', $pageTitle));
+        $ogDescription = trim($__env->yieldContent('og_description', 'Marketplace karya inovatif dan produk kreatif siswa SMK Plus Al Hilal (SMK PAL). Dari kerajinan tangan, produk kreatif, hingga teknologi anak bangsa.'));
+        $ogImage = trim($__env->yieldContent('og_image', asset('images/og-hilalkraf-square.png') . '?v=3'));
+        $ogImageBanner = trim($__env->yieldContent('og_image_banner', asset('images/og-hilalkraf-share.png') . '?v=3'));
+        $ogUrl = url()->current();
+    @endphp
+
+    <!-- Meta SEO & Social Sharing (WhatsApp, Facebook, Twitter, Telegram, LinkedIn) -->
+    <meta name="description" content="{{ $ogDescription }}">
+    <link rel="canonical" href="{{ $ogUrl }}">
+
+    <!-- Open Graph / WhatsApp Preview Card (HD Ultra-Sharp) -->
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:site_name" content="hilalkraf — SMK Plus Al Hilal">
+    <meta property="og:url" content="{{ $ogUrl }}">
+    <meta property="og:title" content="{{ $ogTitle }}">
+    <meta property="og:description" content="{{ $ogDescription }}">
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:image:secure_url" content="{{ $ogImage }}">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="800">
+    <meta property="og:image:height" content="800">
+    <meta property="og:image:alt" content="{{ $ogTitle }}">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ $ogUrl }}">
+    <meta name="twitter:title" content="{{ $ogTitle }}">
+    <meta name="twitter:description" content="{{ $ogDescription }}">
+    <meta name="twitter:image" content="{{ $ogImageBanner }}">
+
     <!-- Logo Resmi hilalkraf pada Tab Bar Browser (Favicon & Mobile Touch Icon) -->
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=2">
-    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v=2">
-    <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-hilalkraf.jpg') }}?v=2">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v=2">
-    <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('apple-touch-icon.png') }}?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=3">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v=3">
+    <link rel="icon" type="image/png" href="{{ asset('images/og-hilalkraf-square.png') }}?v=3">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v=3">
+    <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('apple-touch-icon.png') }}?v=3">
 
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -16,7 +16,12 @@ Algoritma:
 --}}
 @extends('layouts.app')
 
-@section('title', $product->product_name . ' — hilalkraft')
+@section('title', $product->product_name . ' — hilalkraf')
+@section('og_type', 'product')
+@section('og_title', $product->product_name . ' — ' . $product->formatted_price . ' | hilalkraf')
+@section('og_description', 'Beli ' . $product->product_name . ' (' . $product->formatted_price . ') dari toko ' . ($product->store->store_name ?? 'SMK Plus Al Hilal') . '. ' . \Illuminate\Support\Str::limit(strip_tags($product->description ?? 'Karya inovatif siswa SMK Plus Al Hilal'), 120))
+@section('og_image', Str::startsWith($product->image, 'http') ? $product->image : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image)))
+@section('og_image_banner', Str::startsWith($product->image, 'http') ? $product->image : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image)))
 
 @section('content')
 @php

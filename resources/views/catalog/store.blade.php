@@ -12,7 +12,10 @@ Algoritma:
 --}}
 @extends('layouts.app')
 
-@section('title', $store->store_name . ' — Toko Siswa hilalkraft')
+@section('title', $store->store_name . ' — Toko Siswa hilalkraf')
+@section('og_type', 'profile')
+@section('og_title', 'Toko ' . $store->store_name . ' — hilalkraf')
+@section('og_description', 'Kunjungi etalase resmi ' . $store->store_name . ' (' . $store->seller_type_label . ') di hilalkraf. Dukung aneka karya inovatif siswa SMK Plus Al Hilal.')
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
