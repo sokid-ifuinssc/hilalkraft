@@ -93,9 +93,12 @@ class AppServiceProvider extends ServiceProvider
             ! Schema::hasTable('visitor_logs') ||
             ! Schema::hasTable('cms_contents') ||
             ! Schema::hasTable('bazaar_events') ||
+            ! Schema::hasTable('activity_logs') ||
             ! Schema::hasColumn('cms_contents', 'duration_seconds') ||
             ! Schema::hasColumn('orders', 'progress_status') ||
             ! Schema::hasColumn('stores', 'discount_pelajar') ||
+            ! Schema::hasColumn('stores', 'deleted_at') ||
+            ! Schema::hasColumn('stores', 'status') ||
             ! Schema::hasColumn('users', 'user_subtype') ||
             ! Schema::hasColumn('products', 'views_count')
         ) {

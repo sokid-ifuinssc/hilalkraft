@@ -68,6 +68,49 @@ class Store extends Model
     }
 
     /**
+     * Override bootSoftDeletes agar aman dan resilient (Anti 500 Error):
+     * Jika kolom `deleted_at` belum ada di tabel `stores` (misalnya saat baru git pull di server),
+     * scope soft-delete tidak dipaksakan sehingga tidak melempar QueryException,
+     * dan otomatis melakukan penambahan kolom (auto-healing).
+     */
+    public static function bootSoftDeletes(): void
+    {
+        try {
+            static $hasDeletedAt = null;
+            if ($hasDeletedAt === null) {
+                $hasDeletedAt = \Illuminate\Support\Facades\Schema::hasColumn('stores', 'deleted_at');
+                if (! $hasDeletedAt && \Illuminate\Support\Facades\Schema::hasTable('stores')) {
+                    try {
+                        \Illuminate\Support\Facades\Schema::table('stores', function ($table) {
+                            $table->softDeletes();
+                            if (! \Illuminate\Support\Facades\Schema::hasColumn('stores', 'status')) {
+                                $table->string('status', 20)->default('active');
+                            }
+                        });
+                        $hasDeletedAt = true;
+                    } catch (\Throwable $migrationError) {
+                        $hasDeletedAt = false;
+                    }
+                }
+            }
+
+            if ($hasDeletedAt) {
+                static::addGlobalScope(new \Illuminate\Database\Eloquent\SoftDeletingScope);
+            }
+        } catch (\Throwable $e) {
+            // Hindari crash jika skema database belum siap
+        }
+    }
+
+    /**
+     * Cek apakah toko terhapus secara aman tanpa crash jika kolom belum ada.
+     */
+    public function trashed(): bool
+    {
+        return array_key_exists('deleted_at', $this->attributes) && ! is_null($this->{$this->getDeletedAtColumn()});
+    }
+
+    /**
      * Klasifikasi Status Toko: 'aktif', 'nonaktif', 'terhapus'
      */
     public function getStoreStateAttribute(): string
