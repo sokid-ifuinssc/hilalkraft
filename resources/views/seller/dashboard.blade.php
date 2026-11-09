@@ -782,7 +782,7 @@ Algoritma:
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Jurusan (Database) *</label>
-                            <select name="major_name" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
+                            <select name="major_name" id="siswa_major_name" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                                 <option value="">Pilih Jurusan</option>
                                 @foreach($effectiveMajors as $mj)
                                     <option value="{{ $mj }}" @selected(old('major_name', $user->major_name) === $mj)>{{ $mj }}</option>
@@ -794,15 +794,15 @@ Algoritma:
                     <!-- Atribut Guru -->
                     <div id="profile-guru-row" class="{{ ($store->seller_type ?? 'siswa') === 'guru' ? '' : 'hidden' }} grid grid-cols-1 sm:grid-cols-2 gap-3.5 rounded-xl bg-[#F8FAFC] p-4 border border-slate-200/80">
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 mb-1">NUPTK Guru *</label>
-                            <input type="text" name="nuptk" value="{{ old('nuptk', $user->nuptk) }}" placeholder="Nomor NUPTK" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">NUPTK Guru</label>
+                            <input type="text" name="nuptk" id="guru_nuptk" value="{{ old('nuptk', $user->nuptk) }}" placeholder="Nomor NUPTK" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Jurusan / Unit (Database)</label>
-                            <select name="major_name" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
+                            <select name="teacher_major_name" id="guru_major_name" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                                 <option value="">Pilih Jurusan / Unit</option>
                                 @foreach($effectiveMajors as $mj)
-                                    <option value="{{ $mj }}" @selected(old('major_name', $user->major_name) === $mj)>{{ $mj }}</option>
+                                    <option value="{{ $mj }}" @selected(old('teacher_major_name', old('major_name', $user->major_name)) === $mj)>{{ $mj }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -925,8 +925,17 @@ Algoritma:
     }
 
     function toggleSellerProfileType(val) {
-        document.getElementById('profile-siswa-row').classList.toggle('hidden', val !== 'siswa');
-        document.getElementById('profile-guru-row').classList.toggle('hidden', val !== 'guru');
+        const siswaRow = document.getElementById('profile-siswa-row');
+        const guruRow = document.getElementById('profile-guru-row');
+        if (!siswaRow || !guruRow) return;
+
+        const isSiswa = (val === 'siswa');
+        siswaRow.classList.toggle('hidden', !isSiswa);
+        guruRow.classList.toggle('hidden', isSiswa);
+
+        // Nonaktifkan input pada baris yang disembunyikan agar tidak terkirim atau bentrok
+        siswaRow.querySelectorAll('input, select').forEach(el => el.disabled = !isSiswa);
+        guruRow.querySelectorAll('input, select').forEach(el => el.disabled = isSiswa);
     }
 
     function filterSellerTable(q) {
@@ -952,6 +961,12 @@ Algoritma:
 
     // Auto-scroll ke section setelah submit & auto-dismiss toast
     window.addEventListener('DOMContentLoaded', () => {
+        // Sinkronisasi status tipe pemilik toko (siswa/guru)
+        const sellerTypeSelect = document.querySelector('select[name="seller_type"]');
+        if (sellerTypeSelect) {
+            toggleSellerProfileType(sellerTypeSelect.value);
+        }
+
         const hash = window.location.hash;
         if (hash) {
             if (hash.includes('profil')) {
@@ -965,13 +980,17 @@ Algoritma:
             }
         }
 
+        @if($errors->any())
+            switchSellerTab('profil');
+        @endif
+
         const toast = document.getElementById('seller-floating-toast');
         if (toast) {
             setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(-10px)';
                 setTimeout(() => toast.remove(), 400);
-            }, 5000);
+            }, 6000);
         }
     });
 </script>

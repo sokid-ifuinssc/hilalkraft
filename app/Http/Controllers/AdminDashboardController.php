@@ -469,6 +469,15 @@ class AdminDashboardController extends Controller
             ? ['super_admin', 'admin', 'seller', 'buyer']
             : ['seller', 'buyer'];
 
+        $messages = [
+            'name.required'  => 'Nama pengguna wajib diisi.',
+            'email.required' => 'Email pengguna wajib diisi.',
+            'email.email'    => 'Format email tidak valid.',
+            'email.unique'   => 'Email tersebut sudah digunakan oleh akun lain.',
+            'role.required'  => 'Peran pengguna (Role) wajib dipilih.',
+            'password.min'   => 'Password baru minimal terdiri dari 6 karakter.',
+        ];
+
         $validated = $request->validate([
             'name'      => ['required', 'string', 'max:120'],
             'email'     => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
@@ -476,7 +485,7 @@ class AdminDashboardController extends Controller
             'role'      => ['required', Rule::in($allowedRoles)],
             'is_active' => ['nullable', 'boolean'],
             'password'  => ['nullable', 'string', 'min:6'],
-        ]);
+        ], $messages);
 
         $updateData = [
             'name'      => $validated['name'],

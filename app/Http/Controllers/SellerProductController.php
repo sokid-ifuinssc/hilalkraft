@@ -105,6 +105,26 @@ class SellerProductController extends Controller
         $store = $user->store;
         $sellerType = $request->input('seller_type', $store?->seller_type ?? 'siswa');
 
+        // Normalisasi major_name dan class_name (hindari bentrok elemen form HTML)
+        $majorName = $request->input('major_name');
+        if (empty($majorName) && $request->filled('teacher_major_name')) {
+            $majorName = $request->input('teacher_major_name');
+        }
+        if (empty($majorName)) {
+            $majorName = $user->major_name ?: ($store?->student_class ? trim(explode('-', $store->student_class)[1] ?? '') : null);
+        }
+
+        $className = $request->input('class_name') ?: $user->class_name;
+        $nisNisn   = $request->input('nis_nisn') ?: $user->nis_nisn;
+        $nuptk     = $request->input('nuptk') ?: $user->nuptk;
+
+        $request->merge([
+            'major_name' => $majorName,
+            'class_name' => $className,
+            'nis_nisn'   => $nisNisn,
+            'nuptk'      => $nuptk,
+        ]);
+
         $rules = [
             'name'           => ['required', 'string', 'max:120'],
             'phone'          => ['required', 'string', 'max:25'],
@@ -116,27 +136,34 @@ class SellerProductController extends Controller
             'address_detail' => ['nullable', 'string', 'max:255'],
             'store_name'     => ['required', 'string', 'max:120'],
             'description'    => ['required', 'string', 'max:500'],
+            'class_name'     => ['nullable', 'string', 'max:50'],
+            'major_name'     => ['nullable', 'string', 'max:120'],
+            'nis_nisn'       => ['nullable', 'string', 'max:30'],
+            'nuptk'          => ['nullable', 'string', 'max:30'],
         ];
 
-        if ($sellerType === 'siswa') {
-            $rules['nis_nisn']   = ['required', 'string', 'max:30'];
-            $rules['class_name'] = ['required', 'string', 'max:50'];
-            $rules['major_name'] = ['required', 'string', 'max:120'];
-        } else {
-            $rules['nuptk']      = ['required', 'string', 'max:30'];
-            $rules['major_name'] = ['nullable', 'string', 'max:120'];
-        }
+        $messages = [
+            'name.required'        => 'Nama lengkap pemilik toko wajib diisi.',
+            'phone.required'       => 'Nomor WhatsApp pemilik toko wajib diisi.',
+            'seller_type.required' => 'Pilih peran pemilik toko (Siswa atau Guru).',
+            'store_name.required'  => 'Nama toko karya siswa/guru wajib diisi.',
+            'description.required' => 'Deskripsi toko wajib diisi.',
+            'desa.required'        => 'Desa / Kelurahan tempat tinggal wajib diisi.',
+            'kecamatan.required'   => 'Kecamatan tempat tinggal wajib diisi.',
+            'kabupaten.required'   => 'Kabupaten / Kota tempat tinggal wajib diisi.',
+            'kode_pos.required'    => 'Kode pos wajib diisi.',
+        ];
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, $messages);
 
         $user->update([
             'name'           => $validated['name'],
             'phone'          => $validated['phone'],
             'user_subtype'   => $sellerType,
             'is_teacher'     => $sellerType === 'guru',
-            'nis_nisn'       => $sellerType === 'siswa' ? $validated['nis_nisn'] : $user->nis_nisn,
-            'nuptk'          => $sellerType === 'guru' ? $validated['nuptk'] : $user->nuptk,
-            'class_name'     => $sellerType === 'siswa' ? $validated['class_name'] : $user->class_name,
+            'nis_nisn'       => $sellerType === 'siswa' ? ($validated['nis_nisn'] ?? $user->nis_nisn) : $user->nis_nisn,
+            'nuptk'          => $sellerType === 'guru' ? ($validated['nuptk'] ?? $user->nuptk) : $user->nuptk,
+            'class_name'     => $sellerType === 'siswa' ? ($validated['class_name'] ?? $user->class_name) : $user->class_name,
             'major_name'     => $validated['major_name'] ?? $user->major_name,
             'desa'           => $validated['desa'],
             'kecamatan'      => $validated['kecamatan'],
@@ -145,9 +172,12 @@ class SellerProductController extends Controller
             'address_detail' => $validated['address_detail'] ?? null,
         ]);
 
+        $finalMajor = $validated['major_name'] ?? $user->major_name ?? 'SMK Plus Al Hilal';
+        $finalClass = $validated['class_name'] ?? $user->class_name ?? 'Siswa';
+
         $studentClassLabel = $sellerType === 'siswa'
-            ? trim(($validated['class_name'] ?? '') . ' - ' . ($validated['major_name'] ?? ''))
-            : 'Guru / Pembina ' . ($validated['major_name'] ?? 'SMK Plus Al Hilal');
+            ? trim($finalClass . ' - ' . $finalMajor)
+            : 'Guru / Pembina ' . $finalMajor;
 
         $store->update([
             'store_name'     => $validated['store_name'],

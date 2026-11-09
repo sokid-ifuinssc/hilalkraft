@@ -661,9 +661,9 @@ Fungsi:
         });
     }
 
-    // Auto-buka tab sesuai Hash URL saat load
+    // Auto-buka tab sesuai Hash URL saat load atau saat terjadi error validasi
     document.addEventListener('DOMContentLoaded', function () {
-        if (window.location.hash === '#menu-profil') {
+        if (window.location.hash === '#menu-profil' || {{ $errors->any() ? 'true' : 'false' }}) {
             switchBuyerTab('profil');
         } else {
             switchBuyerTab('pesanan');

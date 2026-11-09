@@ -374,6 +374,16 @@ class BuyerOrderController extends Controller
     {
         $user = $request->user();
 
+        $messages = [
+            'name.required'         => 'Nama lengkap pembeli wajib diisi.',
+            'phone.required'        => 'Nomor WhatsApp pembeli wajib diisi.',
+            'user_subtype.required' => 'Pilih kategori pembeli untuk penyesuaian diskon.',
+            'desa.required'         => 'Desa / Kelurahan alamat pengiriman wajib diisi.',
+            'kecamatan.required'    => 'Kecamatan alamat pengiriman wajib diisi.',
+            'kabupaten.required'    => 'Kabupaten / Kota alamat pengiriman wajib diisi.',
+            'password.min'          => 'Password baru minimal terdiri dari 6 karakter.',
+        ];
+
         $validated = $request->validate([
             'name'           => ['required', 'string', 'max:120'],
             'phone'          => ['required', 'string', 'max:30'],
@@ -384,7 +394,7 @@ class BuyerOrderController extends Controller
             'kode_pos'       => ['nullable', 'string', 'max:15'],
             'address_detail' => ['nullable', 'string', 'max:255'],
             'password'       => ['nullable', 'string', 'min:6'],
-        ]);
+        ], $messages);
 
         $updateData = [
             'name'           => $validated['name'],
