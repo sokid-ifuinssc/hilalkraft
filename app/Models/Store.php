@@ -51,6 +51,13 @@ class Store extends Model
         'discount_alumni',
         'discount_umum',
         'discount_bazar_extra',
+        'bank_name',
+        'bank_account_number',
+        'bank_account_name',
+        'ewallet_name',
+        'ewallet_account_number',
+        'ewallet_account_name',
+        'payment_instructions',
     ];
 
     protected function casts(): array
@@ -261,5 +268,32 @@ class Store extends Model
             'total_discount'              => $totalDiscount,
             'total_price'                 => $finalTotal,
         ];
+    }
+
+    public function getHasBankAccountAttribute(): bool
+    {
+        return ! empty($this->bank_name) && ! empty($this->bank_account_number);
+    }
+
+    public function getHasEwalletAccountAttribute(): bool
+    {
+        return ! empty($this->ewallet_name) && ! empty($this->ewallet_account_number);
+    }
+
+    public function getHasPaymentAccountAttribute(): bool
+    {
+        return $this->has_bank_account || $this->has_ewallet_account;
+    }
+
+    public function getPaymentSummaryAttribute(): string
+    {
+        $parts = [];
+        if ($this->has_bank_account) {
+            $parts[] = "Bank {$this->bank_name}: {$this->bank_account_number}" . ($this->bank_account_name ? " a.n. {$this->bank_account_name}" : "");
+        }
+        if ($this->has_ewallet_account) {
+            $parts[] = "E-Wallet {$this->ewallet_name}: {$this->ewallet_account_number}" . ($this->ewallet_account_name ? " a.n. {$this->ewallet_account_name}" : "");
+        }
+        return count($parts) > 0 ? implode(" | ", $parts) : "Hubungi WhatsApp Toko untuk rekening transfer";
     }
 }

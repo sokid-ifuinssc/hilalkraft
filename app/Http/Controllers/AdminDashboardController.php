@@ -311,11 +311,17 @@ class AdminDashboardController extends Controller
             'description'  => ['required', 'string'],
             'image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
             'image_url'    => ['nullable', 'string', 'max:500'],
+            'allowed_delivery_methods' => ['nullable', 'array'],
         ]);
 
         $imagePath = $validated['image_url'] ?? '/images/product-karya-1.jpg';
         if ($request->hasFile('image_file')) {
             $imagePath = $request->file('image_file')->store('products', 'public');
+        }
+
+        $allowedMethods = $request->input('allowed_delivery_methods');
+        if (empty($allowedMethods)) {
+            $allowedMethods = Product::ALL_DELIVERY_METHODS;
         }
 
         Product::create([
@@ -327,6 +333,7 @@ class AdminDashboardController extends Controller
             'stock'        => $validated['stock'],
             'description'  => $validated['description'],
             'image'        => $imagePath,
+            'allowed_delivery_methods' => array_values($allowedMethods),
             'is_active'    => true,
         ]);
 
@@ -347,6 +354,7 @@ class AdminDashboardController extends Controller
             'description'  => ['required', 'string'],
             'image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
             'image_url'    => ['nullable', 'string', 'max:500'],
+            'allowed_delivery_methods' => ['nullable', 'array'],
         ]);
 
         $imagePath = $product->image;
@@ -360,6 +368,11 @@ class AdminDashboardController extends Controller
             $imagePath = $request->file('image_file')->store('products', 'public');
         }
 
+        $allowedMethods = $request->input('allowed_delivery_methods');
+        if (empty($allowedMethods)) {
+            $allowedMethods = Product::ALL_DELIVERY_METHODS;
+        }
+
         $product->update([
             'store_id'     => $validated['store_id'],
             'product_name' => $validated['product_name'],
@@ -368,6 +381,7 @@ class AdminDashboardController extends Controller
             'stock'        => $validated['stock'],
             'description'  => $validated['description'],
             'image'        => $imagePath,
+            'allowed_delivery_methods' => array_values($allowedMethods),
         ]);
 
         return redirect()->to(route('admin.dashboard') . '#sec-cms-produk')->with('success', "Karya produk '{$product->product_name}' berhasil disimpan melalui CMS.");

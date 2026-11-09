@@ -81,16 +81,28 @@ Fungsi:
         </div>
 
         <div class="lg:col-span-5">
+            @php
+                $cartProductIds = array_keys($cart);
+                $cartProducts = \App\Models\Product::with('store')->findMany($cartProductIds);
+                $canCartPickup = $cartProducts->every(fn($p) => $p->canPickup());
+                $canCartDelivery = $cartProducts->every(fn($p) => $p->canDeliveryLokal());
+                $canCartTransfer = $cartProducts->every(fn($p) => $p->canShippingTransfer());
+                $defaultCartMethod = $canCartPickup ? 'pickup' : ($canCartDelivery ? 'delivery_lokal' : 'shipping_transfer');
+                $cartStores = $cartProducts->pluck('store')->unique('id')->filter();
+            @endphp
             <form action="{{ route('buyer.checkout') }}" method="POST" id="checkout-form" class="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-5 shadow-sm">
                 @csrf
-                <h2 class="text-base font-extrabold text-[#0F291E]">Metode Transaksi & Pengiriman</h2>
+                <div class="flex items-center justify-between">
+                    <h2 class="text-base font-extrabold text-[#0F291E]">Metode Transaksi & Pengiriman</h2>
+                    <span class="text-[10px] text-slate-500">Sesuai ketentuan produk</span>
+                </div>
 
                 <!-- 3 Pilihan Skema Transaksi Sesuai Ketentuan -->
                 <div class="space-y-3">
                     <!-- Opsi 1: Datang ke Sekolah -->
-                    <label class="delivery-option block rounded-2xl border-2 p-3.5 cursor-pointer transition border-[#0B6E4F] bg-[#EBF9F2]/30" data-method="pickup">
+                    <label class="delivery-option block rounded-2xl border-2 p-3.5 transition {{ $canCartPickup ? 'cursor-pointer border-[#0B6E4F] bg-[#EBF9F2]/30' : 'cursor-not-allowed opacity-50 border-slate-200 bg-slate-50' }}" data-method="pickup">
                         <div class="flex items-start gap-3">
-                            <input type="radio" name="delivery_method" value="pickup" checked class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('pickup')">
+                            <input type="radio" name="delivery_method" value="pickup" @checked($defaultCartMethod === 'pickup') @disabled(!$canCartPickup) class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('pickup')">
                             <div class="flex-1 space-y-1">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs font-extrabold text-[#0F291E]">🏫 1. Datang ke Sekolah (Transaksi Langsung)</span>
@@ -99,20 +111,25 @@ Fungsi:
                                 <p class="text-[11px] text-slate-600 leading-snug">
                                     Transaksi & serah terima barang langsung di lingkungan SMK Plus Al Hilal / Stand Bazar.
                                 </p>
-                                <div class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
-                                    <span>Alur 3 Tahap:</span>
-                                    <span class="text-[#0B6E4F]">1. Dipesan</span> →
-                                    <span class="text-[#0B6E4F]">2. Dikemas</span> →
-                                    <span class="text-[#0B6E4F]">3. Diterima / Diambil</span>
+                                <div class="flex items-center justify-between text-[10px]">
+                                    <div class="inline-flex items-center gap-1.5 font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
+                                        <span>Alur 3 Tahap:</span>
+                                        <span class="text-[#0B6E4F]">1. Dipesan</span> →
+                                        <span class="text-[#0B6E4F]">2. Dikemas</span> →
+                                        <span class="text-[#0B6E4F]">3. Diterima / Diambil</span>
+                                    </div>
+                                    @if(!$canCartPickup)
+                                        <span class="text-rose-600 font-bold">(Ada produk yang tidak melayani Datang Langsung)</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </label>
 
                     <!-- Opsi 2: Delivery / Antar Langsung (Khusus Arjawinangun, Susukan, Kaliwedi) -->
-                    <label class="delivery-option block rounded-2xl border-2 p-3.5 cursor-pointer transition border-slate-200 hover:border-slate-300 bg-white" data-method="delivery_lokal">
+                    <label class="delivery-option block rounded-2xl border-2 p-3.5 transition {{ $canCartDelivery ? 'cursor-pointer border-slate-200 hover:border-slate-300 bg-white' : 'cursor-not-allowed opacity-50 border-slate-200 bg-slate-50' }}" data-method="delivery_lokal">
                         <div class="flex items-start gap-3">
-                            <input type="radio" name="delivery_method" value="delivery_lokal" class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('delivery_lokal')">
+                            <input type="radio" name="delivery_method" value="delivery_lokal" @checked($defaultCartMethod === 'delivery_lokal') @disabled(!$canCartDelivery) class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('delivery_lokal')">
                             <div class="flex-1 space-y-1">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs font-extrabold text-[#0F291E]">🛵 2. Delivery / Antar Langsung</span>
@@ -121,39 +138,95 @@ Fungsi:
                                 <p class="text-[11px] text-slate-600 leading-snug">
                                     Pengantaran langsung oleh kurir sekolah khusus wilayah <strong class="text-slate-900">Kec. Arjawinangun, Susukan, & Kaliwedi</strong> (Kab. Cirebon).
                                 </p>
-                                <div class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
-                                    <span>Alur 4 Tahap:</span>
-                                    <span class="text-blue-700">1. Dipesan</span> →
-                                    <span class="text-blue-700">2. Dikemas</span> →
-                                    <span class="text-blue-700">3. Dikirim</span> →
-                                    <span class="text-blue-700">4. Diterima</span>
+                                <div class="flex items-center justify-between text-[10px]">
+                                    <div class="inline-flex items-center gap-1.5 font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
+                                        <span>Alur 4 Tahap:</span>
+                                        <span class="text-blue-700">1. Dipesan</span> →
+                                        <span class="text-blue-700">2. Dikemas</span> →
+                                        <span class="text-blue-700">3. Dikirim</span> →
+                                        <span class="text-blue-700">4. Diterima</span>
+                                    </div>
+                                    @if(!$canCartDelivery)
+                                        <span class="text-rose-600 font-bold">(Ada produk yang hanya melayani Datang Langsung)</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </label>
 
                     <!-- Opsi 3: Transfer Antar (Ekspedisi Luar Wilayah / Luar Kota) -->
-                    <label class="delivery-option block rounded-2xl border-2 p-3.5 cursor-pointer transition border-slate-200 hover:border-slate-300 bg-white" data-method="shipping_transfer">
+                    <label class="delivery-option block rounded-2xl border-2 p-3.5 transition {{ $canCartTransfer ? 'cursor-pointer border-slate-200 hover:border-slate-300 bg-white' : 'cursor-not-allowed opacity-50 border-slate-200 bg-slate-50' }}" data-method="shipping_transfer">
                         <div class="flex items-start gap-3">
-                            <input type="radio" name="delivery_method" value="shipping_transfer" class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('shipping_transfer')">
+                            <input type="radio" name="delivery_method" value="shipping_transfer" @checked($defaultCartMethod === 'shipping_transfer') @disabled(!$canCartTransfer) class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('shipping_transfer')">
                             <div class="flex-1 space-y-1">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs font-extrabold text-[#0F291E]">📦 3. Transfer Antar (Ekspedisi)</span>
                                     <span id="transfer-badge-cost" class="text-[11px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">+ Ongkir Wilayah</span>
                                 </div>
                                 <p class="text-[11px] text-slate-600 leading-snug">
-                                    Ditambah biaya ongkir ekspedisi menyesuaikan estimasi lokasi pengiriman (Cirebon, Jabar, Luar Kota).
+                                    Ditambah biaya ongkir ekspedisi menyesuaikan estimasi lokasi pengiriman. Pembeli mentransfer ke rekening / e-wallet toko.
                                 </p>
-                                <div class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
-                                    <span>Alur 4 Tahap:</span>
-                                    <span class="text-amber-800">1. Dipesan</span> →
-                                    <span class="text-amber-800">2. Dikemas</span> →
-                                    <span class="text-amber-800">3. Dikirim</span> →
-                                    <span class="text-amber-800">4. Diterima</span>
+                                <div class="flex items-center justify-between text-[10px]">
+                                    <div class="inline-flex items-center gap-1.5 font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
+                                        <span>Alur 4 Tahap:</span>
+                                        <span class="text-amber-800">1. Dipesan</span> →
+                                        <span class="text-amber-800">2. Dikemas</span> →
+                                        <span class="text-amber-800">3. Dikirim</span> →
+                                        <span class="text-amber-800">4. Diterima</span>
+                                    </div>
+                                    @if(!$canCartTransfer)
+                                        <span class="text-rose-600 font-bold">(Ada produk yang hanya melayani Datang Langsung)</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </label>
+                </div>
+
+                <!-- Kotak Rekening & E-Wallet Toko (Ditampilkan saat Transfer Antar dipilih) -->
+                <div id="cart-transfer-bank-box" class="hidden rounded-2xl bg-amber-50/80 border border-amber-200 p-4 space-y-3 text-xs text-amber-950">
+                    <div class="flex items-center justify-between">
+                        <span class="font-extrabold text-amber-900 flex items-center gap-1.5">
+                            <span>💳</span>
+                            <span>Informasi Rekening & E-Wallet Pembayaran Toko</span>
+                        </span>
+                        <span class="text-[10px] text-amber-800 font-bold bg-amber-200/60 px-2 py-0.5 rounded-full">Transfer Antar</span>
+                    </div>
+
+                    @foreach($cartStores as $cStore)
+                        <div class="bg-white rounded-xl p-3 border border-amber-200 space-y-2">
+                            <span class="text-xs font-extrabold text-[#0F291E] block">🏪 Toko: {{ $cStore->store_name }}</span>
+                            @if($cStore->has_bank_account)
+                                <div class="flex items-center justify-between text-slate-700 bg-slate-50 rounded-lg p-2">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 block font-bold uppercase">Bank {{ $cStore->bank_name }}</span>
+                                        <span class="font-mono font-bold text-xs text-[#0F291E]">{{ $cStore->bank_account_number }}</span>
+                                        <span class="text-[10px] text-slate-500 block">a.n. {{ $cStore->bank_account_name }}</span>
+                                    </div>
+                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $cStore->bank_account_number }}'); alert('Nomor Rekening disalin!');" class="rounded bg-amber-100 hover:bg-amber-200 px-2 py-1 text-[10px] font-bold text-amber-900 transition">
+                                        Salin
+                                    </button>
+                                </div>
+                            @endif
+                            @if($cStore->has_ewallet_account)
+                                <div class="flex items-center justify-between text-slate-700 bg-slate-50 rounded-lg p-2">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 block font-bold uppercase">E-Wallet {{ $cStore->ewallet_name }}</span>
+                                        <span class="font-mono font-bold text-xs text-[#0F291E]">{{ $cStore->ewallet_account_number }}</span>
+                                        <span class="text-[10px] text-slate-500 block">a.n. {{ $cStore->ewallet_account_name }}</span>
+                                    </div>
+                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $cStore->ewallet_account_number }}'); alert('Nomor E-Wallet disalin!');" class="rounded bg-amber-100 hover:bg-amber-200 px-2 py-1 text-[10px] font-bold text-amber-900 transition">
+                                        Salin
+                                    </button>
+                                </div>
+                            @endif
+                            @if(!$cStore->has_payment_account)
+                                <p class="text-[10px] text-slate-500 italic">
+                                    Nomor rekening toko akan diberikan melalui konfirmasi WhatsApp penjual.
+                                </p>
+                            @endif
+                        </div>
+                    @endforeach
                 </div>
 
                 <!-- Formulir Alamat & Lokasi Tujuan -->
@@ -301,6 +374,7 @@ Fungsi:
         const shortcuts = document.getElementById('local-district-shortcuts');
         const warning = document.getElementById('local-delivery-warning');
         const submitBtn = document.getElementById('btn-submit-order');
+        const bankBox = document.getElementById('cart-transfer-bank-box');
 
         if (method === 'pickup') {
             addressTitle.textContent = '📍 Lokasi Pengambilan di Sekolah';
@@ -309,21 +383,24 @@ Fungsi:
             if (addressInput && (!addressInput.value || addressInput.value.includes('Jl.'))) {
                 addressInput.value = 'Stand Bazar / Kampus SMK Plus Al Hilal';
             }
-            shortcuts.classList.add('hidden');
-            warning.classList.add('hidden');
+            if (shortcuts) shortcuts.classList.add('hidden');
+            if (warning) warning.classList.add('hidden');
+            if (bankBox) bankBox.classList.add('hidden');
             if (submitBtn) submitBtn.disabled = false;
         } else if (method === 'delivery_lokal') {
             addressTitle.textContent = '📍 Alamat Delivery (Khusus Cirebon Barat)';
             addressHint.textContent = 'Kec. Arjawinangun, Susukan, Kaliwedi';
             addressLabel.textContent = 'Alamat Lengkap Pengantaran *';
-            shortcuts.classList.remove('hidden');
+            if (shortcuts) shortcuts.classList.remove('hidden');
+            if (bankBox) bankBox.classList.add('hidden');
         } else {
             // shipping_transfer
             addressTitle.textContent = '📍 Alamat Ekspedisi (Transfer Antar)';
             addressHint.textContent = 'Seluruh Indonesia';
             addressLabel.textContent = 'Alamat Lengkap Pengiriman Ekspedisi *';
-            shortcuts.classList.add('hidden');
-            warning.classList.add('hidden');
+            if (shortcuts) shortcuts.classList.add('hidden');
+            if (warning) warning.classList.add('hidden');
+            if (bankBox) bankBox.classList.remove('hidden');
             if (submitBtn) submitBtn.disabled = false;
         }
 

@@ -420,6 +420,16 @@ Fungsi:
                                 </div>
                             </div>
 
+                            @if($order->delivery_method === 'shipping_transfer' && $order->store->has_payment_account)
+                                <div class="rounded-xl bg-amber-50/80 border border-amber-200 p-3 text-xs text-amber-950 flex flex-wrap items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span>💳</span>
+                                        <span><strong>Rekening / E-Wallet Toko:</strong> {{ $order->store->payment_summary }}</span>
+                                    </div>
+                                    <span class="text-[10px] text-amber-800 font-bold bg-amber-200/60 px-2 py-0.5 rounded-full">Transfer Pembayaran</span>
+                                </div>
+                            @endif
+
                             <!-- Rating Bintang Interaktif -->
                             <div class="rounded-2xl {{ $order->buyer_rating ? 'bg-amber-50/70 border border-amber-200' : 'bg-[#EBF9F2]/60 border border-[#CDEFE0]' }} p-4 sm:p-5">
                                 <form action="{{ route('buyer.orders.rate', $order) }}" method="POST" class="space-y-3">

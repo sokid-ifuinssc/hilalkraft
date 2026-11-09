@@ -120,6 +120,14 @@ class BuyerOrderController extends Controller
         $kecamatan = $validated['destination_kecamatan'] ?: ($buyer->kecamatan ?: '');
         $desa = $validated['destination_desa'] ?: ($buyer->desa ?: '');
 
+        // Validasi izin metode transaksi dari masing-masing produk di keranjang
+        $productModels = Product::findMany(array_keys($cart));
+        foreach ($productModels as $pModel) {
+            if (! $pModel->isDeliveryMethodAllowed($deliveryMethod)) {
+                return back()->withInput()->with('error', "Karya produk '{$pModel->product_name}' hanya melayani opsi: {$pModel->allowed_delivery_label}. Pilihan pengiriman saat ini tidak didukung.");
+            }
+        }
+
         // Validasi Aturan Wilayah: Delivery Lokal hanya untuk Arjawinangun, Susukan, Kaliwedi (Cirebon)
         if ($deliveryMethod === 'delivery_lokal') {
             $cleanKec = strtolower(trim((string) $kecamatan));
@@ -250,6 +258,10 @@ class BuyerOrderController extends Controller
         $kabupaten = $validated['destination_kabupaten'] ?: ($buyer->kabupaten ?: 'Cirebon');
         $kecamatan = $validated['destination_kecamatan'] ?: ($buyer->kecamatan ?: '');
         $desa = $validated['destination_desa'] ?: ($buyer->desa ?: '');
+
+        if (! $product->isDeliveryMethodAllowed($deliveryMethod)) {
+            return back()->withInput()->with('error', "Karya produk '{$product->product_name}' hanya melayani opsi: {$product->allowed_delivery_label}. Pilihan metode transaksi saat ini tidak didukung.");
+        }
 
         if ($deliveryMethod === 'delivery_lokal') {
             $cleanKec = strtolower(trim((string) $kecamatan));

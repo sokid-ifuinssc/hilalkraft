@@ -140,6 +140,13 @@ class SellerProductController extends Controller
             'major_name'     => ['nullable', 'string', 'max:120'],
             'nis_nisn'       => ['nullable', 'string', 'max:30'],
             'nuptk'          => ['nullable', 'string', 'max:30'],
+            'bank_name'              => ['nullable', 'string', 'max:50'],
+            'bank_account_number'   => ['nullable', 'string', 'max:50'],
+            'bank_account_name'     => ['nullable', 'string', 'max:100'],
+            'ewallet_name'           => ['nullable', 'string', 'max:50'],
+            'ewallet_account_number' => ['nullable', 'string', 'max:50'],
+            'ewallet_account_name'   => ['nullable', 'string', 'max:100'],
+            'payment_instructions'   => ['nullable', 'string', 'max:500'],
         ];
 
         $messages = [
@@ -180,11 +187,18 @@ class SellerProductController extends Controller
             : 'Guru / Pembina ' . $finalMajor;
 
         $store->update([
-            'store_name'     => $validated['store_name'],
-            'seller_type'    => $sellerType,
-            'student_class'  => Str::limit($studentClassLabel, 250, ''),
-            'description'    => $validated['description'],
-            'contact_number' => $validated['phone'],
+            'store_name'             => $validated['store_name'],
+            'seller_type'            => $sellerType,
+            'student_class'          => Str::limit($studentClassLabel, 250, ''),
+            'description'            => $validated['description'],
+            'contact_number'         => $validated['phone'],
+            'bank_name'              => $validated['bank_name'] ?? null,
+            'bank_account_number'    => $validated['bank_account_number'] ?? null,
+            'bank_account_name'      => $validated['bank_account_name'] ?? null,
+            'ewallet_name'           => $validated['ewallet_name'] ?? null,
+            'ewallet_account_number' => $validated['ewallet_account_number'] ?? null,
+            'ewallet_account_name'   => $validated['ewallet_account_name'] ?? null,
+            'payment_instructions'   => $validated['payment_instructions'] ?? null,
         ]);
 
         return redirect()->to(route('seller.dashboard') . '#section-profil')->with('success', 'Profil lengkap pemilik toko & identitas toko berhasil disimpan!');
@@ -207,25 +221,33 @@ class SellerProductController extends Controller
         $store = $request->user()->store;
 
         $validated = $request->validate([
-            'product_name' => ['required', 'string', 'max:150'],
-            'category'     => ['required', 'string', 'max:100'],
-            'price'        => ['required', 'numeric', 'min:1000'],
-            'stock'        => ['required', 'integer', 'min:0'],
-            'description'  => ['required', 'string'],
-            'image'        => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'product_name'             => ['required', 'string', 'max:150'],
+            'category'                 => ['required', 'string', 'max:100'],
+            'price'                    => ['required', 'numeric', 'min:1000'],
+            'stock'                    => ['required', 'integer', 'min:0'],
+            'description'              => ['required', 'string'],
+            'image'                    => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'allowed_delivery_methods' => ['nullable', 'array'],
+            'allowed_delivery_methods.*' => ['string', 'in:pickup,delivery_lokal,shipping_transfer'],
         ]);
 
         $imagePath = $request->file('image')->store('products', 'public');
 
+        $allowedMethods = $request->input('allowed_delivery_methods');
+        if (empty($allowedMethods)) {
+            $allowedMethods = Product::ALL_DELIVERY_METHODS;
+        }
+
         $store->products()->create([
-            'product_name' => $validated['product_name'],
-            'slug'         => Str::slug($validated['product_name']) . '-' . Str::lower(Str::random(5)),
-            'category'     => $validated['category'],
-            'price'        => $validated['price'],
-            'stock'        => $validated['stock'],
-            'description'  => $validated['description'],
-            'image'        => $imagePath,
-            'is_active'    => true,
+            'product_name'             => $validated['product_name'],
+            'slug'                     => Str::slug($validated['product_name']) . '-' . Str::lower(Str::random(5)),
+            'category'                 => $validated['category'],
+            'price'                    => $validated['price'],
+            'stock'                    => $validated['stock'],
+            'description'              => $validated['description'],
+            'image'                    => $imagePath,
+            'allowed_delivery_methods' => array_values($allowedMethods),
+            'is_active'                => true,
         ]);
 
         return redirect()
@@ -250,12 +272,14 @@ class SellerProductController extends Controller
         $this->authorizeProductOwner($request, $product);
 
         $validated = $request->validate([
-            'product_name' => ['required', 'string', 'max:150'],
-            'category'     => ['required', 'string', 'max:100'],
-            'price'        => ['required', 'numeric', 'min:1000'],
-            'stock'        => ['required', 'integer', 'min:0'],
-            'description'  => ['required', 'string'],
-            'image'        => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'product_name'             => ['required', 'string', 'max:150'],
+            'category'                 => ['required', 'string', 'max:100'],
+            'price'                    => ['required', 'numeric', 'min:1000'],
+            'stock'                    => ['required', 'integer', 'min:0'],
+            'description'              => ['required', 'string'],
+            'image'                    => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'allowed_delivery_methods' => ['nullable', 'array'],
+            'allowed_delivery_methods.*' => ['string', 'in:pickup,delivery_lokal,shipping_transfer'],
         ]);
 
         if ($request->hasFile('image')) {
@@ -264,6 +288,12 @@ class SellerProductController extends Controller
             }
             $validated['image'] = $request->file('image')->store('products', 'public');
         }
+
+        $allowedMethods = $request->input('allowed_delivery_methods');
+        if (empty($allowedMethods)) {
+            $allowedMethods = Product::ALL_DELIVERY_METHODS;
+        }
+        $validated['allowed_delivery_methods'] = array_values($allowedMethods);
 
         $product->update($validated);
 

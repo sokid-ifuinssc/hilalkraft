@@ -884,6 +884,80 @@ Algoritma:
                         </div>
                     </div>
 
+                    <!-- Informasi Rekening Bank & E-Wallet Toko untuk Pembayaran Transfer -->
+                    <div class="rounded-2xl bg-[#F8FAFC] border border-slate-200/80 p-5 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xs sm:text-sm font-extrabold text-[#0F291E] flex items-center gap-2">
+                                    <span>💳</span>
+                                    <span>Informasi Rekening Bank & E-Wallet Toko (Untuk Transaksi Transfer)</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5">
+                                    Informasi ini akan ditampilkan kepada pembeli saat memilih metode <strong>Transfer Antar / Ekspedisi</strong> agar pembeli dapat melakukan pembayaran.
+                                </p>
+                            </div>
+                            @if($store->has_payment_account)
+                                <span class="rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0B6E4F]">
+                                    ✓ Rekening Terpasang
+                                </span>
+                            @else
+                                <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800">
+                                    Belum Diisi
+                                </span>
+                            @endif
+                        </div>
+
+                        <!-- Rekening Bank -->
+                        <div class="rounded-xl bg-white border border-slate-200 p-4 space-y-3">
+                            <span class="text-xs font-extrabold text-[#0F291E] flex items-center gap-1.5">
+                                <span>🏦</span>
+                                <span>1. Rekening Bank Toko (BCA / BRI / BNI / Mandiri / BSI / BJB)</span>
+                            </span>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Nama Bank</label>
+                                    <input type="text" name="bank_name" value="{{ old('bank_name', $store->bank_name) }}" placeholder="Contoh: BCA / BRI / BJB / BSI" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Nomor Rekening</label>
+                                    <input type="text" name="bank_account_number" value="{{ old('bank_account_number', $store->bank_account_number) }}" placeholder="Nomor rekening bank" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono font-bold focus:border-[#0B6E4F] focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Atas Nama (Pemilik Rekening)</label>
+                                    <input type="text" name="bank_account_name" value="{{ old('bank_account_name', $store->bank_account_name) }}" placeholder="Nama pemilik rekening" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- E-Wallet -->
+                        <div class="rounded-xl bg-white border border-slate-200 p-4 space-y-3">
+                            <span class="text-xs font-extrabold text-[#0F291E] flex items-center gap-1.5">
+                                <span>📱</span>
+                                <span>2. Akun E-Wallet (DANA / GoPay / OVO / ShopeePay)</span>
+                            </span>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Jenis E-Wallet</label>
+                                    <input type="text" name="ewallet_name" value="{{ old('ewallet_name', $store->ewallet_name) }}" placeholder="Contoh: DANA / GoPay / OVO" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Nomor HP E-Wallet</label>
+                                    <input type="text" name="ewallet_account_number" value="{{ old('ewallet_account_number', $store->ewallet_account_number) }}" placeholder="08xxxxxxxxxx" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono font-bold focus:border-[#0B6E4F] focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Atas Nama E-Wallet</label>
+                                    <input type="text" name="ewallet_account_name" value="{{ old('ewallet_account_name', $store->ewallet_account_name) }}" placeholder="Nama pemilik e-wallet" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Petunjuk Transfer Tambahan -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Petunjuk Pembayaran Transfer untuk Pembeli (Opsional)</label>
+                            <input type="text" name="payment_instructions" value="{{ old('payment_instructions', $store->payment_instructions) }}" placeholder="Contoh: Silakan kirim bukti transfer ke WhatsApp toko setelah order dibuat..." class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none">
+                        </div>
+                    </div>
+
                     <div class="flex justify-end pt-2">
                         <button type="submit" class="rounded-xl bg-[#0B6E4F] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#08583F] transition">
                             ✓ Simpan Profil & Toko

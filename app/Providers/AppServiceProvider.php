@@ -106,6 +106,39 @@ class AppServiceProvider extends ServiceProvider
                     if (! Schema::hasColumn('stores', 'status')) {
                         $table->string('status', 20)->default('active');
                     }
+                    if (! Schema::hasColumn('stores', 'bank_name')) {
+                        $table->string('bank_name', 50)->nullable();
+                    }
+                    if (! Schema::hasColumn('stores', 'bank_account_number')) {
+                        $table->string('bank_account_number', 50)->nullable();
+                    }
+                    if (! Schema::hasColumn('stores', 'bank_account_name')) {
+                        $table->string('bank_account_name', 100)->nullable();
+                    }
+                    if (! Schema::hasColumn('stores', 'ewallet_name')) {
+                        $table->string('ewallet_name', 50)->nullable();
+                    }
+                    if (! Schema::hasColumn('stores', 'ewallet_account_number')) {
+                        $table->string('ewallet_account_number', 50)->nullable();
+                    }
+                    if (! Schema::hasColumn('stores', 'ewallet_account_name')) {
+                        $table->string('ewallet_account_name', 100)->nullable();
+                    }
+                    if (! Schema::hasColumn('stores', 'payment_instructions')) {
+                        $table->text('payment_instructions')->nullable();
+                    }
+                });
+            }
+        } catch (Throwable $e) {
+            // Abaikan jika tabel dalam status locking
+        }
+
+        try {
+            if (Schema::hasTable('products')) {
+                Schema::table('products', function ($table) {
+                    if (! Schema::hasColumn('products', 'allowed_delivery_methods')) {
+                        $table->json('allowed_delivery_methods')->nullable();
+                    }
                 });
             }
         } catch (Throwable $e) {

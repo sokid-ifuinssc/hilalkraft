@@ -238,7 +238,68 @@ Algoritma:
                         </div>
                     </div>
 
-                    <!-- Kartu 3: Publikasi -->
+                    <!-- Kartu 3: Pilihan Metode Transaksi yang Diizinkan -->
+                    @php
+                        $allowed = old('allowed_delivery_methods', $product ? $product->effective_allowed_delivery_methods : ['pickup', 'delivery_lokal', 'shipping_transfer']);
+                        if (!is_array($allowed)) $allowed = ['pickup', 'delivery_lokal', 'shipping_transfer'];
+                    @endphp
+                    <div class="rounded-2xl bg-white border border-slate-200/80 p-6 space-y-4">
+                        <div>
+                            <h2 class="text-sm font-extrabold text-[#0F291E]">Metode Transaksi yang Diizinkan *</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Pilih opsi transaksi dan pengiriman apa saja yang dapat dipilih oleh pembeli untuk karya ini.</p>
+                        </div>
+
+                        <div class="space-y-3">
+                            <!-- Opsi 1: Datang ke Sekolah -->
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:border-[#0B6E4F] hover:bg-[#EBF9F2]/20 cursor-pointer transition">
+                                <input type="checkbox" name="allowed_delivery_methods[]" value="pickup" @checked(in_array('pickup', $allowed, true)) class="mt-1 rounded text-[#0B6E4F] focus:ring-[#0B6E4F]">
+                                <div class="space-y-0.5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-[#0F291E]">🏫 1. Datang ke Sekolah / Transaksi Langsung (Rp 0)</span>
+                                        <span class="text-[10px] font-extrabold text-[#0B6E4F] bg-[#EBF9F2] px-2 py-0.5 rounded-full">3 Tahap</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500">
+                                        Pembeli bertransaksi dan mengambil barang langsung di lingkungan SMK Plus Al Hilal / Stand Bazar SMK. Wajib untuk makanan basah / barang rapuh / pesanan langsung.
+                                    </p>
+                                </div>
+                            </label>
+
+                            <!-- Opsi 2: Delivery / Antar Langsung -->
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:border-[#0B6E4F] hover:bg-[#EBF9F2]/20 cursor-pointer transition">
+                                <input type="checkbox" name="allowed_delivery_methods[]" value="delivery_lokal" @checked(in_array('delivery_lokal', $allowed, true)) class="mt-1 rounded text-[#0B6E4F] focus:ring-[#0B6E4F]">
+                                <div class="space-y-0.5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-[#0F291E]">🛵 2. Delivery / Antar Langsung (Rp 5.000)</span>
+                                        <span class="text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">4 Tahap</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500">
+                                        Diantar kurir sekolah khusus wilayah <strong class="text-slate-800">Kec. Arjawinangun, Susukan, & Kaliwedi</strong> (Kab. Cirebon).
+                                    </p>
+                                </div>
+                            </label>
+
+                            <!-- Opsi 3: Transfer Antar -->
+                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:border-[#0B6E4F] hover:bg-[#EBF9F2]/20 cursor-pointer transition">
+                                <input type="checkbox" name="allowed_delivery_methods[]" value="shipping_transfer" @checked(in_array('shipping_transfer', $allowed, true)) class="mt-1 rounded text-[#0B6E4F] focus:ring-[#0B6E4F]">
+                                <div class="space-y-0.5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-[#0F291E]">📦 3. Transfer Antar / Ekspedisi (+ Ongkir Wilayah)</span>
+                                        <span class="text-[10px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">4 Tahap</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500">
+                                        Pengiriman luar wilayah melalui ekspedisi kurir. Pembeli mentransfer ke nomor rekening atau e-wallet toko Anda.
+                                    </p>
+                                    @if(!$store->has_payment_account)
+                                        <p class="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-1">
+                                            💡 <strong>Tips:</strong> Toko Anda belum melengkapi nomor rekening / e-wallet di profil toko. Lengkapi di menu <em>Profil Toko</em> agar pembeli tahu nomor rekening tujuan transfer Anda.
+                                        </p>
+                                    @endif
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Kartu 4: Publikasi -->
                     <div class="rounded-2xl bg-white border border-slate-200/80 p-6 flex items-center justify-between gap-4">
                         <div>
                             <h2 class="text-sm font-extrabold text-[#0F291E]">Publikasi</h2>
