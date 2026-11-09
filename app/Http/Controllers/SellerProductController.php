@@ -306,6 +306,8 @@ class SellerProductController extends Controller
             'progress_status' => ['nullable', 'in:pesan,kemas,kirim,sampai,dibatalkan'],
             'status'          => ['nullable', 'in:pending,confirmed,completed,cancelled'],
             'progress_note'   => ['nullable', 'string', 'max:255'],
+            'tracking_number' => ['nullable', 'string', 'max:100'],
+            'courier_name'    => ['nullable', 'string', 'max:100'],
         ]);
 
         $progress = $validated['progress_status'] ?? match ($validated['status'] ?? 'pending') {
@@ -314,6 +316,11 @@ class SellerProductController extends Controller
             'cancelled' => 'dibatalkan',
             default     => 'pesan',
         };
+
+        // Jika metode pickup (datang ke sekolah), bila dipilih kirim otomatis sesuaikan ke sampai atau tolak jika tidak ada kurir
+        if ($order->delivery_method === 'pickup' && $progress === 'kirim') {
+            $progress = 'sampai';
+        }
 
         // Aturan: Penjual tidak dapat membatalkan pesanan jika pesanan sudah selesai (Sampai)
         if ($progress === 'dibatalkan' && ($order->effective_progress === 'sampai' || $order->status === 'completed')) {
@@ -331,6 +338,13 @@ class SellerProductController extends Controller
             'progress_status' => $progress,
             'status'          => $legacyStatus,
         ];
+
+        if ($request->filled('tracking_number')) {
+            $updatePayload['tracking_number'] = $validated['tracking_number'];
+        }
+        if ($request->filled('courier_name')) {
+            $updatePayload['courier_name'] = $validated['courier_name'];
+        }
 
         if ($request->has('progress_note')) {
             $updatePayload['progress_note'] = $validated['progress_note'];

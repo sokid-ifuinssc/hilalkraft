@@ -81,13 +81,118 @@ Fungsi:
         </div>
 
         <div class="lg:col-span-5">
-            <form action="{{ route('buyer.checkout') }}" method="POST" class="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-4 shadow-sm">
+            <form action="{{ route('buyer.checkout') }}" method="POST" id="checkout-form" class="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-5 shadow-sm">
                 @csrf
-                <h2 class="text-base font-extrabold text-[#0F291E]">Ringkasan Checkout & Skema Diskon</h2>
+                <h2 class="text-base font-extrabold text-[#0F291E]">Metode Transaksi & Pengiriman</h2>
 
-                <div>
-                    <label class="block text-xs font-bold text-[#0F291E] mb-1">Alamat Pengiriman / Lokasi Pengambilan (Stand Bazar / Kelas) *</label>
-                    <input type="text" name="shipping_address" value="{{ old('shipping_address', $user->full_address !== 'Wilayah belum dilengkapi' ? $user->full_address : 'Stand Bazar SMK Plus Al Hilal') }}" required placeholder="Contoh: Stand Bazar SMK Plus Al Hilal / Ruang Tamu Sekolah" class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3.5 py-2 text-xs font-medium focus:bg-white focus:border-[#0B6E4F] focus:outline-none">
+                <!-- 3 Pilihan Skema Transaksi Sesuai Ketentuan -->
+                <div class="space-y-3">
+                    <!-- Opsi 1: Datang ke Sekolah -->
+                    <label class="delivery-option block rounded-2xl border-2 p-3.5 cursor-pointer transition border-[#0B6E4F] bg-[#EBF9F2]/30" data-method="pickup">
+                        <div class="flex items-start gap-3">
+                            <input type="radio" name="delivery_method" value="pickup" checked class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('pickup')">
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-[#0F291E]">🏫 1. Datang ke Sekolah (Transaksi Langsung)</span>
+                                    <span class="text-[11px] font-extrabold text-[#0B6E4F] bg-[#EBF9F2] px-2 py-0.5 rounded-full">Rp 0 (Gratis)</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-snug">
+                                    Transaksi & serah terima barang langsung di lingkungan SMK Plus Al Hilal / Stand Bazar.
+                                </p>
+                                <div class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
+                                    <span>Alur 3 Tahap:</span>
+                                    <span class="text-[#0B6E4F]">1. Dipesan</span> →
+                                    <span class="text-[#0B6E4F]">2. Dikemas</span> →
+                                    <span class="text-[#0B6E4F]">3. Diterima / Diambil</span>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Opsi 2: Delivery / Antar Langsung (Khusus Arjawinangun, Susukan, Kaliwedi) -->
+                    <label class="delivery-option block rounded-2xl border-2 p-3.5 cursor-pointer transition border-slate-200 hover:border-slate-300 bg-white" data-method="delivery_lokal">
+                        <div class="flex items-start gap-3">
+                            <input type="radio" name="delivery_method" value="delivery_lokal" class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('delivery_lokal')">
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-[#0F291E]">🛵 2. Delivery / Antar Langsung</span>
+                                    <span class="text-[11px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">Rp 5.000</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-snug">
+                                    Pengantaran langsung oleh kurir sekolah khusus wilayah <strong class="text-slate-900">Kec. Arjawinangun, Susukan, & Kaliwedi</strong> (Kab. Cirebon).
+                                </p>
+                                <div class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
+                                    <span>Alur 4 Tahap:</span>
+                                    <span class="text-blue-700">1. Dipesan</span> →
+                                    <span class="text-blue-700">2. Dikemas</span> →
+                                    <span class="text-blue-700">3. Dikirim</span> →
+                                    <span class="text-blue-700">4. Diterima</span>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Opsi 3: Transfer Antar (Ekspedisi Luar Wilayah / Luar Kota) -->
+                    <label class="delivery-option block rounded-2xl border-2 p-3.5 cursor-pointer transition border-slate-200 hover:border-slate-300 bg-white" data-method="shipping_transfer">
+                        <div class="flex items-start gap-3">
+                            <input type="radio" name="delivery_method" value="shipping_transfer" class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('shipping_transfer')">
+                            <div class="flex-1 space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-[#0F291E]">📦 3. Transfer Antar (Ekspedisi)</span>
+                                    <span id="transfer-badge-cost" class="text-[11px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">+ Ongkir Wilayah</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-snug">
+                                    Ditambah biaya ongkir ekspedisi menyesuaikan estimasi lokasi pengiriman (Cirebon, Jabar, Luar Kota).
+                                </p>
+                                <div class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
+                                    <span>Alur 4 Tahap:</span>
+                                    <span class="text-amber-800">1. Dipesan</span> →
+                                    <span class="text-amber-800">2. Dikemas</span> →
+                                    <span class="text-amber-800">3. Dikirim</span> →
+                                    <span class="text-amber-800">4. Diterima</span>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Formulir Alamat & Lokasi Tujuan -->
+                <div id="address-container" class="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-extrabold text-[#0F291E]" id="address-section-title">📍 Lokasi Penyerahan / Tujuan</span>
+                        <span class="text-[10px] text-slate-500" id="address-hint">Sekolah SMK Plus Al Hilal</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2" id="geo-district-container">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-0.5">Kabupaten / Kota</label>
+                            <input type="text" name="destination_kabupaten" id="dest-kabupaten" value="{{ old('destination_kabupaten', $user->kabupaten ?: 'Cirebon') }}" placeholder="Cirebon" oninput="calculateLiveOngkir()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-0.5">Kecamatan</label>
+                            <input type="text" name="destination_kecamatan" id="dest-kecamatan" value="{{ old('destination_kecamatan', $user->kecamatan ?: 'Arjawinangun') }}" placeholder="Arjawinangun / Susukan / Kaliwedi" oninput="calculateLiveOngkir()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Shortcut cepat 3 kecamatan delivery lokal -->
+                    <div id="local-district-shortcuts" class="hidden text-[11px] text-slate-600 space-y-1">
+                        <div class="text-[10px] font-bold text-blue-900">Pilih cepat kecamatan terlayani:</div>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="setKecamatan('Arjawinangun')" class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-[10px] font-extrabold hover:bg-blue-200 transition">Kec. Arjawinangun</button>
+                            <button type="button" onclick="setKecamatan('Susukan')" class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-[10px] font-extrabold hover:bg-blue-200 transition">Kec. Susukan</button>
+                            <button type="button" onclick="setKecamatan('Kaliwedi')" class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-[10px] font-extrabold hover:bg-blue-200 transition">Kec. Kaliwedi</button>
+                        </div>
+                    </div>
+
+                    <!-- Peringatan Wilayah jika Delivery Lokal tidak cocok -->
+                    <div id="local-delivery-warning" class="hidden rounded-xl bg-rose-50 border border-rose-200 p-2.5 text-[11px] text-rose-800">
+                        ⚠️ <strong>Perhatian:</strong> Delivery Antar Langsung hanya melayani 3 kecamatan di Kab. Cirebon: <strong>Arjawinangun, Susukan, dan Kaliwedi</strong>. Untuk kecamatan lain, silakan pilih <em>Transfer Antar</em> atau <em>Datang ke Sekolah</em>.
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-0.5" id="lbl-shipping-address">Alamat Detail / Ruang Penyerahan *</label>
+                        <input type="text" name="shipping_address" id="input-shipping-address" value="{{ old('shipping_address', $user->full_address !== 'Wilayah belum dilengkapi' ? $user->full_address : 'Stand Bazar / Kampus SMK Plus Al Hilal') }}" required placeholder="Contoh: Stand Bazar SMK Plus Al Hilal / Ruang Kelas XI TKJ / Jl. Nyi Mas Gandasari No..." class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
+                    </div>
                 </div>
 
                 <!-- Skema Diskon Bazar / Event SMK -->
@@ -124,24 +229,173 @@ Fungsi:
 
                 <div>
                     <label class="block text-xs font-bold text-[#0F291E] mb-1">Catatan Tambahan untuk Penjual</label>
-                    <textarea name="notes" rows="2" placeholder="Contoh: Ambil langsung di stand bazar pukul 10.00..." class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3.5 py-2 text-xs focus:bg-white focus:border-[#0B6E4F] focus:outline-none"></textarea>
+                    <textarea name="notes" rows="2" placeholder="Contoh: Titipkan di pos satpam / hubungi WA saat berangkat..." class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3.5 py-2 text-xs focus:bg-white focus:border-[#0B6E4F] focus:outline-none"></textarea>
                 </div>
 
                 <div class="pt-3 border-t border-slate-100 space-y-1.5 text-xs">
                     <div class="flex items-center justify-between text-slate-500">
-                        <span>Subtotal Keranjang</span>
+                        <span>Subtotal Produk</span>
                         <span class="font-bold text-[#0F291E]">Rp {{ number_format($grandSubtotal, 0, ',', '.') }}</span>
                     </div>
-                    <p class="text-[11px] text-[#0B6E4F] font-semibold">
-                        ✓ Diskon Jenis Pembeli ({{ $user->subtype_label }}) & Diskon Bazar SMK otomatis dihitung saat pesanan dibuat.
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span id="ongkir-label-text">Ongkos Kirim (Datang ke Sekolah)</span>
+                        <span class="font-bold text-[#0B6E4F]" id="ongkir-display-text">Rp 0 (Gratis)</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm font-extrabold text-[#0F291E] pt-1 border-t border-dashed border-slate-200">
+                        <span>Total Pembayaran</span>
+                        <span class="text-base text-[#0B6E4F]" id="grand-total-text">Rp {{ number_format($grandSubtotal, 0, ',', '.') }}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 font-semibold pt-1">
+                        ✓ Diskon Jenis Pembeli ({{ $user->subtype_label }}) & Diskon Bazar SMK otomatis dihitung saat konfirmasi.
                     </p>
                 </div>
 
-                <button type="submit" @disabled(empty($cart)) class="w-full rounded-xl bg-[#0B6E4F] py-3 text-xs sm:text-sm font-bold text-white hover:bg-[#08583F] transition shadow-sm disabled:opacity-50">
-                    ✓ Buat Pesanan & Pantau Progres Barang
+                <button type="submit" id="btn-submit-order" @disabled(empty($cart)) class="w-full rounded-xl bg-[#0B6E4F] py-3 text-xs sm:text-sm font-bold text-white hover:bg-[#08583F] transition shadow-sm disabled:opacity-50">
+                    ✓ Konfirmasi Pesanan & Pantau Progres
                 </button>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    const subtotalBase = {{ (float) $grandSubtotal }};
+    const validLocalDistricts = ['arjawinangun', 'susukan', 'kaliwedi'];
+
+    function formatRupiah(amount) {
+        return 'Rp ' + Number(amount).toLocaleString('id-ID');
+    }
+
+    function getSelectedDeliveryMethod() {
+        const radios = document.getElementsByName('delivery_method');
+        for (let r of radios) {
+            if (r.checked) return r.value;
+        }
+        return 'pickup';
+    }
+
+    function setKecamatan(name) {
+        const kecInput = document.getElementById('dest-kecamatan');
+        const kabInput = document.getElementById('dest-kabupaten');
+        if (kecInput) kecInput.value = name;
+        if (kabInput && !kabInput.value) kabInput.value = 'Cirebon';
+        calculateLiveOngkir();
+    }
+
+    function updateDeliveryUI(method) {
+        // Highlight active card
+        document.querySelectorAll('.delivery-option').forEach(el => {
+            if (el.getAttribute('data-method') === method) {
+                el.classList.add('border-[#0B6E4F]', 'bg-[#EBF9F2]/30');
+                el.classList.remove('border-slate-200', 'bg-white');
+            } else {
+                el.classList.remove('border-[#0B6E4F]', 'bg-[#EBF9F2]/30');
+                el.classList.add('border-slate-200', 'bg-white');
+            }
+        });
+
+        const addressTitle = document.getElementById('address-section-title');
+        const addressHint = document.getElementById('address-hint');
+        const addressLabel = document.getElementById('lbl-shipping-address');
+        const addressInput = document.getElementById('input-shipping-address');
+        const shortcuts = document.getElementById('local-district-shortcuts');
+        const warning = document.getElementById('local-delivery-warning');
+        const submitBtn = document.getElementById('btn-submit-order');
+
+        if (method === 'pickup') {
+            addressTitle.textContent = '📍 Lokasi Pengambilan di Sekolah';
+            addressHint.textContent = 'Kampus SMK Plus Al Hilal / Bazar';
+            addressLabel.textContent = 'Stand / Ruang Penyerahan di Sekolah *';
+            if (addressInput && (!addressInput.value || addressInput.value.includes('Jl.'))) {
+                addressInput.value = 'Stand Bazar / Kampus SMK Plus Al Hilal';
+            }
+            shortcuts.classList.add('hidden');
+            warning.classList.add('hidden');
+            if (submitBtn) submitBtn.disabled = false;
+        } else if (method === 'delivery_lokal') {
+            addressTitle.textContent = '📍 Alamat Delivery (Khusus Cirebon Barat)';
+            addressHint.textContent = 'Kec. Arjawinangun, Susukan, Kaliwedi';
+            addressLabel.textContent = 'Alamat Lengkap Pengantaran *';
+            shortcuts.classList.remove('hidden');
+        } else {
+            // shipping_transfer
+            addressTitle.textContent = '📍 Alamat Ekspedisi (Transfer Antar)';
+            addressHint.textContent = 'Seluruh Indonesia';
+            addressLabel.textContent = 'Alamat Lengkap Pengiriman Ekspedisi *';
+            shortcuts.classList.add('hidden');
+            warning.classList.add('hidden');
+            if (submitBtn) submitBtn.disabled = false;
+        }
+
+        calculateLiveOngkir();
+    }
+
+    function calculateLiveOngkir() {
+        const method = getSelectedDeliveryMethod();
+        const kabInput = document.getElementById('dest-kabupaten');
+        const kecInput = document.getElementById('dest-kecamatan');
+        const warning = document.getElementById('local-delivery-warning');
+        const submitBtn = document.getElementById('btn-submit-order');
+        const ongkirLabel = document.getElementById('ongkir-label-text');
+        const ongkirDisplay = document.getElementById('ongkir-display-text');
+        const grandTotalDisplay = document.getElementById('grand-total-text');
+
+        let ongkir = 0;
+
+        if (method === 'pickup') {
+            ongkir = 0;
+            ongkirLabel.textContent = 'Ongkos Kirim (Datang ke Sekolah)';
+            ongkirDisplay.textContent = 'Rp 0 (Gratis)';
+            ongkirDisplay.className = 'font-bold text-[#0B6E4F]';
+        } else if (method === 'delivery_lokal') {
+            ongkir = 5000;
+            ongkirLabel.textContent = 'Ongkos Kirim (Delivery Lokal)';
+            ongkirDisplay.textContent = formatRupiah(ongkir);
+            ongkirDisplay.className = 'font-bold text-blue-700';
+
+            const cleanKec = (kecInput ? kecInput.value : '').toLowerCase().trim();
+            const isMatch = validLocalDistricts.some(d => cleanKec.includes(d));
+
+            if (!isMatch && cleanKec.length > 0) {
+                warning.classList.remove('hidden');
+                if (submitBtn) submitBtn.disabled = true;
+            } else {
+                warning.classList.add('hidden');
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        } else {
+            // shipping_transfer
+            ongkirLabel.textContent = 'Estimasi Ongkir (Transfer Antar)';
+            const cleanKab = (kabInput ? kabInput.value : '').toLowerCase().trim();
+            const cleanKec = (kecInput ? kecInput.value : '').toLowerCase().trim();
+
+            if (cleanKab.includes('cirebon')) {
+                ongkir = validLocalDistricts.some(d => cleanKec.includes(d)) ? 8000 : 10000;
+            } else if (['indramayu', 'majalengka', 'kuningan'].some(d => cleanKab.includes(d))) {
+                ongkir = 12000;
+            } else if (['bandung', 'jakarta', 'bekasi', 'bogor', 'depok', 'tangerang', 'karawang', 'purwakarta', 'subang'].some(d => cleanKab.includes(d))) {
+                ongkir = 18000;
+            } else if (['semarang', 'solo', 'surabaya', 'malang', 'jogja', 'yogyakarta', 'banyumas', 'tegal', 'brebes'].some(d => cleanKab.includes(d))) {
+                ongkir = 24000;
+            } else if (cleanKab.length > 2) {
+                ongkir = 38000;
+            } else {
+                ongkir = 15000;
+            }
+
+            ongkirDisplay.textContent = formatRupiah(ongkir);
+            ongkirDisplay.className = 'font-bold text-amber-800';
+            const badgeCost = document.getElementById('transfer-badge-cost');
+            if (badgeCost) badgeCost.textContent = formatRupiah(ongkir);
+        }
+
+        const grandTotal = Math.max(0, subtotalBase + ongkir);
+        grandTotalDisplay.textContent = formatRupiah(grandTotal);
+    }
+
+    // Inisialisasi awal saat halaman dibuka
+    document.addEventListener('DOMContentLoaded', function() {
+        updateDeliveryUI('pickup');
+    });
+</script>
 @endsection

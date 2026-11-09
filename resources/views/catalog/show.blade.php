@@ -35,7 +35,7 @@ Algoritma:
         asset('images/products/tokoganci-iyung-iyung.jpg'),
         $mainImg,
     ];
-    $waMessage = urlencode("Assalamu'alaikum {$product->store->owner->name} ({$product->store->store_name}), saya tertarik membeli produk *{$product->product_name}* seharga {$product->formatted_price} di hilalkraf SMK Plus Al Hilal.");
+    $waMessage = urlencode("Assalamu'alaikum {$product->store->owner->name} ({$product->store->store_name}), saya tertarik membeli produk *{$product->product_name}* seharga {$product->formatted_price} di hilalkraf SMK Plus Al Hilal. Saya ingin konsultasi transaksi (Datang ke Sekolah / Delivery Lokal Arjawinangun, Susukan, Kaliwedi / Transfer Antar).");
 @endphp
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
@@ -205,15 +205,10 @@ Algoritma:
                             </button>
                         </form>
 
-                        <form action="{{ route('buyer.direct-order', $product) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="quantity" id="direct-qty-input" value="1">
-                            <input type="hidden" name="is_bazaar_offline" id="direct-bazaar-input" value="0">
-                            <button type="submit" class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B6E4F] px-5 py-3 text-xs sm:text-sm font-semibold text-white hover:bg-[#08583F] transition shadow-sm">
-                                <span>🚚</span>
-                                <span>Pesan & Pantau Progres</span>
-                            </button>
-                        </form>
+                        <button type="button" onclick="openDirectOrderModal()" class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B6E4F] px-5 py-3 text-xs sm:text-sm font-semibold text-white hover:bg-[#08583F] transition shadow-sm">
+                            <span>🚚</span>
+                            <span>Pesan & Pantau Progres</span>
+                        </button>
                     @else
                         <a href="{{ route('login') }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs sm:text-sm font-semibold text-[#0F291E] hover:border-[#0B6E4F] hover:text-[#0B6E4F] transition">
                             <span>🛍️</span>
@@ -553,6 +548,157 @@ Algoritma:
         </div>
     </div>
 
+    @auth
+    <!-- Modal Pemesanan Langsung & Pilihan Metode Pengiriman (3 Skema Transaksi) -->
+    <div id="direct-order-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+        <div class="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-8">
+            <div class="bg-gradient-to-r from-[#0B6E4F] to-[#0F291E] p-5 text-white flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-extrabold flex items-center gap-2">
+                        <span>🚚</span>
+                        <span>Pesan Langsung: {{ $product->product_name }}</span>
+                    </h3>
+                    <p class="text-xs text-emerald-200 mt-0.5">Toko: {{ $product->store->store_name }} • Pilih skema penyerahan barang</p>
+                </div>
+                <button type="button" onclick="closeDirectOrderModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold transition">
+                    ✕
+                </button>
+            </div>
+
+            <form action="{{ route('buyer.direct-order', $product) }}" method="POST" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                @csrf
+                <input type="hidden" name="quantity" id="modal-direct-qty" value="1">
+
+                <!-- Info Jumlah Item -->
+                <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div>
+                        <div class="text-xs font-bold text-[#0F291E]">Jumlah Pesanan</div>
+                        <div class="text-[11px] text-slate-500">Harga Satuan: {{ $product->formatted_price }}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="changeModalQty(-1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-xs font-bold hover:bg-slate-100">-</button>
+                        <span id="modal-qty-display" class="w-8 text-center text-xs font-extrabold">1</span>
+                        <button type="button" onclick="changeModalQty(1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-xs font-bold hover:bg-slate-100">+</button>
+                    </div>
+                </div>
+
+                <!-- 3 Opsi Skema Transaksi -->
+                <div class="space-y-2.5">
+                    <div class="text-xs font-extrabold text-[#0F291E]">Pilih Metode Transaksi & Pengiriman *</div>
+
+                    <!-- 1. Datang ke Sekolah -->
+                    <label class="modal-delivery-card block rounded-2xl border-2 p-3 cursor-pointer transition border-[#0B6E4F] bg-[#EBF9F2]/30" data-method="pickup">
+                        <div class="flex items-start gap-3">
+                            <input type="radio" name="delivery_method" value="pickup" checked class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateModalDeliveryUI('pickup')">
+                            <div class="flex-1 space-y-0.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-[#0F291E]">🏫 1. Datang ke Sekolah (Transaksi Langsung)</span>
+                                    <span class="text-[10px] font-extrabold text-[#0B6E4F] bg-[#EBF9F2] px-2 py-0.5 rounded-full">Rp 0 (Gratis)</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600">Ambil/serah terima langsung di SMK Plus Al Hilal / Stand Bazar.</p>
+                                <span class="text-[10px] font-bold text-slate-500">Alur: Dipesan → Dikemas → Diterima (3 Tahap)</span>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- 2. Delivery / Antar Langsung (Arjawinangun, Susukan, Kaliwedi) -->
+                    <label class="modal-delivery-card block rounded-2xl border-2 p-3 cursor-pointer transition border-slate-200 hover:border-slate-300 bg-white" data-method="delivery_lokal">
+                        <div class="flex items-start gap-3">
+                            <input type="radio" name="delivery_method" value="delivery_lokal" class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateModalDeliveryUI('delivery_lokal')">
+                            <div class="flex-1 space-y-0.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-[#0F291E]">🛵 2. Delivery / Antar Langsung</span>
+                                    <span class="text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">Rp 5.000</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600">Kurir sekolah khusus: <strong class="text-slate-900">Kec. Arjawinangun, Susukan, & Kaliwedi</strong>.</p>
+                                <span class="text-[10px] font-bold text-slate-500">Alur: Dipesan → Dikemas → Dikirim → Diterima (4 Tahap)</span>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- 3. Transfer Antar -->
+                    <label class="modal-delivery-card block rounded-2xl border-2 p-3 cursor-pointer transition border-slate-200 hover:border-slate-300 bg-white" data-method="shipping_transfer">
+                        <div class="flex items-start gap-3">
+                            <input type="radio" name="delivery_method" value="shipping_transfer" class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateModalDeliveryUI('shipping_transfer')">
+                            <div class="flex-1 space-y-0.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-[#0F291E]">📦 3. Transfer Antar (Ekspedisi)</span>
+                                    <span id="modal-transfer-badge" class="text-[10px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">+ Ongkir Wilayah</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600">Dikirim lewat ekspedisi reguler ke alamat pembeli.</p>
+                                <span class="text-[10px] font-bold text-slate-500">Alur: Dipesan → Dikemas → Dikirim → Diterima (4 Tahap)</span>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Input Alamat & Lokasi -->
+                <div class="rounded-2xl bg-slate-50 border border-slate-200 p-3.5 space-y-2.5">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Kabupaten / Kota</label>
+                            <input type="text" name="destination_kabupaten" id="modal-dest-kabupaten" value="{{ old('destination_kabupaten', auth()->user()->kabupaten ?: 'Cirebon') }}" placeholder="Cirebon" oninput="calculateModalOngkir()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Kecamatan</label>
+                            <input type="text" name="destination_kecamatan" id="modal-dest-kecamatan" value="{{ old('destination_kecamatan', auth()->user()->kecamatan ?: 'Arjawinangun') }}" placeholder="Arjawinangun / Susukan / Kaliwedi" oninput="calculateModalOngkir()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Shortcut 3 kecamatan untuk delivery lokal -->
+                    <div id="modal-local-shortcuts" class="hidden text-[10px] text-slate-600 space-y-1">
+                        <span class="font-bold text-blue-900">Pilih cepat:</span>
+                        <div class="flex gap-1.5">
+                            <button type="button" onclick="setModalKecamatan('Arjawinangun')" class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px] font-bold hover:bg-blue-200">Arjawinangun</button>
+                            <button type="button" onclick="setModalKecamatan('Susukan')" class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px] font-bold hover:bg-blue-200">Susukan</button>
+                            <button type="button" onclick="setModalKecamatan('Kaliwedi')" class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px] font-bold hover:bg-blue-200">Kaliwedi</button>
+                        </div>
+                    </div>
+
+                    <div id="modal-local-warning" class="hidden rounded-xl bg-rose-50 border border-rose-200 p-2 text-[10px] text-rose-800">
+                        ⚠️ Delivery Antar Langsung hanya untuk Kec. Arjawinangun, Susukan, dan Kaliwedi (Kab. Cirebon).
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-700 mb-0.5" id="modal-lbl-address">Alamat Pengiriman / Stand Penyerahan *</label>
+                        <input type="text" name="shipping_address" id="modal-shipping-address" value="{{ old('shipping_address', auth()->user()->full_address !== 'Wilayah belum dilengkapi' ? auth()->user()->full_address : 'Stand Bazar / Kampus SMK Plus Al Hilal') }}" required placeholder="Contoh: Stand Bazar SMK Plus Al Hilal / Jl. Nyi Mas Gandasari No..." class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Diskon Bazar & Catatan -->
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-amber-950 font-semibold bg-amber-50/70 p-2.5 rounded-xl border border-amber-200">
+                        <input type="checkbox" name="is_bazaar_offline" value="1" class="rounded border-amber-400 text-[#0B6E4F] focus:ring-[#0B6E4F]">
+                        <span>🎪 Beli langsung di Acara Bazar SMK (Klaim Promo Stand)</span>
+                    </label>
+                    <textarea name="notes" rows="1" placeholder="Catatan untuk penjual (opsional)..." class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-1.5 text-xs focus:bg-white focus:border-[#0B6E4F] focus:outline-none"></textarea>
+                </div>
+
+                <!-- Total Biaya -->
+                <div class="pt-3 border-t border-slate-100 space-y-1 text-xs">
+                    <div class="flex justify-between text-slate-500">
+                        <span>Ongkos Kirim:</span>
+                        <span id="modal-ongkir-text" class="font-bold text-[#0B6E4F]">Rp 0 (Gratis)</span>
+                    </div>
+                    <div class="flex justify-between text-sm font-extrabold text-[#0F291E]">
+                        <span>Estimasi Total:</span>
+                        <span id="modal-total-text" class="text-base text-[#0B6E4F]">{{ $product->formatted_price }}</span>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeDirectOrderModal()" class="flex-1 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+                        Batal
+                    </button>
+                    <button type="submit" id="modal-submit-btn" class="flex-2 rounded-xl bg-[#0B6E4F] py-2.5 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-sm">
+                        ✓ Buat Pesanan Sekarang
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endauth
+
 </div>
 
 <script>
@@ -661,10 +807,174 @@ Algoritma:
 
     // Tutup modal jika klik di luar box
     document.addEventListener('click', (e) => {
-        const modal = document.getElementById('share-product-modal');
-        if (modal && e.target === modal) {
+        const shareModal = document.getElementById('share-product-modal');
+        if (shareModal && e.target === shareModal) {
             closeShareModal();
         }
+        const directModal = document.getElementById('direct-order-modal');
+        if (directModal && e.target === directModal) {
+            closeDirectOrderModal();
+        }
     });
+
+    // Modal Direct Order
+    const productBasePrice = {{ (float) $product->price }};
+    const localDistricts = ['arjawinangun', 'susukan', 'kaliwedi'];
+
+    function openDirectOrderModal() {
+        const modal = document.getElementById('direct-order-modal');
+        if (!modal) return;
+        // Ambil quantity dari input utama
+        const mainQty = document.getElementById('qty-display');
+        const q = mainQty ? parseInt(mainQty.value || '1', 10) : 1;
+        setModalQtyVal(q);
+        updateModalDeliveryUI('pickup');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeDirectOrderModal() {
+        const modal = document.getElementById('direct-order-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function setModalQtyVal(val) {
+        val = Math.max(1, val);
+        const qtyDisplay = document.getElementById('modal-qty-display');
+        const hiddenQty = document.getElementById('modal-direct-qty');
+        if (qtyDisplay) qtyDisplay.textContent = val;
+        if (hiddenQty) hiddenQty.value = val;
+        calculateModalOngkir();
+    }
+
+    function changeModalQty(delta) {
+        const hiddenQty = document.getElementById('modal-direct-qty');
+        let current = hiddenQty ? parseInt(hiddenQty.value || '1', 10) : 1;
+        setModalQtyVal(current + delta);
+    }
+
+    function setModalKecamatan(name) {
+        const kecInput = document.getElementById('modal-dest-kecamatan');
+        const kabInput = document.getElementById('modal-dest-kabupaten');
+        if (kecInput) kecInput.value = name;
+        if (kabInput && !kabInput.value) kabInput.value = 'Cirebon';
+        calculateModalOngkir();
+    }
+
+    function getModalSelectedMethod() {
+        const radios = document.getElementsByName('delivery_method');
+        for (let r of radios) {
+            if (r.checked) return r.value;
+        }
+        return 'pickup';
+    }
+
+    function updateModalDeliveryUI(method) {
+        document.querySelectorAll('.modal-delivery-card').forEach(el => {
+            if (el.getAttribute('data-method') === method) {
+                el.classList.add('border-[#0B6E4F]', 'bg-[#EBF9F2]/30');
+                el.classList.remove('border-slate-200', 'bg-white');
+            } else {
+                el.classList.remove('border-[#0B6E4F]', 'bg-[#EBF9F2]/30');
+                el.classList.add('border-slate-200', 'bg-white');
+            }
+        });
+
+        const addressLabel = document.getElementById('modal-lbl-address');
+        const addressInput = document.getElementById('modal-shipping-address');
+        const shortcuts = document.getElementById('modal-local-shortcuts');
+        const warning = document.getElementById('modal-local-warning');
+        const submitBtn = document.getElementById('modal-submit-btn');
+
+        if (method === 'pickup') {
+            addressLabel.textContent = 'Stand / Ruang Penyerahan di Sekolah *';
+            if (addressInput && (!addressInput.value || addressInput.value.includes('Jl.'))) {
+                addressInput.value = 'Stand Bazar / Kampus SMK Plus Al Hilal';
+            }
+            if (shortcuts) shortcuts.classList.add('hidden');
+            if (warning) warning.classList.add('hidden');
+            if (submitBtn) submitBtn.disabled = false;
+        } else if (method === 'delivery_lokal') {
+            addressLabel.textContent = 'Alamat Pengantaran (Arjawinangun/Susukan/Kaliwedi) *';
+            if (shortcuts) shortcuts.classList.remove('hidden');
+        } else {
+            addressLabel.textContent = 'Alamat Lengkap Pengiriman Ekspedisi *';
+            if (shortcuts) shortcuts.classList.add('hidden');
+            if (warning) warning.classList.add('hidden');
+            if (submitBtn) submitBtn.disabled = false;
+        }
+
+        calculateModalOngkir();
+    }
+
+    function calculateModalOngkir() {
+        const method = getModalSelectedMethod();
+        const kabInput = document.getElementById('modal-dest-kabupaten');
+        const kecInput = document.getElementById('modal-dest-kecamatan');
+        const hiddenQty = document.getElementById('modal-direct-qty');
+        const warning = document.getElementById('modal-local-warning');
+        const submitBtn = document.getElementById('modal-submit-btn');
+        const ongkirText = document.getElementById('modal-ongkir-text');
+        const totalText = document.getElementById('modal-total-text');
+
+        const qty = hiddenQty ? parseInt(hiddenQty.value || '1', 10) : 1;
+        const subtotal = productBasePrice * qty;
+        let ongkir = 0;
+
+        if (method === 'pickup') {
+            ongkir = 0;
+            if (ongkirText) {
+                ongkirText.textContent = 'Rp 0 (Gratis)';
+                ongkirText.className = 'font-bold text-[#0B6E4F]';
+            }
+        } else if (method === 'delivery_lokal') {
+            ongkir = 5000;
+            if (ongkirText) {
+                ongkirText.textContent = 'Rp 5.000';
+                ongkirText.className = 'font-bold text-blue-700';
+            }
+            const cleanKec = (kecInput ? kecInput.value : '').toLowerCase().trim();
+            const isMatch = localDistricts.some(d => cleanKec.includes(d));
+            if (!isMatch && cleanKec.length > 0) {
+                if (warning) warning.classList.remove('hidden');
+                if (submitBtn) submitBtn.disabled = true;
+            } else {
+                if (warning) warning.classList.add('hidden');
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        } else {
+            const cleanKab = (kabInput ? kabInput.value : '').toLowerCase().trim();
+            const cleanKec = (kecInput ? kecInput.value : '').toLowerCase().trim();
+
+            if (cleanKab.includes('cirebon')) {
+                ongkir = localDistricts.some(d => cleanKec.includes(d)) ? 8000 : 10000;
+            } else if (['indramayu', 'majalengka', 'kuningan'].some(d => cleanKab.includes(d))) {
+                ongkir = 12000;
+            } else if (['bandung', 'jakarta', 'bekasi', 'bogor', 'depok', 'tangerang', 'karawang', 'purwakarta', 'subang'].some(d => cleanKab.includes(d))) {
+                ongkir = 18000;
+            } else if (['semarang', 'solo', 'surabaya', 'malang', 'jogja', 'yogyakarta', 'banyumas', 'tegal', 'brebes'].some(d => cleanKab.includes(d))) {
+                ongkir = 24000;
+            } else if (cleanKab.length > 2) {
+                ongkir = 38000;
+            } else {
+                ongkir = 15000;
+            }
+
+            if (ongkirText) {
+                ongkirText.textContent = 'Rp ' + Number(ongkir).toLocaleString('id-ID');
+                ongkirText.className = 'font-bold text-amber-800';
+            }
+            const badge = document.getElementById('modal-transfer-badge');
+            if (badge) badge.textContent = 'Rp ' + Number(ongkir).toLocaleString('id-ID');
+        }
+
+        const grand = subtotal + ongkir;
+        if (totalText) {
+            totalText.textContent = 'Rp ' + Number(grand).toLocaleString('id-ID');
+        }
+    }
 </script>
 @endsection

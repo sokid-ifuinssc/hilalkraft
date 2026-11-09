@@ -263,14 +263,18 @@ Fungsi:
                         @endphp
 
                         <div class="rounded-2xl bg-white border border-slate-200/90 p-5 sm:p-6 space-y-5 shadow-sm">
-                            <!-- Baris Atas: Kode Pesanan, Nama Toko, & Tombol WA Penjual -->
+                            <!-- Baris Atas: Kode Pesanan, Nama Toko, Badge Metode Pengiriman & Tombol WA Penjual -->
                             <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
-                                <div class="space-y-1">
+                                <div class="space-y-1.5">
                                     <div class="flex flex-wrap items-center gap-2">
                                         <span class="text-sm font-extrabold text-[#0F291E]">#{{ $order->order_code }}</span>
                                         <a href="{{ route('stores.show', $order->store->slug) }}" target="_blank" class="rounded-full bg-[#EBF9F2] px-3 py-0.5 text-xs font-extrabold text-[#0B6E4F] hover:underline">
                                             🏪 {{ $order->store->store_name }}
                                         </a>
+                                        <!-- Badge Metode Transaksi & Pengiriman -->
+                                        <span class="rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border {{ $order->delivery_badge_class }}">
+                                            {{ $order->delivery_method_short_label }}
+                                        </span>
                                         <span class="rounded-full px-2.5 py-0.5 text-[11px] font-extrabold {{ $effProgress === 'sampai' ? 'bg-emerald-100 text-emerald-800' : ($effProgress === 'dibatalkan' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800') }}">
                                             {{ $order->progress_label }}
                                         </span>
@@ -280,9 +284,15 @@ Fungsi:
                                             </span>
                                         @endif
                                     </div>
-                                    <p class="text-xs text-slate-500">
-                                        📍 Alamat: {{ $order->shipping_address }} • 🕒 Dipesan {{ $order->created_at?->format('d M Y, H:i') }}
-                                    </p>
+                                    <div class="text-xs text-slate-500 space-y-0.5">
+                                        <p>📍 <strong>Alamat / Stand:</strong> {{ $order->shipping_address }}</p>
+                                        <div class="flex flex-wrap items-center gap-3 text-[11px]">
+                                            <span>🕒 Dipesan {{ $order->created_at?->format('d M Y, H:i') }}</span>
+                                            @if($order->tracking_number)
+                                                <span class="font-bold text-blue-700">🚚 No. Resi: <span class="font-mono bg-blue-50 px-1.5 py-0.5 rounded">{{ $order->tracking_number }}</span> ({{ $order->courier_name ?? 'Kurir' }})</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-2">
@@ -305,7 +315,7 @@ Fungsi:
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="rounded-xl border border-emerald-600 bg-[#EBF9F2] px-3.5 py-2 text-xs font-extrabold text-[#0B6E4F] hover:bg-[#0B6E4F] hover:text-white transition">
-                                                ✅ Konfirmasi Barang Sampai
+                                                {{ $order->delivery_method === 'pickup' ? '✅ Konfirmasi Telah Diambil' : '✅ Konfirmasi Barang Sampai' }}
                                             </button>
                                         </form>
                                     @endif
@@ -319,17 +329,24 @@ Fungsi:
                                 </div>
                             </div>
 
-                            <!-- PROGRES BARANG 4 TAHAP -->
+                            <!-- SKEMA PROGRES BARANG (DINAMIS 3 TAHAP / 4 TAHAP) -->
                             @if($effProgress !== 'dibatalkan')
+                                @php
+                                    $orderStages = $order->progress_stages;
+                                    $stageCount = count($orderStages);
+                                @endphp
                                 <div class="space-y-2">
                                     <div class="flex items-center justify-between text-xs">
-                                        <span class="font-extrabold text-[#0F291E] uppercase tracking-wider text-[11px]">Progres Pengiriman</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-extrabold text-[#0F291E] uppercase tracking-wider text-[11px]">Progres Pesanan</span>
+                                            <span class="text-[10px] text-slate-500">({{ $stageCount }} Tahap: {{ $order->delivery_method_label }})</span>
+                                        </div>
                                         @if($order->progress_note)
                                             <span class="text-xs font-semibold text-[#0B6E4F]">📢 Catatan Toko: "{{ $order->progress_note }}"</span>
                                         @endif
                                     </div>
-                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                        @foreach($stagesMeta as $stepNum => $meta)
+                                    <div class="grid grid-cols-1 sm:grid-cols-{{ $stageCount }} gap-3">
+                                        @foreach($orderStages as $stepNum => $meta)
                                             @php
                                                 $isDone = $currentStep >= $stepNum;
                                                 $isCurrent = $currentStep === $stepNum;
@@ -344,7 +361,7 @@ Fungsi:
                                                     @endif
                                                 </div>
                                                 <p class="text-xs font-extrabold text-[#0F291E]">{{ $meta['icon'] }} {{ $meta['label'] }}</p>
-                                                <p class="text-[11px] text-slate-500">{{ $meta['desc'] }}</p>
+                                                <p class="text-[11px] text-slate-500 leading-snug">{{ $meta['desc'] }}</p>
                                             </div>
                                         @endforeach
                                     </div>
@@ -390,6 +407,12 @@ Fungsi:
                                             <span>- Rp {{ number_format($order->bazaar_discount_amount, 0, ',', '.') }}</span>
                                         </div>
                                     @endif
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>Ongkir ({{ $order->delivery_method_short_label }})</span>
+                                        <span class="font-semibold {{ $order->shipping_cost > 0 ? 'text-[#0F291E]' : 'text-[#0B6E4F]' }}">
+                                            {{ $order->shipping_cost > 0 ? 'Rp ' . number_format($order->shipping_cost, 0, ',', '.') : 'Rp 0 (Gratis)' }}
+                                        </span>
+                                    </div>
                                     <div class="flex justify-between text-sm font-extrabold text-[#0F291E] pt-1.5 border-t border-slate-100">
                                         <span>Total Pembayaran</span>
                                         <span class="text-[#0B6E4F]">{{ $order->formatted_total_price }}</span>

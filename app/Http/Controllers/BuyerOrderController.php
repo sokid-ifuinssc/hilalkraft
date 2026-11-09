@@ -98,10 +98,14 @@ class BuyerOrderController extends Controller
     public function checkout(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'shipping_address'    => ['required', 'string', 'max:255'],
-            'notes'               => ['nullable', 'string', 'max:500'],
-            'bazaar_voucher_code' => ['nullable', 'string', 'max:50'],
-            'is_bazaar_offline'   => ['nullable', 'boolean'],
+            'delivery_method'       => ['nullable', 'string', 'in:pickup,delivery_lokal,shipping_transfer'],
+            'shipping_address'      => ['nullable', 'string', 'max:255'],
+            'destination_kabupaten' => ['nullable', 'string', 'max:100'],
+            'destination_kecamatan' => ['nullable', 'string', 'max:100'],
+            'destination_desa'      => ['nullable', 'string', 'max:100'],
+            'notes'                 => ['nullable', 'string', 'max:500'],
+            'bazaar_voucher_code'   => ['nullable', 'string', 'max:50'],
+            'is_bazaar_offline'     => ['nullable', 'boolean'],
         ]);
 
         $cart = session()->get('hilalkraft_cart', []);
@@ -111,6 +115,26 @@ class BuyerOrderController extends Controller
         }
 
         $buyer = $request->user();
+        $deliveryMethod = $validated['delivery_method'] ?? 'pickup';
+        $kabupaten = $validated['destination_kabupaten'] ?: ($buyer->kabupaten ?: 'Cirebon');
+        $kecamatan = $validated['destination_kecamatan'] ?: ($buyer->kecamatan ?: '');
+        $desa = $validated['destination_desa'] ?: ($buyer->desa ?: '');
+
+        // Validasi Aturan Wilayah: Delivery Lokal hanya untuk Arjawinangun, Susukan, Kaliwedi (Cirebon)
+        if ($deliveryMethod === 'delivery_lokal') {
+            $cleanKec = strtolower(trim((string) $kecamatan));
+            if (! in_array($cleanKec, Order::LOCAL_DELIVERY_DISTRICTS, true)) {
+                return back()->withInput()->with('error', 'Metode Delivery / Antar Langsung hanya melayani wilayah Kecamatan Arjawinangun, Susukan, dan Kaliwedi (Kabupaten Cirebon). Untuk wilayah lain, silakan pilih Transfer Antar atau Datang ke Sekolah.');
+            }
+        }
+
+        $shippingCost = Order::calculateEstimatedShipping($deliveryMethod, $kabupaten, $kecamatan);
+
+        $shippingAddress = match ($deliveryMethod) {
+            'pickup' => 'Ambil Langsung di SMK Plus Al Hilal Arjawinangun' . (! empty($validated['shipping_address']) ? ' (' . $validated['shipping_address'] . ')' : ''),
+            default  => $validated['shipping_address'] ?: ($buyer->full_address ?: "Desa {$desa}, Kec. {$kecamatan}, Kab. {$kabupaten}"),
+        };
+
         $isBazaarOffline = $request->boolean('is_bazaar_offline');
         $voucherCode = strtoupper(trim((string) ($validated['bazaar_voucher_code'] ?? '')));
 
@@ -126,12 +150,25 @@ class BuyerOrderController extends Controller
 
         $groupedByStore = collect($cart)->groupBy('store_id');
 
-        DB::transaction(function () use ($groupedByStore, $buyer, $validated, $bazaarEvent, $isBazaarOffline) {
+        DB::transaction(function () use ($groupedByStore, $buyer, $validated, $bazaarEvent, $isBazaarOffline, $deliveryMethod, $shippingCost, $kabupaten, $kecamatan, $desa, $shippingAddress) {
             foreach ($groupedByStore as $storeId => $items) {
                 $store = Store::findOrFail($storeId);
                 $subtotal = (float) $items->sum(fn ($item) => $item['price'] * $item['quantity']);
 
                 $pricing = $store->calculateOrderPricing($subtotal, $buyer, $bazaarEvent, $isBazaarOffline);
+                $finalTotal = max(0, (float) $pricing['total_price'] + (float) $shippingCost);
+
+                $courierName = match ($deliveryMethod) {
+                    'delivery_lokal'    => 'Kurir Sekolah (Antar Langsung)',
+                    'shipping_transfer' => 'Ekspedisi Reguler (Transfer Antar)',
+                    default             => 'Ambil Sendiri di Sekolah',
+                };
+
+                $progressNote = match ($deliveryMethod) {
+                    'delivery_lokal'    => 'Pesanan diterima. Akan diantar langsung oleh kurir ke alamat pembeli.',
+                    'shipping_transfer' => 'Pesanan diterima. Menunggu koordinasi transfer dan pengiriman ekspedisi.',
+                    default             => 'Pesanan diterima. Silakan datang langsung ke SMK Plus Al Hilal untuk serah terima barang.',
+                };
 
                 $order = Order::create([
                     'invoice_number'              => 'HK-' . now()->format('Ymd') . '-' . Str::upper(Str::random(5)),
@@ -145,13 +182,17 @@ class BuyerOrderController extends Controller
                     'bazaar_discount_percent'     => $pricing['bazaar_discount_percent'],
                     'bazaar_discount_amount'      => $pricing['bazaar_discount_amount'],
                     'is_bazaar_offline'           => $isBazaarOffline,
-                    'total_price'                 => $pricing['total_price'],
+                    'delivery_method'             => $deliveryMethod,
+                    'shipping_cost'               => $shippingCost,
+                    'destination_kabupaten'       => $kabupaten,
+                    'destination_kecamatan'       => $kecamatan,
+                    'destination_desa'            => $desa,
+                    'courier_name'                => $courierName,
+                    'total_price'                 => $finalTotal,
                     'status'                      => 'pending',
                     'progress_status'             => 'pesan',
-                    'progress_note'               => $isBazaarOffline
-                        ? 'Pembelian langsung di Stand Bazar / Event SMK Plus Al Hilal.'
-                        : 'Pesanan berhasil dibuat. Silakan hubungi WhatsApp penjual untuk konfirmasi.',
-                    'shipping_address'            => $validated['shipping_address'],
+                    'progress_note'               => $progressNote,
+                    'shipping_address'            => $shippingAddress,
                     'notes'                       => $validated['notes'] ?? null,
                 ]);
 
@@ -177,7 +218,7 @@ class BuyerOrderController extends Controller
 
         return redirect()
             ->route('buyer.dashboard')
-            ->with('success', 'Pesanan berhasil dibuat! Pantau progres barang (Pesan → Kemas → Kirim → Sampai) di bawah ini dan hubungi penjual via WhatsApp.');
+            ->with('success', 'Pesanan berhasil dibuat! Anda dapat memantau progres pesanan dan menghubungi penjual via WhatsApp.');
     }
 
     /**
@@ -188,10 +229,14 @@ class BuyerOrderController extends Controller
     public function directOrder(Request $request, Product $product): RedirectResponse
     {
         $validated = $request->validate([
-            'quantity'            => ['nullable', 'integer', 'min:1'],
-            'is_bazaar_offline'   => ['nullable', 'boolean'],
-            'bazaar_voucher_code' => ['nullable', 'string', 'max:50'],
-            'shipping_address'    => ['nullable', 'string', 'max:255'],
+            'quantity'              => ['nullable', 'integer', 'min:1'],
+            'delivery_method'       => ['nullable', 'string', 'in:pickup,delivery_lokal,shipping_transfer'],
+            'destination_kabupaten' => ['nullable', 'string', 'max:100'],
+            'destination_kecamatan' => ['nullable', 'string', 'max:100'],
+            'destination_desa'      => ['nullable', 'string', 'max:100'],
+            'is_bazaar_offline'     => ['nullable', 'boolean'],
+            'bazaar_voucher_code'   => ['nullable', 'string', 'max:50'],
+            'shipping_address'      => ['nullable', 'string', 'max:255'],
         ]);
 
         $qty = max(1, (int) ($validated['quantity'] ?? 1));
@@ -201,6 +246,20 @@ class BuyerOrderController extends Controller
 
         $buyer = $request->user();
         $store = $product->store;
+        $deliveryMethod = $validated['delivery_method'] ?? 'pickup';
+        $kabupaten = $validated['destination_kabupaten'] ?: ($buyer->kabupaten ?: 'Cirebon');
+        $kecamatan = $validated['destination_kecamatan'] ?: ($buyer->kecamatan ?: '');
+        $desa = $validated['destination_desa'] ?: ($buyer->desa ?: '');
+
+        if ($deliveryMethod === 'delivery_lokal') {
+            $cleanKec = strtolower(trim((string) $kecamatan));
+            if (! in_array($cleanKec, Order::LOCAL_DELIVERY_DISTRICTS, true)) {
+                return back()->withInput()->with('error', 'Metode Delivery / Antar Langsung hanya melayani wilayah Kecamatan Arjawinangun, Susukan, dan Kaliwedi (Kabupaten Cirebon). Untuk wilayah lain, silakan pilih Transfer Antar atau Datang ke Sekolah.');
+            }
+        }
+
+        $shippingCost = Order::calculateEstimatedShipping($deliveryMethod, $kabupaten, $kecamatan);
+
         $isBazaarOffline = $request->boolean('is_bazaar_offline');
         $voucherCode = strtoupper(trim((string) ($validated['bazaar_voucher_code'] ?? '')));
 
@@ -213,14 +272,28 @@ class BuyerOrderController extends Controller
 
         $subtotal = (float) $product->price * $qty;
         $pricing = $store->calculateOrderPricing($subtotal, $buyer, $bazaarEvent, $isBazaarOffline);
+        $finalTotal = max(0, (float) $pricing['total_price'] + (float) $shippingCost);
 
-        $shippingAddress = ! empty($validated['shipping_address'])
-            ? $validated['shipping_address']
-            : ($isBazaarOffline
-                ? ('Ambil Langsung di Stand Bazar SMK (' . ($bazaarEvent->location ?? 'SMK Plus Al Hilal') . ')')
-                : ($buyer->full_address ?: 'Konfirmasi via WhatsApp Penjual'));
+        $shippingAddress = match ($deliveryMethod) {
+            'pickup' => 'Ambil Langsung di SMK Plus Al Hilal Arjawinangun' . (! empty($validated['shipping_address']) ? ' (' . $validated['shipping_address'] . ')' : ''),
+            default  => $validated['shipping_address'] ?: ($buyer->full_address ?: "Desa {$desa}, Kec. {$kecamatan}, Kab. {$kabupaten}"),
+        };
 
-        DB::transaction(function () use ($product, $store, $buyer, $qty, $pricing, $bazaarEvent, $isBazaarOffline, $shippingAddress) {
+        $courierName = match ($deliveryMethod) {
+            'delivery_lokal'    => 'Kurir Sekolah (Antar Langsung)',
+            'shipping_transfer' => 'Ekspedisi Reguler (Transfer Antar)',
+            default             => 'Ambil Sendiri di Sekolah',
+        };
+
+        $progressNote = match ($deliveryMethod) {
+            'delivery_lokal'    => 'Pesanan langsung dibuat. Akan diantar kurir ke alamat Anda.',
+            'shipping_transfer' => 'Pesanan langsung dibuat. Silakan hubungi penjual via WA untuk transfer & pengiriman.',
+            default             => $isBazaarOffline
+                ? 'Pesanan Stand Bazar SMK dibuat. Tunjukkan invoice ini kepada penjaga stand toko.'
+                : 'Pesanan dibuat. Silakan datang ke SMK Plus Al Hilal untuk serah terima barang.',
+        };
+
+        $order = DB::transaction(function () use ($product, $store, $buyer, $qty, $pricing, $finalTotal, $shippingCost, $deliveryMethod, $courierName, $kabupaten, $kecamatan, $desa, $progressNote, $bazaarEvent, $isBazaarOffline, $shippingAddress) {
             $lockedProduct = Product::lockForUpdate()->findOrFail($product->id);
 
             $order = Order::create([
@@ -235,12 +308,16 @@ class BuyerOrderController extends Controller
                 'bazaar_discount_percent'     => $pricing['bazaar_discount_percent'],
                 'bazaar_discount_amount'      => $pricing['bazaar_discount_amount'],
                 'is_bazaar_offline'           => $isBazaarOffline,
-                'total_price'                 => $pricing['total_price'],
+                'delivery_method'             => $deliveryMethod,
+                'shipping_cost'               => $shippingCost,
+                'destination_kabupaten'       => $kabupaten,
+                'destination_kecamatan'       => $kecamatan,
+                'destination_desa'            => $desa,
+                'courier_name'                => $courierName,
+                'total_price'                 => $finalTotal,
                 'status'                      => 'pending',
                 'progress_status'             => 'pesan',
-                'progress_note'               => $isBazaarOffline
-                    ? 'Pesanan Stand Bazar SMK dibuat. Tunjukkan invoice ini kepada penjaga stand toko.'
-                    : 'Pesanan dibuat. Silakan klik tombol Hubungi WhatsApp Toko untuk koordinasi pengiriman.',
+                'progress_note'               => $progressNote,
                 'shipping_address'            => $shippingAddress,
             ]);
 
@@ -254,11 +331,13 @@ class BuyerOrderController extends Controller
             if ($lockedProduct->stock >= $qty) {
                 $lockedProduct->decrement('stock', $qty);
             }
+
+            return $order;
         });
 
         return redirect()
             ->route('buyer.dashboard')
-            ->with('success', "Pesanan '{$product->product_name}' berhasil dicatat! Anda dapat melacak progres (Pesan → Kemas → Kirim → Sampai), menghubungi WA penjual, dan memberi rating bintang.");
+            ->with('success', "Pesanan '{$product->product_name}' berhasil dicatat! Anda dapat melacak progres ({$order->delivery_method_short_label}), menghubungi WA penjual, dan memberi rating bintang.");
     }
 
     /**

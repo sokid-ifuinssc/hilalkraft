@@ -400,11 +400,11 @@ Algoritma:
                 <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
                     <div>
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-[#EBF9F2] px-3 py-1 text-[11px] font-bold text-[#0B6E4F] mb-2">
-                            🚚 Skema Progres Pesanan 4 Tahap
+                            🚚 Skema Progres Transaksi & Pengiriman
                         </span>
                         <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Kelola Progres Pesanan Pembeli</h2>
                         <p class="text-xs text-slate-500 mt-0.5">
-                            Walaupun transaksi dan negosiasi terhubung langsung ke WhatsApp, perbarui status progres barang mulai dari <strong>1. Pesan</strong> → <strong>2. Kemas</strong> → <strong>3. Kirim (Dalam Perjalanan)</strong> → <strong>4. Sampai</strong> agar pembeli dapat memantau progres secara realtime dan memberikan rating bintang ★.
+                            Mendukung 3 metode: <strong>Datang ke Sekolah</strong> (3 Tahap: Pesan → Kemas → Diterima), <strong>Delivery Lokal</strong> (4 Tahap, Khusus Arjawinangun, Susukan, Kaliwedi), dan <strong>Transfer Antar</strong> (+ Ongkir Ekspedisi & No. Resi).
                         </p>
                     </div>
 
@@ -480,16 +480,24 @@ Algoritma:
                                             <span>💬 Hubungi WA Pembeli</span>
                                         </a>
                                     @endif
+                                    <!-- Badge Metode Transaksi & Pengiriman -->
+                                    <span class="rounded-xl px-2.5 py-1 text-[10px] font-extrabold border {{ $order->delivery_badge_class }}">
+                                        {{ $order->delivery_method_short_label }}
+                                    </span>
                                     <span class="rounded-xl px-3 py-1.5 text-[11px] font-extrabold {{ $effProgress === 'sampai' ? 'bg-emerald-100 text-emerald-800' : ($effProgress === 'dibatalkan' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800') }}">
                                         {{ $order->progress_label }}
                                     </span>
                                 </div>
                             </div>
 
-                            <!-- Visual Stepper 4 Tahap: Pesan -> Kemas -> Kirim -> Sampai -->
+                            <!-- Visual Stepper Progres Dinamis (3 Tahap / 4 Tahap Sesuai Metode) -->
                             @if($effProgress !== 'dibatalkan')
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-                                    @foreach($stagesMeta as $stepNum => $meta)
+                                @php
+                                    $orderStages = $order->progress_stages;
+                                    $stageCount = count($orderStages);
+                                @endphp
+                                <div class="grid grid-cols-1 sm:grid-cols-{{ $stageCount }} gap-2.5 pt-1">
+                                    @foreach($orderStages as $stepNum => $meta)
                                         @php
                                             $isDone = $currentStep >= $stepNum;
                                             $isCurrent = $currentStep === $stepNum;
@@ -557,6 +565,12 @@ Algoritma:
                                             <span>- Rp {{ number_format($order->bazaar_discount_amount, 0, ',', '.') }}</span>
                                         </div>
                                     @endif
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>Ongkos Kirim ({{ $order->delivery_method_short_label }})</span>
+                                        <span class="font-semibold {{ $order->shipping_cost > 0 ? 'text-[#0F291E]' : 'text-[#0B6E4F]' }}">
+                                            {{ $order->shipping_cost > 0 ? 'Rp ' . number_format($order->shipping_cost, 0, ',', '.') : 'Rp 0 (Gratis)' }}
+                                        </span>
+                                    </div>
                                     <div class="flex justify-between text-sm font-extrabold text-[#0F291E] pt-1.5 border-t border-slate-200">
                                         <span>Total Transaksi</span>
                                         <span class="text-[#0B6E4F]">{{ $order->formatted_total_price }}</span>
@@ -584,35 +598,62 @@ Algoritma:
                             <!-- Form Kontrol Ubah Tahap Progres oleh Pemilik Toko -->
                             @if($effProgress === 'sampai')
                                 <div class="rounded-xl bg-[#EBF9F2] border border-[#B8E8D2] px-4 py-2.5 text-xs text-[#0B6E4F] font-bold flex items-center justify-between">
-                                    <span>✅ Pesanan ini telah selesai (Sampai) dan tidak dapat dibatalkan.</span>
+                                    <span>✅ Pesanan ini telah selesai ({{ $order->delivery_method === 'pickup' ? 'Telah Diambil di Sekolah' : 'Sampai ke Pembeli' }}) dan tidak dapat dibatalkan.</span>
                                 </div>
                             @elseif($effProgress === 'dibatalkan')
                                 <div class="rounded-xl bg-rose-50 border border-rose-200 px-4 py-2.5 text-xs text-rose-700 font-bold flex items-center justify-between">
                                     <span>✕ Pesanan ini telah dibatalkan.</span>
                                 </div>
                             @else
-                                <form action="{{ route('seller.orders.status', $order) }}" method="POST" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+                                <form action="{{ route('seller.orders.status', $order) }}" method="POST" class="space-y-3 pt-1">
                                     @csrf
                                     @method('PATCH')
-                                    <div class="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                                        <div class="sm:w-56">
-                                            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Tahap Progres Barang</label>
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                                        <div class="sm:w-64">
+                                            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">
+                                                Tahap Progres ({{ $order->delivery_method_short_label }})
+                                            </label>
                                             <select name="progress_status" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
-                                                <option value="pesan" @selected($effProgress === 'pesan')>1. Pesan (Pesanan Diterima)</option>
-                                                <option value="kemas" @selected($effProgress === 'kemas')>2. Kemas (Sedang Dikemas)</option>
-                                                <option value="kirim" @selected($effProgress === 'kirim')>3. Kirim (Dalam Perjalanan / COD)</option>
-                                                <option value="sampai" @selected($effProgress === 'sampai')>4. Sampai (Diterima Pembeli)</option>
+                                                @if($order->delivery_method === 'pickup')
+                                                    <option value="pesan" @selected($effProgress === 'pesan')>1. Pesan (Pesanan Masuk)</option>
+                                                    <option value="kemas" @selected($effProgress === 'kemas')>2. Kemas (Disiapkan di Sekolah/Stand)</option>
+                                                    <option value="sampai" @selected($effProgress === 'sampai')>3. Selesai (Telah Diambil di Sekolah)</option>
+                                                @elseif($order->delivery_method === 'delivery_lokal')
+                                                    <option value="pesan" @selected($effProgress === 'pesan')>1. Pesan (Pesanan Diterima)</option>
+                                                    <option value="kemas" @selected($effProgress === 'kemas')>2. Kemas (Sedang Dikemas)</option>
+                                                    <option value="kirim" @selected($effProgress === 'kirim')>3. Kirim (Kurir Sekolah Mengantar)</option>
+                                                    <option value="sampai" @selected($effProgress === 'sampai')>4. Sampai (Diterima Pembeli)</option>
+                                                @else
+                                                    <option value="pesan" @selected($effProgress === 'pesan')>1. Pesan (Menunggu Transfer/Konfirmasi)</option>
+                                                    <option value="kemas" @selected($effProgress === 'kemas')>2. Kemas (Sedang Dipacking)</option>
+                                                    <option value="kirim" @selected($effProgress === 'kirim')>3. Kirim (Diserahkan ke Ekspedisi)</option>
+                                                    <option value="sampai" @selected($effProgress === 'sampai')>4. Sampai (Diterima Pembeli)</option>
+                                                @endif
                                                 <option value="dibatalkan">✕ Batalkan Pesanan</option>
                                             </select>
                                         </div>
                                         <div class="flex-1">
-                                            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Catatan Progres / Pengiriman (Opsional)</label>
-                                            <input type="text" name="progress_note" value="{{ $order->progress_note }}" placeholder="Contoh: Barang sedang dikemas rapi / Diantar ke Stand Bazar SMK..." class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
+                                            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Catatan Progres / Info Pengiriman</label>
+                                            <input type="text" name="progress_note" value="{{ $order->progress_note }}" placeholder="Contoh: Barang siap diambil di Stand TKJ / Diantar kurir..." class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
                                         </div>
                                     </div>
-                                    <div class="flex items-end gap-2 pt-2 sm:pt-4">
-                                        <button type="submit" class="w-full sm:w-auto rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-sm">
-                                            ✓ Simpan Progres
+
+                                    @if($order->delivery_method === 'shipping_transfer')
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                                            <div>
+                                                <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-0.5">Nama Ekspedisi (JNE / J&T / SiCepat / dll)</label>
+                                                <input type="text" name="courier_name" value="{{ $order->courier_name }}" placeholder="JNE / J&T / SiCepat" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-0.5">Nomor Resi Pengiriman</label>
+                                                <input type="text" name="tracking_number" value="{{ $order->tracking_number }}" placeholder="Nomor Resi Ekspedisi" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <div class="flex justify-end pt-1">
+                                        <button type="submit" class="w-full sm:w-auto rounded-xl bg-[#0B6E4F] px-5 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-sm">
+                                            ✓ Simpan Perubahan Progres
                                         </button>
                                     </div>
                                 </form>

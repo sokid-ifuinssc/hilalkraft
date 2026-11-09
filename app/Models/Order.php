@@ -28,6 +28,11 @@ class Order extends Model
 {
     use HasFactory;
 
+    /**
+     * Tiga kecamatan Kabupaten Cirebon yang dilayani Delivery / Antar Langsung
+     */
+    public const LOCAL_DELIVERY_DISTRICTS = ['arjawinangun', 'susukan', 'kaliwedi'];
+
     protected $fillable = [
         'invoice_number',
         'buyer_id',
@@ -40,6 +45,13 @@ class Order extends Model
         'bazaar_discount_percent',
         'bazaar_discount_amount',
         'is_bazaar_offline',
+        'delivery_method',
+        'shipping_cost',
+        'destination_kabupaten',
+        'destination_kecamatan',
+        'destination_desa',
+        'courier_name',
+        'tracking_number',
         'total_price',
         'status',
         'progress_status',
@@ -63,6 +75,7 @@ class Order extends Model
             'bazaar_discount_percent'     => 'integer',
             'bazaar_discount_amount'      => 'decimal:2',
             'is_bazaar_offline'           => 'boolean',
+            'shipping_cost'               => 'decimal:2',
             'total_price'                 => 'decimal:2',
             'buyer_rating'                => 'integer',
             'rated_at'                    => 'datetime',
@@ -106,8 +119,71 @@ class Order extends Model
         };
     }
 
+    /**
+     * Label ramah metode pengiriman / transaksi
+     */
+    public function getDeliveryMethodLabelAttribute(): string
+    {
+        return match ($this->delivery_method) {
+            'delivery_lokal'    => 'Delivery / Antar Langsung (Arjawinangun, Susukan, Kaliwedi)',
+            'shipping_transfer' => 'Transfer Antar (Ekspedisi Luar Wilayah)',
+            default             => 'Transaksi Langsung / Datang ke Sekolah',
+        };
+    }
+
+    public function getDeliveryMethodShortLabelAttribute(): string
+    {
+        return match ($this->delivery_method) {
+            'delivery_lokal'    => '🛵 Antar Langsung',
+            'shipping_transfer' => '🚚 Transfer Antar',
+            default             => '🏫 Datang ke Sekolah',
+        };
+    }
+
+    public function getDeliveryBadgeClassAttribute(): string
+    {
+        return match ($this->delivery_method) {
+            'delivery_lokal'    => 'bg-sky-50 text-sky-800 border border-sky-200',
+            'shipping_transfer' => 'bg-amber-50 text-amber-800 border border-amber-200',
+            default             => 'bg-emerald-50 text-emerald-800 border border-emerald-200',
+        };
+    }
+
+    /**
+     * Daftar tahapan progres sesuai skema:
+     * - `pickup` (Datang ke Sekolah): 3 Tahap (Dipesan -> Dikemas -> Diterima)
+     * - `delivery_lokal` & `shipping_transfer`: 4 Tahap (Dipesan -> Dikemas -> Dikirim -> Diterima)
+     */
+    public function getProgressStagesAttribute(): array
+    {
+        if ($this->delivery_method === 'pickup') {
+            return [
+                1 => ['key' => 'pesan', 'label' => '1. Dipesan', 'desc' => 'Pesanan masuk / Konfirmasi'],
+                2 => ['key' => 'kemas', 'label' => '2. Dikemas', 'desc' => 'Disiapkan di SMK Plus Al Hilal'],
+                3 => ['key' => 'sampai', 'label' => '3. Diterima', 'desc' => 'Diambil di sekolah & beri ★'],
+            ];
+        }
+
+        return [
+            1 => ['key' => 'pesan', 'label' => '1. Dipesan', 'desc' => 'Pesanan masuk'],
+            2 => ['key' => 'kemas', 'label' => '2. Dikemas', 'desc' => 'Sedang dikemas penjual'],
+            3 => ['key' => 'kirim', 'label' => '3. Dikirim', 'desc' => $this->delivery_method === 'delivery_lokal' ? 'Dalam perjalanan diantar kurir' : 'Dalam perjalanan ekspedisi'],
+            4 => ['key' => 'sampai', 'label' => '4. Diterima', 'desc' => 'Diterima pembeli & beri ★'],
+        ];
+    }
+
     public function getProgressStepAttribute(): int
     {
+        if ($this->delivery_method === 'pickup') {
+            return match ($this->effective_progress) {
+                'pesan'      => 1,
+                'kemas'      => 2,
+                'sampai'     => 3,
+                'dibatalkan' => 0,
+                default      => 1,
+            };
+        }
+
         return match ($this->effective_progress) {
             'pesan'      => 1,
             'kemas'      => 2,
@@ -120,14 +196,83 @@ class Order extends Model
 
     public function getProgressLabelAttribute(): string
     {
+        if ($this->delivery_method === 'pickup') {
+            return match ($this->effective_progress) {
+                'pesan'      => 'Dipesan',
+                'kemas'      => 'Dikemas (Siap Diambil di Sekolah)',
+                'sampai'     => 'Diterima di Sekolah',
+                'dibatalkan' => 'Dibatalkan',
+                default      => 'Dipesan',
+            };
+        }
+
         return match ($this->effective_progress) {
             'pesan'      => 'Dipesan',
             'kemas'      => 'Dikemas',
             'kirim'      => 'Dikirim / Dalam Perjalanan',
-            'sampai'     => 'Sampai / Selesai',
+            'sampai'     => 'Sampai / Diterima',
             'dibatalkan' => 'Dibatalkan',
             default      => 'Dipesan',
         };
+    }
+
+    public function getFormattedShippingCostAttribute(): string
+    {
+        $cost = (float) ($this->shipping_cost ?? 0);
+        return $cost > 0 ? 'Rp ' . number_format($cost, 0, ',', '.') : 'Gratis (Rp 0)';
+    }
+
+    /**
+     * Hitung Estimasi Biaya Ongkir Menyesuaikan Skema & Lokasi
+     */
+    public static function calculateEstimatedShipping(?string $method, ?string $kabupaten, ?string $kecamatan): float
+    {
+        $method = $method ?: 'pickup';
+        if ($method === 'pickup') {
+            return 0.0;
+        }
+
+        $kec = strtolower(trim((string) $kecamatan));
+        $kab = strtolower(trim((string) $kabupaten));
+
+        if ($method === 'delivery_lokal') {
+            // Khusus 3 kecamatan lokal Kabupaten Cirebon
+            return 5000.0;
+        }
+
+        // Metode Transfer Antar (Ekspedisi Luar Kecamatan / Kota)
+        if (str_contains($kab, 'cirebon') && in_array($kec, self::LOCAL_DELIVERY_DISTRICTS, true)) {
+            return 8000.0;
+        }
+
+        if (str_contains($kab, 'cirebon') || str_contains($kab, 'indramayu') || str_contains($kab, 'majalengka') || str_contains($kab, 'kuningan')) {
+            return 12000.0; // Wilayah III Cirebon
+        }
+
+        if (
+            str_contains($kab, 'bandung') || str_contains($kab, 'bekasi') || str_contains($kab, 'bogor') ||
+            str_contains($kab, 'depok') || str_contains($kab, 'jakarta') || str_contains($kab, 'tangerang') ||
+            str_contains($kab, 'karawang') || str_contains($kab, 'purwakarta') || str_contains($kab, 'subang') ||
+            str_contains($kab, 'sumedang') || str_contains($kab, 'garut') || str_contains($kab, 'tasikmalaya') ||
+            str_contains($kab, 'ciamis') || str_contains($kab, 'banjar') || str_contains($kab, 'pangandaran') ||
+            str_contains($kab, 'sukabumi') || str_contains($kab, 'cianjur') || str_contains($kab, 'banten') || str_contains($kab, 'serang')
+        ) {
+            return 18000.0; // Jawa Barat, Banten & Jabodetabek
+        }
+
+        if (
+            str_contains($kab, 'semarang') || str_contains($kab, 'surakarta') || str_contains($kab, 'solo') ||
+            str_contains($kab, 'yogyakarta') || str_contains($kab, 'jogja') || str_contains($kab, 'surabaya') ||
+            str_contains($kab, 'malang') || str_contains($kab, 'jawa') || str_contains($kab, 'jateng') || str_contains($kab, 'jatim')
+        ) {
+            return 24000.0; // Jawa Tengah, DIY, Jawa Timur
+        }
+
+        if ($kab !== '') {
+            return 38000.0; // Luar Pulau Jawa
+        }
+
+        return 15000.0; // Default estimasi transfer antar
     }
 
     public function getOrderCodeAttribute(): string

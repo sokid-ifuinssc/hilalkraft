@@ -112,6 +112,36 @@ class AppServiceProvider extends ServiceProvider
             // Abaikan jika tabel dalam status locking
         }
 
+        try {
+            if (Schema::hasTable('orders')) {
+                Schema::table('orders', function ($table) {
+                    if (! Schema::hasColumn('orders', 'delivery_method')) {
+                        $table->string('delivery_method', 30)->default('pickup');
+                    }
+                    if (! Schema::hasColumn('orders', 'shipping_cost')) {
+                        $table->decimal('shipping_cost', 12, 2)->default(0);
+                    }
+                    if (! Schema::hasColumn('orders', 'destination_kabupaten')) {
+                        $table->string('destination_kabupaten', 100)->nullable();
+                    }
+                    if (! Schema::hasColumn('orders', 'destination_kecamatan')) {
+                        $table->string('destination_kecamatan', 100)->nullable();
+                    }
+                    if (! Schema::hasColumn('orders', 'destination_desa')) {
+                        $table->string('destination_desa', 100)->nullable();
+                    }
+                    if (! Schema::hasColumn('orders', 'courier_name')) {
+                        $table->string('courier_name', 100)->nullable();
+                    }
+                    if (! Schema::hasColumn('orders', 'tracking_number')) {
+                        $table->string('tracking_number', 100)->nullable();
+                    }
+                });
+            }
+        } catch (Throwable $e) {
+            // Abaikan jika orders belum siap
+        }
+
         if (
             ! Schema::hasTable('users') ||
             ! Schema::hasTable('categories') ||
@@ -124,6 +154,7 @@ class AppServiceProvider extends ServiceProvider
             ! Schema::hasTable('activity_logs') ||
             ! Schema::hasColumn('cms_contents', 'duration_seconds') ||
             ! Schema::hasColumn('orders', 'progress_status') ||
+            ! Schema::hasColumn('orders', 'delivery_method') ||
             ! Schema::hasColumn('stores', 'discount_pelajar') ||
             ! Schema::hasColumn('users', 'user_subtype') ||
             ! Schema::hasColumn('products', 'views_count')
