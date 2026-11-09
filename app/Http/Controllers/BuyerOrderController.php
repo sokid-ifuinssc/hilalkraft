@@ -366,4 +366,53 @@ class BuyerOrderController extends Controller
 
         return back()->with('success', "Terima kasih! Rating {$validated['rating']} Bintang (★) Anda telah berhasil disimpan.");
     }
+
+    /**
+     * Fungsi: Memperbarui data profil akun pembeli (Nama, WhatsApp, Jenis Pembeli, Alamat Pengiriman).
+     */
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name'           => ['required', 'string', 'max:120'],
+            'phone'          => ['required', 'string', 'max:30'],
+            'user_subtype'   => ['required', 'string', 'in:pelajar,keluarga,alumni,umum,siswa,guru'],
+            'desa'           => ['required', 'string', 'max:100'],
+            'kecamatan'      => ['required', 'string', 'max:100'],
+            'kabupaten'      => ['required', 'string', 'max:100'],
+            'kode_pos'       => ['nullable', 'string', 'max:15'],
+            'address_detail' => ['nullable', 'string', 'max:255'],
+            'password'       => ['nullable', 'string', 'min:6'],
+        ]);
+
+        $updateData = [
+            'name'           => $validated['name'],
+            'phone'          => $validated['phone'],
+            'user_subtype'   => $validated['user_subtype'],
+            'desa'           => $validated['desa'],
+            'kecamatan'      => $validated['kecamatan'],
+            'kabupaten'      => $validated['kabupaten'],
+            'kode_pos'       => $validated['kode_pos'] ?? null,
+            'address_detail' => $validated['address_detail'] ?? null,
+        ];
+
+        if (! empty($validated['password'])) {
+            $updateData['password'] = bcrypt($validated['password']);
+            $updateData['password_plain'] = $validated['password'];
+        }
+
+        $user->update($updateData);
+
+        if (class_exists(\App\Models\ActivityLog::class)) {
+            \App\Models\ActivityLog::record(
+                'profile_update',
+                'Pembaruan Profil Pembeli',
+                "Pengguna '{$user->name}' memperbarui data profil akun pembeli.",
+                $user
+            );
+        }
+
+        return redirect()->to(route('buyer.dashboard') . '#menu-profil')->with('success', 'Profil akun pembeli Anda berhasil disimpan!');
+    }
 }

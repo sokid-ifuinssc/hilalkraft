@@ -60,6 +60,7 @@ Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
 */
 Route::middleware(['auth', 'role:buyer,seller,admin,super_admin'])->prefix('pembeli')->name('buyer.')->group(function () {
     Route::get('/dashboard', [BuyerOrderController::class, 'index'])->name('dashboard');
+    Route::put('/profil', [BuyerOrderController::class, 'updateProfile'])->name('profile.update');
     Route::get('/laporan', [ReportController::class, 'buyer'])->name('reports');
     Route::post('/keranjang/{product}', [BuyerOrderController::class, 'addToCart'])->name('cart.add');
     Route::get('/keranjang', [BuyerOrderController::class, 'viewCart'])->name('cart.index');

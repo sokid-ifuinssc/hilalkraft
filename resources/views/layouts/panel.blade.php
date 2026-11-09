@@ -43,10 +43,11 @@ Penggunaan:
             ['🧭', 'Pengunjung',         route('admin.dashboard') . '#sec-laporan-pengunjung',   false],
         ],
         default => [
-            ['🚚', 'Pesanan Saya',    route('buyer.dashboard'),  request()->routeIs('buyer.dashboard')],
-            ['🛒', 'Keranjang',       route('buyer.cart.index'), request()->routeIs('buyer.cart.*')],
-            ['📊', 'Laporan Belanja', route('buyer.reports'),    request()->routeIs('buyer.reports')],
-            ['🛍️', 'Belanja Lagi',    route('home'),             false],
+            ['🚚', 'Pesanan Saya',    route('buyer.dashboard'),                      request()->routeIs('buyer.dashboard')],
+            ['👤', 'Profil Akun',     route('buyer.dashboard') . '#menu-profil',     false],
+            ['🛒', 'Keranjang',       route('buyer.cart.index'),                     request()->routeIs('buyer.cart.*')],
+            ['📊', 'Laporan Belanja', route('buyer.reports'),                        request()->routeIs('buyer.reports')],
+            ['🛍️', 'Belanja Lagi',    route('home'),                                 false],
         ],
     };
 

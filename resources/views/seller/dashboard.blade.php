@@ -32,27 +32,35 @@ Algoritma:
     $lowStockProducts = $products->filter(fn($p) => $p->stock <= 3);
 @endphp
 
-<div class="min-h-screen flex bg-[#F8FAFC] text-[#0F291E]">
+<div class="min-h-screen flex bg-[#F8FAFC] text-[#0F291E] relative">
 
-    <!-- Sidebar Kiri Sesuai Desain `Kelola produk · Desktop.png` -->
-    <aside class="w-64 bg-white border-r border-slate-200/80 hidden lg:flex flex-col justify-between shrink-0 sticky top-0 h-screen p-6">
+    <!-- Backdrop Overlay Drawer Mobile -->
+    <div id="sellerOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 hidden lg:hidden transition-opacity" onclick="toggleSellerSidebar(false)"></div>
+
+    <!-- Sidebar Kiri Sesuai Desain `Kelola produk · Desktop.png` (Responsive Drawer di Mobile & Sticky di Desktop) -->
+    <aside id="sellerSidebar" class="w-64 bg-white border-r border-slate-200/80 fixed lg:sticky top-0 left-0 z-50 h-screen p-6 flex flex-col justify-between shrink-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out overflow-y-auto">
         <div class="space-y-6">
-            <!-- Brand dengan Logo hilalkraf & Logo SMK Plus Al Hilal -->
-            <a href="{{ route('home') }}" class="flex flex-col gap-2 pb-4 border-b border-slate-100">
-                <div class="flex items-center gap-2 rounded-2xl bg-white border border-emerald-500/25 px-2.5 py-1.5 shadow-sm">
-                    <img src="{{ asset('images/logo-hilalkraf.jpg') }}"
-                         alt="hilalkraf"
-                         class="h-11 w-auto object-contain">
-                    <span class="h-7 w-[1px] bg-slate-200"></span>
-                    <img src="{{ asset('images/logo-smk-alhilal.png') }}"
-                         alt="SMK Plus Al Hilal"
-                         class="h-9 w-9 object-contain">
-                </div>
-                <div>
-                    <span class="text-lg font-extrabold tracking-tight text-[#0F291E] block leading-none">hilalkraf</span>
-                    <span class="text-[10px] font-bold text-[#0B6E4F]">Inkubator Bisnis & Wirausaha Muda SMK PAL</span>
-                </div>
-            </a>
+            <!-- Header Sidebar & Tombol Close Mobile -->
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100 lg:border-none lg:pb-0">
+                <a href="{{ route('home') }}" class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2 rounded-2xl bg-white border border-emerald-500/25 px-2.5 py-1.5 shadow-sm">
+                        <img src="{{ asset('images/logo-hilalkraf.jpg') }}"
+                             alt="hilalkraf"
+                             class="h-10 w-auto object-contain">
+                        <span class="h-6 w-[1px] bg-slate-200"></span>
+                        <img src="{{ asset('images/logo-smk-alhilal.png') }}"
+                             alt="SMK Plus Al Hilal"
+                             class="h-8 w-8 object-contain">
+                    </div>
+                    <div>
+                        <span class="text-base font-extrabold tracking-tight text-[#0F291E] block leading-none">hilalkraf</span>
+                        <span class="text-[9px] font-bold text-[#0B6E4F]">Inkubator Bisnis Muda SMK PAL</span>
+                    </div>
+                </a>
+                <button type="button" onclick="toggleSellerSidebar(false)" class="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-lg leading-none font-bold" title="Tutup Menu">
+                    &times;
+                </button>
+            </div>
 
             <!-- Identitas Ruang Karya -->
             <div class="space-y-1">
@@ -64,36 +72,39 @@ Algoritma:
             </div>
 
             <!-- Menu Navigasi Sidebar -->
-            <nav class="space-y-1 text-xs font-semibold">
-                <a href="#section-ringkasan" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
+            <nav class="space-y-1 text-xs font-semibold" id="seller-sidebar-nav">
+                <button type="button" onclick="switchSellerTab('all')" class="seller-nav-item w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition text-left" data-target="all">
                     <span>⊞</span>
-                    <span>Dashboard</span>
-                </a>
-                <a href="#section-produk" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 bg-[#EBF9F2] text-[#0B6E4F] font-bold">
-                    <span>📦</span>
-                    <span>Produk Saya</span>
-                </a>
-                <a href="#section-pesanan" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
+                    <span>Semua Menu</span>
+                </button>
+                <button type="button" onclick="switchSellerTab('produk')" class="seller-nav-item w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 bg-[#EBF9F2] text-[#0B6E4F] font-bold text-left transition" data-target="produk">
+                    <span class="flex items-center gap-3">
+                        <span>📦</span>
+                        <span>Produk Saya</span>
+                    </span>
+                    <span class="rounded-full bg-white/80 px-2 py-0.5 text-[10px]">{{ $products->total() }}</span>
+                </button>
+                <button type="button" onclick="switchSellerTab('pesanan')" class="seller-nav-item w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition text-left" data-target="pesanan">
                     <span class="flex items-center gap-3">
                         <span>🚚</span>
                         <span>Progres Pesanan</span>
                     </span>
                     <span class="rounded-full bg-[#EBF9F2] px-2 py-0.5 text-[10px] font-bold text-[#0B6E4F]">{{ $orders->count() }}</span>
-                </a>
-                <a href="#section-diskon" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
+                </button>
+                <button type="button" onclick="switchSellerTab('diskon')" class="seller-nav-item w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition text-left" data-target="diskon">
                     <span class="flex items-center gap-3">
                         <span>🏷️</span>
                         <span>Diskon & Bazar</span>
                     </span>
                     <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">Promo</span>
-                </a>
+                </button>
+                <button type="button" onclick="switchSellerTab('profil')" class="seller-nav-item w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition text-left" data-target="profil">
+                    <span>🏪</span>
+                    <span>Profil Toko</span>
+                </button>
                 <a href="{{ route('seller.reports') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span>📊</span>
                     <span>Laporan Penjualan</span>
-                </a>
-                <a href="#section-profil" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>🏪</span>
-                    <span>Profil Toko</span>
                 </a>
             </nav>
         </div>
@@ -104,13 +115,13 @@ Algoritma:
                 <span class="w-6 h-6 rounded-full bg-white text-[#0B6E4F] flex items-center justify-center text-xs font-bold">🛟</span>
                 <p class="text-xs font-bold text-[#0F291E] pt-1">Butuh bantuan?</p>
                 <p class="text-[11px] text-slate-500">Tim hilalkraft siap membantu.</p>
-                <a href="#section-profil" class="inline-block text-[11px] font-bold text-[#0B6E4F] hover:underline pt-0.5">
+                <button type="button" onclick="switchSellerTab('profil')" class="inline-block text-[11px] font-bold text-[#0B6E4F] hover:underline pt-0.5 text-left">
                     Hubungi pengelola →
-                </a>
+                </button>
             </div>
 
             <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
-                <a href="{{ route('home') }}" class="hover:text-[#0B6E4F] transition">↗ Kembali ke marketplace</a>
+                <a href="{{ route('home') }}" class="hover:text-[#0B6E4F] transition">↗ Beranda</a>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
                     <button type="submit" class="text-rose-600 font-semibold hover:underline">Keluar</button>
@@ -122,21 +133,31 @@ Algoritma:
     <!-- Konten Utama -->
     <div class="flex-1 flex flex-col min-w-0">
 
-        <!-- Top Bar -->
-        <header class="h-16 bg-white border-b border-slate-200/80 px-6 sm:px-10 flex items-center justify-between gap-4">
-            <div class="text-xs text-slate-400 flex items-center gap-2">
-                <a href="{{ route('home') }}" class="lg:hidden font-bold text-[#0B6E4F]">← Marketplace</a>
-                <span>Dashboard pemilik toko</span>
-                <span>/</span>
-                <span class="text-slate-700 font-semibold">Produk Saya</span>
+        <!-- Top Bar dengan Tombol Hamburger Mobile -->
+        <header class="h-16 bg-white border-b border-slate-200/80 px-4 sm:px-10 flex items-center justify-between gap-3 sticky top-0 z-30">
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="toggleSellerSidebar(true)" class="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 border border-slate-200 flex items-center gap-1.5 font-bold text-xs">
+                    <span>☰</span>
+                    <span>Menu</span>
+                </button>
+                <div class="text-xs text-slate-400 hidden sm:flex items-center gap-2">
+                    <a href="{{ route('home') }}" class="font-bold text-[#0B6E4F]">← Beranda</a>
+                    <span>/</span>
+                    <span>Panel Toko</span>
+                    <span>/</span>
+                    <span class="text-slate-700 font-semibold truncate max-w-[160px]">{{ $store->store_name }}</span>
+                </div>
             </div>
 
             <div class="flex items-center gap-3">
+                <a href="{{ route('home') }}" class="text-xs font-bold text-[#0B6E4F] hover:underline hidden xs:inline">
+                    ↗ Lihat Web
+                </a>
                 <div class="text-right hidden sm:block">
                     <p class="text-xs font-bold text-[#0F291E] leading-none">{{ $user->name }}</p>
-                    <p class="text-[10px] text-slate-400 mt-0.5">Pemilik Toko ({{ $store->seller_type_label }})</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">{{ $store->seller_type_label }}</p>
                 </div>
-                <div class="w-8 h-8 rounded-full bg-[#D5F5E6] text-[#0B6E4F] font-extrabold text-xs flex items-center justify-center">
+                <div class="w-8 h-8 rounded-full bg-[#D5F5E6] text-[#0B6E4F] font-extrabold text-xs flex items-center justify-center shrink-0">
                     {{ strtoupper(substr($user->name, 0, 2)) }}
                 </div>
             </div>
@@ -189,75 +210,101 @@ Algoritma:
         @endif
 
         <!-- Isi Halaman -->
-        <div class="p-6 sm:p-10 space-y-8 max-w-6xl w-full mx-auto">
+        <div class="p-4 sm:p-8 lg:p-10 space-y-6 max-w-6xl w-full mx-auto">
 
-            <!-- Judul & Tombol Tambah Produk Baru -->
-            <div id="section-ringkasan" class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0F291E] tracking-tight">Produk Saya</h1>
-                    <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Kelola karya, pantau stok, dan terus bertumbuh.</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <a href="{{ route('seller.reports') }}" class="inline-flex items-center gap-2 rounded-xl border border-[#CDEFE0] bg-[#EBF9F2] px-4 py-3 text-xs sm:text-sm font-semibold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
-                        📊 Laporan Penjualan
-                    </a>
-                    <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-[#0B6E4F] px-5 py-3 text-xs sm:text-sm font-semibold text-white hover:bg-[#08583F] transition shadow-sm">
-                        <span>+ Tambah Produk Baru</span>
-                    </a>
-                </div>
+            <!-- Bilah Navigasi Tab Cepat (Quick Switcher Pills Anti-Scroll Panjang di Mobile & Desktop) -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs font-bold -mx-1 px-1">
+                <button type="button" onclick="switchSellerTab('all')" class="seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-[#0B6E4F] text-white" data-pill="all">
+                    ⊞ Semua Menu
+                </button>
+                <button type="button" onclick="switchSellerTab('produk')" class="seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="produk">
+                    📦 Produk Saya ({{ $products->total() }})
+                </button>
+                <button type="button" onclick="switchSellerTab('pesanan')" class="seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="pesanan">
+                    🚚 Progres Pesanan ({{ $orders->count() }})
+                </button>
+                <button type="button" onclick="switchSellerTab('diskon')" class="seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="diskon">
+                    🏷️ Diskon & Bazar
+                </button>
+                <button type="button" onclick="switchSellerTab('profil')" class="seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="profil">
+                    🏪 Profil Toko
+                </button>
+                <a href="{{ route('seller.reports') }}" class="rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 flex items-center gap-1">
+                    <span>📊</span>
+                    <span>Laporan Penjualan</span>
+                </a>
             </div>
 
-            <!-- 4 Kartu KPI -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
-                    <div class="flex items-center justify-between text-xs text-slate-400">
-                        <span>Produk aktif</span>
-                        <span class="text-[#0B6E4F]">📦</span>
+            <!-- Ringkasan & 4 Kartu KPI -->
+            <div id="section-ringkasan-wrap" class="seller-main-section space-y-6">
+                <!-- Judul & Tombol Tambah Produk Baru -->
+                <div id="section-ringkasan" class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0F291E] tracking-tight">Dashboard & Produk Toko</h1>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Kelola karya, pantau stok, diskon, dan pesanan pembeli.</p>
                     </div>
-                    <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ $store->products_count }}</p>
-                    <p class="text-[11px] font-semibold text-[#0B6E4F]">Semua sudah tayang</p>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a href="{{ route('seller.reports') }}" class="inline-flex items-center gap-2 rounded-xl border border-[#CDEFE0] bg-[#EBF9F2] px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
+                            📊 Laporan
+                        </a>
+                        <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-[#0B6E4F] px-4.5 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-[#08583F] transition shadow-sm">
+                            <span>+ Tambah Produk Baru</span>
+                        </a>
+                    </div>
                 </div>
 
-                <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
-                    <div class="flex items-center justify-between text-xs text-slate-400">
-                        <span>Total dilihat (👁️)</span>
-                        <span class="text-[#0B6E4F]">👁️</span>
+                <!-- 4 Kartu KPI -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>Produk aktif</span>
+                            <span class="text-[#0B6E4F]">📦</span>
+                        </div>
+                        <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ $store->products_count }}</p>
+                        <p class="text-[11px] font-semibold text-[#0B6E4F]">Semua sudah tayang</p>
                     </div>
-                    <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ number_format($store->views_count + $products->sum('views_count')) }}</p>
-                    <p class="text-[11px] font-semibold text-[#0B6E4F]">Pengunjung & akun</p>
+
+                    <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>Total dilihat (👁️)</span>
+                            <span class="text-[#0B6E4F]">👁️</span>
+                        </div>
+                        <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ number_format($store->views_count + $products->sum('views_count')) }}</p>
+                        <p class="text-[11px] font-semibold text-[#0B6E4F]">Pengunjung & akun</p>
+                    </div>
+
+                    <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>Suka & Komentar</span>
+                            <span class="text-[#0B6E4F]">❤️</span>
+                        </div>
+                        <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">
+                            {{ number_format($products->sum('likes_count')) }} <span class="text-sm font-semibold text-slate-400">/ {{ number_format($store->comments_count ?? 0) }} 💬</span>
+                        </p>
+                        <p class="text-[11px] font-semibold text-[#0B6E4F]">Apresiasi karya</p>
+                    </div>
+
+                    <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>Stok menipis</span>
+                            <span class="text-amber-600">⚠️</span>
+                        </div>
+                        <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ $lowStockProducts->count() }}</p>
+                        <p class="text-[11px] font-semibold text-[#0B6E4F]">{{ $lowStockProducts->count() > 0 ? 'Perlu segera ditambah' : 'Stok aman terkendali' }}</p>
+                    </div>
                 </div>
 
-                <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
-                    <div class="flex items-center justify-between text-xs text-slate-400">
-                        <span>Suka & Komentar</span>
-                        <span class="text-[#0B6E4F]">❤️</span>
+                <!-- Banner Info Stok Menipis -->
+                @if($lowStockProducts->first())
+                    <div class="rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] px-4 py-3 text-xs text-[#0B6E4F] flex items-center gap-2.5 font-medium">
+                        <span class="font-bold">ⓘ</span>
+                        <span>{{ $lowStockProducts->first()->product_name }} tersisa {{ $lowStockProducts->first()->stock }} unit. Tambah stok agar pembeli tidak kehabisan.</span>
                     </div>
-                    <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">
-                        {{ number_format($products->sum('likes_count')) }} <span class="text-sm font-semibold text-slate-400">/ {{ number_format($store->comments_count ?? 0) }} 💬</span>
-                    </p>
-                    <p class="text-[11px] font-semibold text-[#0B6E4F]">Apresiasi karya</p>
-                </div>
-
-                <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
-                    <div class="flex items-center justify-between text-xs text-slate-400">
-                        <span>Stok menipis</span>
-                        <span class="text-amber-600">⚠️</span>
-                    </div>
-                    <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ $lowStockProducts->count() }}</p>
-                    <p class="text-[11px] font-semibold text-[#0B6E4F]">{{ $lowStockProducts->count() > 0 ? 'Perlu segera ditambah' : 'Stok aman terkendali' }}</p>
-                </div>
+                @endif
             </div>
-
-            <!-- Banner Info Stok Menipis -->
-            @if($lowStockProducts->first())
-                <div class="rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] px-4 py-3 text-xs text-[#0B6E4F] flex items-center gap-2.5 font-medium">
-                    <span class="font-bold">ⓘ</span>
-                    <span>{{ $lowStockProducts->first()->product_name }} tersisa {{ $lowStockProducts->first()->stock }} unit. Tambah stok agar pembeli tidak kehabisan.</span>
-                </div>
-            @endif
 
             <!-- Tabel Produk Saya -->
-            <div id="section-produk" class="rounded-2xl bg-white border border-slate-200/80 overflow-hidden">
+            <div id="section-produk" class="seller-main-section rounded-2xl bg-white border border-slate-200/80 overflow-hidden">
                 <div class="p-5 space-y-4 border-b border-slate-100">
                     <div class="flex items-center gap-5 text-xs font-bold">
                         <span class="text-[#0B6E4F]">Semua produk ({{ $products->total() }})</span>
@@ -349,7 +396,7 @@ Algoritma:
             <!-- ========================================================================= -->
             <!-- SKEMA PROGRES PESANAN PEMILIK TOKO (PESAN -> KEMAS -> KIRIM -> SAMPAI)     -->
             <!-- ========================================================================= -->
-            <div id="section-pesanan" class="rounded-2xl bg-white border border-slate-200/80 p-6 sm:p-8 space-y-6">
+            <div id="section-pesanan" class="seller-main-section rounded-2xl bg-white border border-slate-200/80 p-6 sm:p-8 space-y-6">
                 <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
                     <div>
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-[#EBF9F2] px-3 py-1 text-[11px] font-bold text-[#0B6E4F] mb-2">
@@ -585,7 +632,7 @@ Algoritma:
             <!-- ========================================================================= -->
             <!-- SKEMA DISKON JENIS PEMBELI & ACARA BAZAR SMK OLEH PEMILIK TOKO            -->
             <!-- ========================================================================= -->
-            <div id="section-diskon" class="rounded-2xl bg-white border border-slate-200/80 p-6 sm:p-8 space-y-6">
+            <div id="section-diskon" class="seller-main-section rounded-2xl bg-white border border-slate-200/80 p-6 sm:p-8 space-y-6">
                 <div class="border-b border-slate-100 pb-4 flex flex-wrap items-start justify-between gap-4">
                     <div>
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200/80 px-3 py-1 text-[11px] font-bold text-amber-800 mb-2">
@@ -688,7 +735,7 @@ Algoritma:
             </div>
 
             <!-- Bagian Profil Toko & Edit Profil Lengkap Pemilik Toko (Satu Toko Satu Akun) -->
-            <div id="section-profil" class="rounded-2xl bg-white border border-slate-200/80 p-6 sm:p-8 space-y-5">
+            <div id="section-profil" class="seller-main-section rounded-2xl bg-white border border-slate-200/80 p-6 sm:p-8 space-y-5">
                 <div class="border-b border-slate-100 pb-4">
                     <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Profil Toko & Identitas Lengkap Pemilik Toko (1 Akun 1 Toko)</h2>
                     <p class="text-xs text-slate-500 mt-0.5">
@@ -812,6 +859,71 @@ Algoritma:
 </div>
 
 <script>
+    function toggleSellerSidebar(open) {
+        const sidebar = document.getElementById('sellerSidebar');
+        const overlay = document.getElementById('sellerOverlay');
+        if (!sidebar || !overlay) return;
+
+        if (open) {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        } else {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
+    }
+
+    function switchSellerTab(target) {
+        // 1. Tutup drawer sidebar mobile jika terbuka
+        toggleSellerSidebar(false);
+
+        // 2. Tampilkan section terpilih atau semua section
+        const sections = {
+            'all': ['section-ringkasan-wrap', 'section-produk', 'section-pesanan', 'section-diskon', 'section-profil'],
+            'produk': ['section-ringkasan-wrap', 'section-produk'],
+            'pesanan': ['section-pesanan'],
+            'diskon': ['section-diskon'],
+            'profil': ['section-profil']
+        };
+
+        const activeIds = sections[target] || sections['all'];
+
+        document.querySelectorAll('.seller-main-section').forEach(el => {
+            const shouldShow = activeIds.includes(el.id);
+            el.style.display = shouldShow ? '' : 'none';
+        });
+
+        // 3. Update active pill highlight
+        document.querySelectorAll('.seller-pill').forEach(btn => {
+            const isMatch = btn.getAttribute('data-pill') === target;
+            btn.className = isMatch
+                ? 'seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-[#0B6E4F] text-white shadow-xs font-bold'
+                : 'seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 font-bold';
+        });
+
+        // 4. Update sidebar nav items
+        document.querySelectorAll('.seller-nav-item').forEach(item => {
+            const isMatch = item.getAttribute('data-target') === target;
+            if (isMatch) {
+                item.classList.add('bg-[#EBF9F2]', 'text-[#0B6E4F]', 'font-bold');
+                item.classList.remove('text-slate-600', 'hover:bg-slate-50');
+            } else {
+                item.classList.remove('bg-[#EBF9F2]', 'text-[#0B6E4F]', 'font-bold');
+                item.classList.add('text-slate-600', 'hover:bg-slate-50');
+            }
+        });
+
+        // 5. Update URL hash
+        if (target !== 'all') {
+            history.replaceState(null, null, '#section-' + target);
+        } else {
+            history.replaceState(null, null, ' ');
+        }
+
+        // 6. Scroll ke posisi atas konten utama
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function toggleSellerProfileType(val) {
         document.getElementById('profile-siswa-row').classList.toggle('hidden', val !== 'siswa');
         document.getElementById('profile-guru-row').classList.toggle('hidden', val !== 'guru');
@@ -840,12 +952,16 @@ Algoritma:
 
     // Auto-scroll ke section setelah submit & auto-dismiss toast
     window.addEventListener('DOMContentLoaded', () => {
-        if (window.location.hash) {
-            const targetEl = document.querySelector(window.location.hash);
-            if (targetEl) {
-                setTimeout(() => {
-                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 150);
+        const hash = window.location.hash;
+        if (hash) {
+            if (hash.includes('profil')) {
+                switchSellerTab('profil');
+            } else if (hash.includes('diskon')) {
+                switchSellerTab('diskon');
+            } else if (hash.includes('pesanan')) {
+                switchSellerTab('pesanan');
+            } else if (hash.includes('produk')) {
+                switchSellerTab('produk');
             }
         }
 

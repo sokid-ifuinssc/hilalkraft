@@ -36,10 +36,9 @@ class CatalogController extends Controller
 
         $sort = $request->string('sort', 'rekomendasi')->toString();
 
-        $productsQuery = Product::with(['store.owner'])
+        $productsQuery = Product::availableForPublic()
+            ->with(['store.owner'])
             ->withCount('comments')
-            ->where('is_active', true)
-            ->whereHas('store', fn ($q) => $q->where('is_verified', true))
             ->when($request->filled('q'), function ($query) use ($request) {
                 $search = $request->string('q');
                 $query->where(function ($sub) use ($search) {
@@ -61,9 +60,8 @@ class CatalogController extends Controller
 
         $products = $productsQuery->paginate(12)->withQueryString();
 
-        $featuredProduct = Product::with(['store.owner'])
-            ->where('is_active', true)
-            ->whereHas('store', fn ($q) => $q->where('is_verified', true))
+        $featuredProduct = Product::availableForPublic()
+            ->with(['store.owner'])
             ->orderByDesc('views_count')
             ->first();
 
@@ -96,10 +94,22 @@ class CatalogController extends Controller
      */
     public function show(Request $request, Product $product): View
     {
-        $product->increment('views_count');
-        $product->store()->increment('views_count');
-
         $user = $request->user();
+        $store = $product->store;
+        $isOwnerOrAdmin = $user && ($user->id === ($store?->user_id ?? 0) || in_array($user->role, ['admin', 'super_admin']));
+
+        // Jika produk tidak aktif atau tokonya nonaktif/terhapus, cegah pengunjung umum
+        if (! $product->is_active || ! $store || ! $store->is_verified || $store->status === 'inactive' || $store->trashed()) {
+            if (! $isOwnerOrAdmin) {
+                abort(404, 'Karya produk atau toko ini sedang dinonaktifkan oleh pengelola.');
+            }
+        }
+
+        $product->increment('views_count');
+        if ($store) {
+            $store->increment('views_count');
+        }
+
         VisitorLog::create([
             'user_id'       => $user?->id,
             'store_id'      => $product->store_id,
@@ -112,11 +122,11 @@ class CatalogController extends Controller
 
         $product->load(['store.owner', 'comments.user']);
 
-        $relatedProducts = Product::with('store')
+        $relatedProducts = Product::availableForPublic()
+            ->with('store')
             ->withCount('comments')
             ->where('category', $product->category)
             ->where('id', '!=', $product->id)
-            ->where('is_active', true)
             ->take(4)
             ->get();
 
@@ -184,9 +194,18 @@ class CatalogController extends Controller
 
     public function storeProfile(Request $request, Store $store): View
     {
+        $user = $request->user();
+        $isOwnerOrAdmin = $user && ($user->id === $store->user_id || in_array($user->role, ['admin', 'super_admin']));
+
+        // Jika toko nonaktif atau terhapus, tolak akses publik
+        if (! $store->is_verified || $store->status === 'inactive' || $store->trashed()) {
+            if (! $isOwnerOrAdmin) {
+                abort(404, 'Toko ini sedang dinonaktifkan atau dalam pemeliharaan.');
+            }
+        }
+
         $store->increment('views_count');
 
-        $user = $request->user();
         VisitorLog::create([
             'user_id'       => $user?->id,
             'store_id'      => $store->id,

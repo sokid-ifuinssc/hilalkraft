@@ -84,6 +84,34 @@ class AppServiceProvider extends ServiceProvider
 
     private function ensureSchemaAndSampleData(): void
     {
+        $conn = DB::getDefaultConnection();
+
+        // 1. Self-Healing Kolom Tabel Stores & Users (Mencegah error kolom truncated / missing)
+        try {
+            if ($conn === 'mysql') {
+                DB::statement("ALTER TABLE `stores` MODIFY COLUMN `student_class` VARCHAR(255) NULL;");
+                DB::statement("ALTER TABLE `users` MODIFY COLUMN `class_name` VARCHAR(100) NULL;");
+                DB::statement("ALTER TABLE `users` MODIFY COLUMN `major_name` VARCHAR(255) NULL;");
+            }
+        } catch (Throwable $e) {
+            // Abaikan jika tabel belum terbuat
+        }
+
+        try {
+            if (Schema::hasTable('stores')) {
+                Schema::table('stores', function ($table) {
+                    if (! Schema::hasColumn('stores', 'deleted_at')) {
+                        $table->softDeletes();
+                    }
+                    if (! Schema::hasColumn('stores', 'status')) {
+                        $table->string('status', 20)->default('active');
+                    }
+                });
+            }
+        } catch (Throwable $e) {
+            // Abaikan jika tabel dalam status locking
+        }
+
         if (
             ! Schema::hasTable('users') ||
             ! Schema::hasTable('categories') ||
@@ -97,8 +125,6 @@ class AppServiceProvider extends ServiceProvider
             ! Schema::hasColumn('cms_contents', 'duration_seconds') ||
             ! Schema::hasColumn('orders', 'progress_status') ||
             ! Schema::hasColumn('stores', 'discount_pelajar') ||
-            ! Schema::hasColumn('stores', 'deleted_at') ||
-            ! Schema::hasColumn('stores', 'status') ||
             ! Schema::hasColumn('users', 'user_subtype') ||
             ! Schema::hasColumn('products', 'views_count')
         ) {

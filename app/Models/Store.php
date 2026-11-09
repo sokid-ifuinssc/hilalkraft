@@ -34,6 +34,23 @@ class Store extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * Override bootSoftDeletes agar aman dan resilient di database yang belum menjalankan migrasi
+     * (mencegah error 'no such column: stores.deleted_at' di SQLite hosting sebelum migrasi).
+     */
+    public static function bootSoftDeletes(): void
+    {
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasColumn('stores', 'deleted_at')) {
+                return;
+            }
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        static::addGlobalScope(new \Illuminate\Database\Eloquent\SoftDeletingScope);
+    }
+
     protected $fillable = [
         'user_id',
         'store_name',

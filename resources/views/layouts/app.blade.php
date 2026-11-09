@@ -29,8 +29,8 @@ Algoritma:
         $pageTitle = trim($__env->yieldContent('title', 'hilalkraf — Marketplace Karya Siswa SMK Plus Al Hilal'));
         $ogTitle = trim($__env->yieldContent('og_title', $pageTitle));
         $ogDescription = trim($__env->yieldContent('og_description', 'Marketplace karya inovatif dan produk kreatif siswa SMK Plus Al Hilal (SMK PAL). Dari kerajinan tangan, produk kreatif, hingga teknologi anak bangsa.'));
-        $ogImage = trim($__env->yieldContent('og_image', asset('images/og-hilalkraf-square.png') . '?v=3'));
-        $ogImageBanner = trim($__env->yieldContent('og_image_banner', asset('images/og-hilalkraf-share.png') . '?v=3'));
+        $ogImage = trim($__env->yieldContent('og_image', asset('images/og-hilalkraf-square.png') . '?v=4'));
+        $ogImageBanner = trim($__env->yieldContent('og_image_banner', asset('images/og-hilalkraf-share.png') . '?v=4'));
         $ogUrl = url()->current();
     @endphp
 
@@ -47,8 +47,8 @@ Algoritma:
     <meta property="og:image" content="{{ $ogImage }}">
     <meta property="og:image:secure_url" content="{{ $ogImage }}">
     <meta property="og:image:type" content="image/png">
-    <meta property="og:image:width" content="800">
-    <meta property="og:image:height" content="800">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="1200">
     <meta property="og:image:alt" content="{{ $ogTitle }}">
 
     <!-- Twitter Card Meta Tags -->
@@ -59,11 +59,11 @@ Algoritma:
     <meta name="twitter:image" content="{{ $ogImageBanner }}">
 
     <!-- Logo Resmi hilalkraf pada Tab Bar Browser (Favicon & Mobile Touch Icon) -->
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=3">
-    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v=3">
-    <link rel="icon" type="image/png" href="{{ asset('images/og-hilalkraf-square.png') }}?v=3">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v=3">
-    <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('apple-touch-icon.png') }}?v=3">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=4">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v=4">
+    <link rel="icon" type="image/png" href="{{ asset('images/og-hilalkraf-square.png') }}?v=4">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v=4">
+    <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('apple-touch-icon.png') }}?v=4">
 
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

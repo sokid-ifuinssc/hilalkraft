@@ -76,4 +76,25 @@ class Product extends Model
         $avg = $this->comments()->avg('rating');
         return $avg ? round((float) $avg, 1) : 5.0;
     }
+
+    /**
+     * Scope agar galeri dan pencarian publik HANYA menampilkan produk aktif
+     * dari toko yang berstatus aktif, terverifikasi, dan tidak terhapus.
+     */
+    public function scopeAvailableForPublic($query)
+    {
+        return $query->where('is_active', true)
+            ->whereHas('store', function ($q) {
+                $q->where('is_verified', true);
+                try {
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('stores', 'status')) {
+                        $q->where(function ($sq) {
+                            $sq->whereNull('status')->orWhere('status', 'active');
+                        });
+                    }
+                } catch (\Throwable $e) {
+                    // Resilient jika kolom status belum termigrasi
+                }
+            });
+    }
 }
