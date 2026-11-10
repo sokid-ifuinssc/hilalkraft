@@ -84,7 +84,14 @@ class AdminDashboardController extends Controller
                 $q->where('class_name', $filterClass)
                   ->orWhere('class_name', $matchedClass)
                   ->orWhere('class_name', 'like', "{$filterClass}%")
-                  ->orWhere('class_name', 'like', "%{$filterClass}");
+                  ->orWhere('class_name', 'like', "%{$filterClass}")
+                  ->orWhereHas('store', function ($sq) use ($filterClass, $altClass) {
+                      $sq->where('student_class', 'like', "{$filterClass}%")
+                        ->orWhere('student_class', 'like', "%{$filterClass}%");
+                      if ($altClass) {
+                          $sq->orWhere('student_class', 'like', "%{$altClass}%");
+                      }
+                  });
                 if ($altClass) {
                     $q->orWhere('class_name', $altClass);
                 }
@@ -108,6 +115,19 @@ class AdminDashboardController extends Controller
                 if (! empty($acronym)) {
                     $q->orWhere('major_name', 'like', "%{$acronym}%");
                 }
+                // Selaraskan juga dengan data toko siswa jika tersimpan di store.student_class
+                $q->orWhereHas('store', function ($sq) use ($filterMajor, $matchedMajor, $baseMajor, $acronym) {
+                    $sq->where('student_class', 'like', "%{$filterMajor}%");
+                    if ($matchedMajor) {
+                        $sq->orWhere('student_class', 'like', "%{$matchedMajor}%");
+                    }
+                    if (! empty($baseMajor)) {
+                        $sq->orWhere('student_class', 'like', "%{$baseMajor}%");
+                    }
+                    if (! empty($acronym)) {
+                        $sq->orWhere('student_class', 'like', "%{$acronym}%");
+                    }
+                });
             });
         }
 
@@ -173,6 +193,20 @@ class AdminDashboardController extends Controller
                 ->sort()
                 ->values();
         }
+
+        // Deduplikasi cerdas agar tidak muncul varian ganda (misal: "Teknik Otomotif" vs "Teknik Otomotif (TO)")
+        $dedupedMajors = collect();
+        $seenBases = [];
+        $sortedMajors = $availableMajors->sortByDesc(fn ($m) => str_contains($m, '(') ? 1 : 0);
+        foreach ($sortedMajors as $majorItem) {
+            [$base] = ClassMajor::cleanMajorName($majorItem);
+            $key = $base ?: strtolower(trim($majorItem));
+            if (! isset($seenBases[$key])) {
+                $seenBases[$key] = true;
+                $dedupedMajors->push($majorItem);
+            }
+        }
+        $availableMajors = $dedupedMajors->sort()->values();
 
         // Master Kabupaten & Kota se-Indonesia dari database
         $availableKabupatens = Regency::getFlatList();

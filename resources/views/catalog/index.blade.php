@@ -260,50 +260,60 @@ Algoritma:
 @php
     $promoCards = collect();
 
+    // 1. Ambil nilai persentase diskon dari konfigurasi CMS / Policy
+    $dPelajar = (int) \App\Models\CmsContent::val('policy_discount_pelajar', '10');
+    $dKeluarga = (int) \App\Models\CmsContent::val('policy_discount_keluarga', '10');
+    $dAlumni = (int) \App\Models\CmsContent::val('policy_discount_alumni', '5');
+    $bazarEvent = isset($activeBazaarEvents) ? $activeBazaarEvents->first() : null;
+    $dBazar = $bazarEvent ? (int)$bazarEvent->discount_percent : (int)\App\Models\CmsContent::val('policy_discount_bazar', '15');
+
+    // 2. Buat Kartu Promo Terstruktur dengan copy-writing menarik
+    $promoCards->push((object)[
+        'category' => 'Diskon Pelajar',
+        'title'    => "Diskon {$dPelajar}% Siswa",
+        'content'  => 'Khusus siswa aktif SMK Plus Al Hilal & pelajar terdaftar.',
+        'link_url' => auth()->check() ? '#katalog-produk' : route('register'),
+        'image'    => null,
+    ]);
+
+    $promoCards->push((object)[
+        'category' => 'Diskon Keluarga',
+        'title'    => "Diskon {$dKeluarga}% Keluarga",
+        'content'  => 'Bagi guru, staf, wali murid & keluarga besar SMK.',
+        'link_url' => auth()->check() ? '#katalog-produk' : route('register'),
+        'image'    => null,
+    ]);
+
+    $promoCards->push((object)[
+        'category' => 'Diskon Alumni',
+        'title'    => "Diskon {$dAlumni}% Alumni",
+        'content'  => 'Penawaran istimewa untuk seluruh lulusan SMK Plus Al Hilal.',
+        'link_url' => auth()->check() ? '#katalog-produk' : route('register'),
+        'image'    => null,
+    ]);
+
+    if ($bazarEvent || $dBazar > 0) {
+        $promoCards->push((object)[
+            'category' => 'Promo Bazar',
+            'title'    => $bazarEvent ? "Bazar {$bazarEvent->discount_percent}% ({$bazarEvent->voucher_code})" : "Promo Bazar s/d {$dBazar}%",
+            'content'  => $bazarEvent ? ($bazarEvent->title . ' • Lokasi: ' . ($bazarEvent->location ?? 'SMK Plus Al Hilal')) : 'Diskon spesial belanja langsung di stand acara bazar sekolah.',
+            'link_url' => '#katalog-produk',
+            'image'    => null,
+        ]);
+    }
+
+    // 3. Masukkan Custom Announcement Banners yang dibuat Super Admin (di luar policy discount)
     if (isset($customCmsBanners) && $customCmsBanners->count() > 0) {
         foreach ($customCmsBanners as $b) {
+            if (str_starts_with($b->key, 'policy_discount_') || str_contains(strtolower($b->title), 'policy discount')) {
+                continue;
+            }
             $promoCards->push((object)[
                 'category'  => $b->section ?: 'Info & Promo',
                 'title'     => $b->title,
                 'content'   => $b->content,
                 'link_url'  => $b->link_url,
                 'image'     => $b->image,
-            ]);
-        }
-    } else {
-        $dPelajar = (int) \App\Models\CmsContent::val('policy_discount_pelajar', '10');
-        $dKeluarga = (int) \App\Models\CmsContent::val('policy_discount_keluarga', '10');
-        $dAlumni = (int) \App\Models\CmsContent::val('policy_discount_alumni', '5');
-        $bazarEvent = isset($activeBazaarEvents) ? $activeBazaarEvents->first() : null;
-
-        $promoCards->push((object)[
-            'category' => 'Diskon Pelajar',
-            'title'    => "Diskon {$dPelajar}% Pelajar",
-            'content'  => 'Khusus siswa SMK Plus Al Hilal & pelajar terdaftar.',
-            'link_url' => route('register'),
-            'image'    => null,
-        ]);
-        $promoCards->push((object)[
-            'category' => 'Diskon Keluarga',
-            'title'    => "Diskon {$dKeluarga}% Keluarga",
-            'content'  => 'Wali & keluarga besar siswa SMK Plus Al Hilal.',
-            'link_url' => route('register'),
-            'image'    => null,
-        ]);
-        $promoCards->push((object)[
-            'category' => 'Diskon Alumni',
-            'title'    => "Diskon {$dAlumni}% Alumni",
-            'content'  => 'Apresiasi istimewa bagi seluruh alumni SMK.',
-            'link_url' => route('register'),
-            'image'    => null,
-        ]);
-        if ($bazarEvent) {
-            $promoCards->push((object)[
-                'category' => 'Diskon Bazar',
-                'title'    => "Bazar {$bazarEvent->discount_percent}% ({$bazarEvent->voucher_code})",
-                'content'  => $bazarEvent->title . ' • Lokasi: ' . ($bazarEvent->location ?? 'SMK Plus Al Hilal'),
-                'link_url' => '#katalog-produk',
-                'image'    => null,
             ]);
         }
     }
@@ -532,10 +542,10 @@ Algoritma:
                                 <span>Detail</span>
                             </a>
 
-                            <!-- Tombol Utama: Pesan (Lebih Kontras & Mencolok) -->
+                            <!-- Tombol Utama: Pesan Resmi Lewat Aplikasi (Lebih Kontras & Mencolok) -->
                             <a href="{{ route('products.show', $product->slug) }}"
                                class="inline-flex items-center justify-center gap-1 rounded-lg sm:rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white shadow-xs hover:shadow-sm py-1.5 sm:py-2 px-2 text-[10px] sm:text-xs font-extrabold transition text-center active:scale-95">
-                                <span>💬 Pesan</span>
+                                <span>🚚 Pesan</span>
                             </a>
                         </div>
 

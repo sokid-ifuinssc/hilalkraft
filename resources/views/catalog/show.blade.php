@@ -45,7 +45,17 @@ Algoritma:
         asset('images/products/tokoganci-iyung-iyung.jpg'),
         $mainImg,
     ];
-    $waMessage = urlencode("Assalamu'alaikum {$product->store->owner->name} ({$product->store->store_name}), saya tertarik membeli produk *{$product->product_name}* seharga {$product->formatted_price} di hilalkraf SMK Plus Al Hilal. Saya ingin konsultasi transaksi (Datang ke Sekolah / Delivery Lokal Arjawinangun, Susukan, Kaliwedi / Transfer Antar).");
+
+    // Status Skema Transaksi & Default Delivery Method (Tersedia Global untuk Tamu & Pengguna Login)
+    $canPickup = $product->canPickup();
+    $canDelivery = $product->canDeliveryLokal();
+    $canTransfer = $product->canShippingTransfer();
+    $defaultMethod = $canPickup ? 'pickup' : ($canDelivery ? 'delivery_lokal' : 'shipping_transfer');
+
+    // Pesan WhatsApp KHUSUS KONSULTASI PRODUK (Bukan Pemesanan Langsung Tanpa Sistem)
+    $productPageUrl = request()->fullUrl();
+    $waConsultationMessage = urlencode("Assalamu'alaikum {$product->store->owner->name} ({$product->store->store_name}), saya ingin berkonsultasi seputar produk *{$product->product_name}* ({$product->formatted_price}) di Hilalkraf SMK Plus Al Hilal. Mohon infonya kak.\n\n(Catatan: Pemesanan resmi akan saya lakukan via aplikasi Hilalkraf agar aman & tercatat status transaksinya).\nLink: {$productPageUrl}");
+    $waMessage = $waConsultationMessage;
 @endphp
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 lg:pb-12 space-y-12">
@@ -212,19 +222,23 @@ Algoritma:
                     </div>
                 </div>
 
-                <!-- Tombol Transaksi Utama WhatsApp (Mencolok, Hijau WA #25D366, Rounded Melengkung, Hover Shadow) -->
-                <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
-                   target="_blank"
-                   rel="noopener"
-                   id="btn-main-whatsapp"
-                   class="w-full inline-flex items-center justify-center gap-2.5 rounded-xl sm:rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] active:scale-[0.98] text-white px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all duration-200 group">
-                    <svg class="w-5 h-5 fill-current shrink-0 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.073.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.112.551 4.148 1.6 5.952l-1.6 5.848 6.002-1.574c1.735 1.002 3.731 1.574 5.998 1.574 6.627 0 12-5.373 12-12s-5.373-12-12-12zm.001 22.083c-1.899 0-3.69-.536-5.231-1.465l-.375-.224-3.568.937.953-3.479-.247-.393c-1.026-1.633-1.568-3.528-1.568-5.459 0-5.556 4.519-10.075 10.076-10.075 5.556 0 10.075 4.519 10.075 10.075 0 5.557-4.519 10.076-10.075 10.076z"/>
-                    </svg>
-                    <span>💬 Pesan via WhatsApp</span>
-                </a>
+                <!-- 1. TOMBOL PEMESANAN UTAMA RESMI VIA APLIKASI (HIERARKI TERTINGGI, AMAN & TERLACAK) -->
+                @auth
+                    <button type="button"
+                            onclick="openDirectOrderModal()"
+                            class="w-full inline-flex items-center justify-center gap-2.5 rounded-xl sm:rounded-2xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-[0.98] text-white px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all duration-200">
+                        <span class="text-base sm:text-lg">🚚</span>
+                        <span>Pesan via Aplikasi (Aman & Terlacak)</span>
+                    </button>
+                @else
+                    <a href="{{ route('login', ['redirect' => request()->fullUrl()]) }}"
+                       class="w-full inline-flex items-center justify-center gap-2.5 rounded-xl sm:rounded-2xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-[0.98] text-white px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all duration-200">
+                        <span class="text-base sm:text-lg">🚚</span>
+                        <span>Pesan via Aplikasi (Masuk / Daftar Akun)</span>
+                    </a>
+                @endauth
 
-                <!-- Opsi Tambah ke Keranjang & Pesan Form Web -->
+                <!-- 2. OPSI KERANJANG & TANYA/KONSULTASI VIA WHATSAPP -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     @auth
                         <form action="{{ route('buyer.cart.add', $product) }}" method="POST">
@@ -235,22 +249,30 @@ Algoritma:
                                 <span>Tambah ke Keranjang</span>
                             </button>
                         </form>
-
-                        <button type="button" onclick="openDirectOrderModal()" class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] px-4 py-2.5 text-xs font-bold text-white transition shadow-xs">
-                            <span>🚚</span>
-                            <span>Pesan via Web</span>
-                        </button>
                     @else
-                        <a href="{{ route('login') }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:border-[#0B6E4F] hover:text-[#0B6E4F] px-4 py-2.5 text-xs font-bold text-[#0F291E] transition">
+                        <a href="{{ route('login', ['redirect' => request()->fullUrl()]) }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:border-[#0B6E4F] hover:text-[#0B6E4F] px-4 py-2.5 text-xs font-bold text-[#0F291E] transition">
                             <span>🛍️</span>
                             <span>Tambah ke Keranjang</span>
                         </a>
-
-                        <a href="{{ route('login') }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] px-4 py-2.5 text-xs font-bold text-white transition shadow-xs">
-                            <span>🚚</span>
-                            <span>Pesan via Web</span>
-                        </a>
                     @endauth
+
+                    <!-- Tombol Tanya / Konsultasi WhatsApp (Hanya untuk Tanya Jawab Produk) -->
+                    <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
+                       target="_blank"
+                       rel="noopener"
+                       id="btn-main-whatsapp"
+                       class="w-full inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#25D366] bg-[#25D366]/10 hover:bg-[#25D366] text-[#0B6E4F] hover:text-white px-4 py-2.5 text-xs font-extrabold transition-all duration-200 group">
+                        <svg class="w-4 h-4 fill-[#25D366] group-hover:fill-white shrink-0 transition-colors" viewBox="0 0 24 24">
+                            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.073.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.112.551 4.148 1.6 5.952l-1.6 5.848 6.002-1.574c1.735 1.002 3.731 1.574 5.998 1.574 6.627 0 12-5.373 12-12s-5.373-12-12-12zm.001 22.083c-1.899 0-3.69-.536-5.231-1.465l-.375-.224-3.568.937.953-3.479-.247-.393c-1.026-1.633-1.568-3.528-1.568-5.459 0-5.556 4.519-10.075 10.076-10.075 5.556 0 10.075 4.519 10.075 10.075 0 5.557-4.519 10.076-10.075 10.076z"/>
+                        </svg>
+                        <span>💬 Tanya / Konsultasi WA</span>
+                    </a>
+                </div>
+
+                <!-- Info Panduan Transaksi Aman -->
+                <div class="rounded-xl bg-slate-50 border border-slate-200/80 p-2.5 text-[11px] text-slate-500 leading-relaxed flex items-start gap-2">
+                    <span class="text-emerald-700 font-bold shrink-0">🛡️</span>
+                    <span><strong>Transaksi Aman:</strong> WhatsApp digunakan untuk tanya jawab detail karya. Pemesanan transaksi tetap wajib lewat aplikasi agar terlindungi sistem (Dipesan ➔ Dikemas ➔ Dikirim ➔ Diterima).</span>
                 </div>
 
                 <!-- Deretan Micro-Badges Visual Nilai Tambah Produk -->
@@ -847,26 +869,36 @@ Algoritma:
             </div>
         </div>
 
-        <!-- Kanan: Tombol Pesan via WA yang Mencolok -->
-        <div class="flex items-center gap-2 shrink-0">
+        <!-- Kanan: Tombol Pesan via Aplikasi (Utama) & Tanya WA (Konsultasi) -->
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
             @auth
                 <button type="button"
                         onclick="openDirectOrderModal()"
-                        class="rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 px-3 py-2 text-xs font-bold text-[#0F291E] transition"
-                        title="Pesan lewat Form Web">
-                    Web
+                        class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-95 text-white px-3.5 sm:px-4 py-2.5 text-xs font-black shadow-md transition"
+                        title="Pesan resmi lewat aplikasi">
+                    <span>🚚</span>
+                    <span>Pesan (Aplikasi)</span>
                 </button>
+            @else
+                <a href="{{ route('login', ['redirect' => request()->fullUrl()]) }}"
+                   class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-95 text-white px-3.5 sm:px-4 py-2.5 text-xs font-black shadow-md transition"
+                   title="Pesan resmi lewat aplikasi">
+                    <span>🚚</span>
+                    <span>Pesan (Aplikasi)</span>
+                </a>
             @endauth
 
+            <!-- Tombol Konsultasi WhatsApp -->
             <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
                target="_blank"
                rel="noopener"
                id="btn-sticky-whatsapp"
-               class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all duration-150">
-                <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+               class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white px-3 sm:px-3.5 py-2.5 text-xs font-bold shadow-sm transition"
+               title="Tanya & konsultasi produk via WhatsApp">
+                <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
                     <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.073.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.112.551 4.148 1.6 5.952l-1.6 5.848 6.002-1.574c1.735 1.002 3.731 1.574 5.998 1.574 6.627 0 12-5.373 12-12s-5.373-12-12-12zm.001 22.083c-1.899 0-3.69-.536-5.231-1.465l-.375-.224-3.568.937.953-3.479-.247-.393c-1.026-1.633-1.568-3.528-1.568-5.459 0-5.556 4.519-10.075 10.076-10.075 5.556 0 10.075 4.519 10.075 10.075 0 5.557-4.519 10.076-10.075 10.076z"/>
                 </svg>
-                <span>💬 Pesan via WA</span>
+                <span>Tanya WA</span>
             </a>
         </div>
     </div>
@@ -899,8 +931,8 @@ Algoritma:
             stickyPrice.textContent = 'Rp ' + totalCalc.toLocaleString('id-ID');
         }
 
-        // Update Link WhatsApp dengan kuantitas yang dipilih
-        const dynamicWaMsg = encodeURIComponent("Assalamu'alaikum " + sellerOwnerName + " (" + storeTitleName + "), saya tertarik membeli produk *" + productItemName + "* sebanyak " + next + " pcs (Total: Rp " + (unitPriceProduct * next).toLocaleString('id-ID') + ") di hilalkraf SMK Plus Al Hilal. Saya ingin konsultasi transaksi (Datang ke Sekolah / Delivery Lokal / Transfer Antar).");
+        // Update Link WhatsApp dengan kuantitas yang dipilih untuk KONSULTASI
+        const dynamicWaMsg = encodeURIComponent("Assalamu'alaikum " + sellerOwnerName + " (" + storeTitleName + "), saya ingin berkonsultasi seputar produk *" + productItemName + "* (" + next + " item) di Hilalkraf SMK Plus Al Hilal. Mohon infonya kak.\n\n(Catatan: Pemesanan resmi akan saya lakukan via aplikasi Hilalkraf agar aman & tercatat status transaksinya).");
         const mainWa = document.getElementById('btn-main-whatsapp');
         const stickyWa = document.getElementById('btn-sticky-whatsapp');
         if (mainWa) mainWa.href = baseWaProductUrl + '?text=' + dynamicWaMsg;
@@ -1019,7 +1051,7 @@ Algoritma:
         const mainQty = document.getElementById('qty-display');
         const q = mainQty ? parseInt(mainQty.value || '1', 10) : 1;
         setModalQtyVal(q);
-        updateModalDeliveryUI('{{ $defaultMethod }}');
+        updateModalDeliveryUI('{{ $defaultMethod ?? 'pickup' }}');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
     }

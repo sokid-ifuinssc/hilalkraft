@@ -39,16 +39,20 @@ class Regency extends Model
                 try {
                     \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
                 } catch (\Throwable $migErr) {
-                    // Abaikan lock
+                    // Safe fallback if migration cannot be executed
                 }
             }
 
-            if (\Illuminate\Support\Facades\Schema::hasTable('regencies') && static::count() > 0) {
-                return static::orderByRaw("CASE WHEN province = 'Jawa Barat' THEN 0 WHEN province = 'DKI Jakarta' THEN 1 WHEN province = 'Banten' THEN 2 WHEN province = 'Jawa Tengah' THEN 3 WHEN province = 'DI Yogyakarta' THEN 4 WHEN province = 'Jawa Timur' THEN 5 ELSE 6 END")
+            if (\Illuminate\Support\Facades\Schema::hasTable('regencies')) {
+                $grouped = static::orderByRaw("CASE WHEN province = 'Jawa Barat' THEN 0 WHEN province = 'DKI Jakarta' THEN 1 WHEN province = 'Banten' THEN 2 WHEN province = 'Jawa Tengah' THEN 3 WHEN province = 'DI Yogyakarta' THEN 4 WHEN province = 'Jawa Timur' THEN 5 ELSE 6 END")
                     ->orderBy('province')
                     ->orderBy('name')
                     ->get()
                     ->groupBy('province');
+
+                if ($grouped->isNotEmpty()) {
+                    return $grouped;
+                }
             }
         } catch (\Throwable $e) {
             // Safe fallback
@@ -78,14 +82,18 @@ class Regency extends Model
                 try {
                     \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
                 } catch (\Throwable $migErr) {
-                    // Abaikan lock
+                    // Safe fallback if migration cannot be executed
                 }
             }
 
-            if (\Illuminate\Support\Facades\Schema::hasTable('regencies') && static::count() > 0) {
-                return static::orderByRaw("CASE WHEN name LIKE '%Cirebon%' THEN 0 WHEN province = 'Jawa Barat' THEN 1 ELSE 2 END")
+            if (\Illuminate\Support\Facades\Schema::hasTable('regencies')) {
+                $list = static::orderByRaw("CASE WHEN name LIKE '%Cirebon%' THEN 0 WHEN province = 'Jawa Barat' THEN 1 ELSE 2 END")
                     ->orderBy('name')
                     ->pluck('name');
+
+                if ($list->isNotEmpty()) {
+                    return $list;
+                }
             }
         } catch (\Throwable $e) {
             // Safe fallback

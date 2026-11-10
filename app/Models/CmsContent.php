@@ -50,6 +50,11 @@ class CmsContent extends Model
         'footer_instagram',
         'footer_whatsapp',
         'footer_email',
+        'policy_discount_pelajar',
+        'policy_discount_keluarga',
+        'policy_discount_alumni',
+        'policy_discount_umum',
+        'policy_discount_bazar',
     ];
 
     protected $fillable = [
@@ -197,6 +202,8 @@ class CmsContent extends Model
         return static::allKeyed()
             ->filter(fn (CmsContent $item) => $item->is_active
                 && $item->section !== 'iklan'
+                && $item->section !== 'discounts'
+                && ! str_starts_with($item->key, 'policy_discount_')
                 && ! in_array($item->key, self::DEFAULT_KEYS, true))
             ->values();
     }
