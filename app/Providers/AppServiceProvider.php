@@ -221,11 +221,11 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        // Sinkronisasi satu kali (One-Time Flag v7):
-        // - Menghapus seeder kategori & produk lama, menyisakan akun utama + 1 contoh produk
-        // - Menambahkan 3 contoh Iklan Mitra Kerjasama Sekolah (BSI, PT. Mega Mentari, Daihatsu)
+        // Sinkronisasi satu kali (One-Time Flag v8):
+        // - Membersihkan seluruh data seeder dummy (pembeli, toko siswa, produk, pesanan, iklan mitra)
+        // - Menyisakan HANYA akun Super Admin dan Admin (Guru)
         $connName = DB::getDefaultConnection();
-        $seedFlag = storage_path("app/cms_seeded_v7_{$connName}.flag");
+        $seedFlag = storage_path("app/cms_seeded_v8_{$connName}.flag");
         if (! is_file($seedFlag)) {
             app(DatabaseSeeder::class)->run();
 
