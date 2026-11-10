@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\ClassMajor;
+use App\Models\Regency;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -80,8 +81,9 @@ class AuthController extends Controller
         // Daftar Kelas unik & Jurusan unik dari database untuk dropdown terpisah
         $classList = $classMajors->pluck('class_name')->unique()->values();
         $majorList = $classMajors->pluck('major_name')->unique()->values();
+        $regenciesGrouped = Regency::getGroupedByProvince();
 
-        return view('auth.register', compact('classMajors', 'classList', 'majorList'));
+        return view('auth.register', compact('classMajors', 'classList', 'majorList', 'regenciesGrouped'));
     }
 
     /**

@@ -74,6 +74,13 @@ Algoritma:
                     <span>⊞</span>
                     <span>Ringkasan</span>
                 </a>
+                <a href="{{ route('seller.dashboard') }}" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-emerald-800 bg-emerald-50/80 border border-emerald-300 hover:bg-emerald-100 transition shadow-2xs" title="Buka Toko Guru & Kelola Produk Saya">
+                    <span class="flex items-center gap-3">
+                        <span>🏪</span>
+                        <span class="font-bold">Toko Guru Saya</span>
+                    </span>
+                    <span class="rounded-full bg-[#0B6E4F] px-2 py-0.5 text-[10px] font-bold text-white">Seller</span>
+                </a>
                 <a href="{{ route('admin.reports') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span>📊</span>
                     <span>Laporan & Rekap</span>
@@ -226,6 +233,10 @@ Algoritma:
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ route('seller.dashboard') }}" class="rounded-xl bg-emerald-50 border border-emerald-300 px-3.5 py-2 text-xs font-bold text-[#0B6E4F] hover:bg-emerald-100 transition flex items-center gap-1.5 shadow-2xs">
+                        <span>🏪</span>
+                        <span>Toko Guru Saya</span>
+                    </a>
                     <a href="{{ route('admin.reports') }}" class="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
                         📊 Laporan & Rekap
                     </a>
@@ -822,10 +833,20 @@ Algoritma:
                                 <div>
                                     <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Daerah (Kabupaten / Kota)</label>
                                     <select name="kabupaten" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
-                                        <option value="">Semua Kabupaten/Kota</option>
-                                        @foreach($availableKabupatens as $kab)
-                                            <option value="{{ $kab }}" @selected(request('kabupaten') === $kab)>{{ $kab }}</option>
-                                        @endforeach
+                                        <option value="">Semua Kabupaten/Kota (Se-Indonesia)</option>
+                                        @if(isset($regenciesGrouped) && $regenciesGrouped->count() > 0)
+                                            @foreach($regenciesGrouped as $provName => $regList)
+                                                <optgroup label="Provinsi {{ $provName }}">
+                                                    @foreach($regList as $rItem)
+                                                        <option value="{{ $rItem->name }}" @selected(request('kabupaten') === $rItem->name || request('kabupaten') === str_replace(['Kabupaten ', 'Kota '], '', $rItem->name))>{{ $rItem->name }}</option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endforeach
+                                        @else
+                                            @foreach($availableKabupatens as $kab)
+                                                <option value="{{ $kab }}" @selected(request('kabupaten') === $kab)>{{ $kab }}</option>
+                                            @endforeach
+                                        @endif
                                     </select>
                                 </div>
 

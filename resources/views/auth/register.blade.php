@@ -324,7 +324,19 @@ Algoritma:
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <input type="text" name="desa" value="{{ old('desa') }}" required placeholder="Desa / Kel. *" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none">
                         <input type="text" name="kecamatan" value="{{ old('kecamatan') }}" required placeholder="Kecamatan *" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none">
-                        <input type="text" name="kabupaten" value="{{ old('kabupaten') }}" required placeholder="Kabupaten *" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none">
+                        <select name="kabupaten" required class="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none font-medium text-[#0F291E]">
+                            <option value="">Pilih Kabupaten / Kota *</option>
+                            @php
+                                $allRegs = $regenciesGrouped ?? \App\Models\Regency::getGroupedByProvince();
+                            @endphp
+                            @foreach($allRegs as $prov => $rList)
+                                <optgroup label="Provinsi {{ $prov }}">
+                                    @foreach($rList as $rItem)
+                                        <option value="{{ $rItem->name }}" @selected(old('kabupaten') === $rItem->name)>{{ $rItem->name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endforeach
+                        </select>
                         <input type="text" name="kode_pos" value="{{ old('kode_pos') }}" required placeholder="Kode Pos *" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none">
                     </div>
                     <input type="text" name="address_detail" value="{{ old('address_detail') }}" placeholder="Detail jalan / RT / RW (opsional)" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none">

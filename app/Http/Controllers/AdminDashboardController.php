@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductComment;
 use App\Models\ProductLike;
+use App\Models\Regency;
 use App\Models\Store;
 use App\Models\User;
 use App\Models\VisitorLog;
@@ -139,12 +140,17 @@ class AdminDashboardController extends Controller
             ->sort()
             ->values();
 
-        $availableKabupatens = User::whereNotNull('kabupaten')
-            ->where('kabupaten', '!=', '')
-            ->pluck('kabupaten')
-            ->unique()
-            ->sort()
-            ->values();
+        // Master Kabupaten & Kota se-Indonesia dari database
+        $availableKabupatens = Regency::getFlatList();
+        if ($availableKabupatens->isEmpty()) {
+            $availableKabupatens = User::whereNotNull('kabupaten')
+                ->where('kabupaten', '!=', '')
+                ->pluck('kabupaten')
+                ->unique()
+                ->sort()
+                ->values();
+        }
+        $regenciesGrouped = Regency::getGroupedByProvince();
 
         $availableKecamatans = User::whereNotNull('kecamatan')
             ->where('kecamatan', '!=', '')
@@ -272,7 +278,8 @@ class AdminDashboardController extends Controller
             'availableClasses',
             'availableMajors',
             'availableKabupatens',
-            'availableKecamatans'
+            'availableKecamatans',
+            'regenciesGrouped'
         ));
     }
 

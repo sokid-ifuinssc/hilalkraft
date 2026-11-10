@@ -563,8 +563,16 @@ Fungsi:
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-600 mb-1">Kabupaten / Kota *</label>
-                                    <input type="text" name="kabupaten" value="{{ old('kabupaten', $user->kabupaten) }}" required placeholder="Contoh: Cirebon"
-                                           class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none">
+                                    <select name="kabupaten" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
+                                        <option value="">Pilih Kabupaten / Kota</option>
+                                        @foreach(\App\Models\Regency::getGroupedByProvince() as $prov => $rList)
+                                            <optgroup label="Provinsi {{ $prov }}">
+                                                @foreach($rList as $rItem)
+                                                    <option value="{{ $rItem->name }}" @selected(old('kabupaten', $user->kabupaten) === $rItem->name || old('kabupaten', $user->kabupaten) === str_replace(['Kabupaten ', 'Kota '], '', $rItem->name))>{{ $rItem->name }}</option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
 

@@ -34,18 +34,22 @@ class SellerProductController extends Controller
         $user = $request->user();
 
         // Pastikan prinsip Satu Toko Satu Akun (1-to-1)
+        $isTeacherOrAdmin = $user->is_teacher || in_array($user->role, ['admin', 'super_admin']);
         $store = $user->store()->withCount(['products', 'orders', 'comments'])->first();
         if (! $store) {
             $store = $user->store()->create([
                 'store_name'     => 'Toko ' . $user->name,
                 'slug'           => Str::slug('toko-' . $user->name) . '-' . Str::lower(Str::random(4)),
-                'seller_type'    => $user->is_teacher ? 'guru' : ($user->user_subtype ?? 'siswa'),
-                'student_class'  => trim(($user->class_name ?? '') . ' ' . ($user->major_name ?? 'SMK Plus Al Hilal')),
-                'description'    => 'Toko Karya Resmi SMK Plus Al Hilal',
+                'seller_type'    => $isTeacherOrAdmin ? 'guru' : ($user->user_subtype ?? 'siswa'),
+                'student_class'  => $isTeacherOrAdmin ? 'Guru SMK Plus Al Hilal' : trim(($user->class_name ?? '') . ' ' . ($user->major_name ?? 'SMK Plus Al Hilal')),
+                'description'    => $isTeacherOrAdmin ? 'Toko Karya Resmi Guru SMK Plus Al Hilal' : 'Toko Karya Resmi SMK Plus Al Hilal',
                 'contact_number' => $user->phone ?? '081234567890',
-                'is_verified'    => false,
+                'is_verified'    => $isTeacherOrAdmin ? true : false,
             ]);
             $store->loadCount(['products', 'orders', 'comments']);
+        } elseif ($isTeacherOrAdmin && ! $store->is_verified) {
+            // Toko guru admin otomatis terverifikasi
+            $store->update(['is_verified' => true]);
         }
 
         $products = $store->products()->withCount('comments')->latest()->paginate(10);

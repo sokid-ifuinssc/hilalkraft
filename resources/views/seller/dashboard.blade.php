@@ -64,7 +64,9 @@ Algoritma:
 
             <!-- Identitas Ruang Karya -->
             <div class="space-y-1">
-                <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">RUANG KARYA SISWA</p>
+                <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                    {{ in_array($user->role, ['admin', 'super_admin']) || $user->is_teacher || ($store->seller_type ?? '') === 'guru' ? 'RUANG KARYA GURU' : 'RUANG KARYA SISWA' }}
+                </p>
                 <p class="text-xs font-extrabold text-[#0F291E] truncate">{{ $store->student_class ?: $store->store_name }}</p>
                 <span class="inline-block rounded-full {{ $store->is_verified ? 'bg-[#EBF9F2] text-[#0B6E4F]' : 'bg-amber-50 text-amber-700' }} px-2.5 py-0.5 text-[10px] font-bold">
                     {{ $store->is_verified ? 'Toko terverifikasi' : 'Menunggu verifikasi' }}
@@ -73,6 +75,12 @@ Algoritma:
 
             <!-- Menu Navigasi Sidebar -->
             <nav class="space-y-1 text-xs font-semibold" id="seller-sidebar-nav">
+                @if(in_array($user->role, ['admin', 'super_admin']))
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 rounded-xl px-3.5 py-2 bg-emerald-50 text-[#0B6E4F] font-bold hover:bg-emerald-100 transition border border-emerald-200/60 mb-2">
+                        <span>⚙️</span>
+                        <span>Panel Admin</span>
+                    </a>
+                @endif
                 <button type="button" onclick="switchSellerTab('all')" class="seller-nav-item w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition text-left" data-target="all">
                     <span>⊞</span>
                     <span>Semua Menu</span>
@@ -150,6 +158,12 @@ Algoritma:
             </div>
 
             <div class="flex items-center gap-3">
+                @if(in_array($user->role, ['admin', 'super_admin']))
+                    <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 text-[#0B6E4F] border border-emerald-200/60 px-3 py-1.5 text-xs font-bold hover:bg-emerald-100 transition">
+                        <span>⚙️</span>
+                        <span>Panel Admin</span>
+                    </a>
+                @endif
                 <a href="{{ route('home') }}" class="text-xs font-bold text-[#0B6E4F] hover:underline hidden xs:inline">
                     ↗ Lihat Web
                 </a>
@@ -861,7 +875,16 @@ Algoritma:
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Kabupaten / Kota *</label>
-                            <input type="text" name="kabupaten" value="{{ old('kabupaten', $user->kabupaten) }}" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
+                            <select name="kabupaten" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
+                                <option value="">Pilih Kabupaten / Kota</option>
+                                @foreach(\App\Models\Regency::getGroupedByProvince() as $prov => $rList)
+                                    <optgroup label="Provinsi {{ $prov }}">
+                                        @foreach($rList as $rItem)
+                                            <option value="{{ $rItem->name }}" @selected(old('kabupaten', $user->kabupaten) === $rItem->name || old('kabupaten', $user->kabupaten) === str_replace(['Kabupaten ', 'Kota '], '', $rItem->name))>{{ $rItem->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Kode Pos *</label>

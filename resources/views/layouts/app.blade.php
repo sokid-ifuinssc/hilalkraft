@@ -211,6 +211,13 @@ Algoritma:
                                 };
                             @endphp
 
+                            @if(in_array(auth()->user()->role, ['admin', 'super_admin']))
+                                <a href="{{ route('seller.dashboard') }}" class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-white px-2.5 sm:px-3 py-1.5 text-xs font-bold text-[#0B6E4F] hover:bg-emerald-50 transition shadow-2xs" title="Kelola Toko Guru Saya (Produk & Pesanan)">
+                                    <span>🏪</span>
+                                    <span class="hidden xs:inline">Toko Guru</span>
+                                </a>
+                            @endif
+
                             <a href="{{ $dashboardRoute }}" class="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-[#EBF9F2] px-3 py-1.5 hover:bg-[#D5F5E6] transition">
                                 <div class="w-6 h-6 rounded-lg bg-[#0B6E4F] text-white font-bold text-[11px] flex items-center justify-center">
                                     {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
