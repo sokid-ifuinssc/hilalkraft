@@ -139,19 +139,35 @@ class CatalogController extends Controller
 
     /**
      * Fungsi: Menyimpan komentar dan rating produk dari pengunjung yang sudah memiliki akun.
-     * Algoritma: Validasi input komentar -> Insert ke `product_comments` dengan `user_id` aktif.
+     * Algoritma: Validasi input komentar & anti-spam link -> Sanitasi XSS -> Insert ke `product_comments`.
      */
     public function storeComment(Request $request, Product $product): RedirectResponse
     {
         $validated = $request->validate([
             'comment' => ['required', 'string', 'max:1000'],
             'rating'  => ['nullable', 'integer', 'min:1', 'max:5'],
+        ], [
+            'comment.required' => 'Tuliskan komentar atau ulasan Anda.',
+            'comment.max'      => 'Komentar maksimal 1000 karakter.',
         ]);
+
+        $rawComment = trim((string) $validated['comment']);
+
+        // Aturan Anti-Spam (Anti-Grafiti): Tidak menerima link/URL luar dari pengguna publik
+        $urlPattern = '/(https?:\/\/|www\.|\.com|\.net|\.org|\.id|\.sch\.id|\.co\.id|\.xyz|\.site|\.online|\.io|\.me|\.info|\.biz|\.top|\.club|\.app|\.dev|\.link|bit\.ly|t\.co|wa\.me)/i';
+        if (preg_match($urlPattern, $rawComment)) {
+            return back()->withInput()->with('error', 'Komentar tidak diperbolehkan mengandung tautan/link luar demi keamanan bersama.');
+        }
+
+        $cleanComment = strip_tags($rawComment);
+        if ($cleanComment === '') {
+            return back()->withInput()->with('error', 'Isi komentar tidak valid atau hanya berisi kode yang tidak diperkenankan.');
+        }
 
         ProductComment::create([
             'product_id' => $product->id,
             'user_id'    => $request->user()->id,
-            'comment'    => $validated['comment'],
+            'comment'    => $cleanComment,
             'rating'     => $validated['rating'] ?? 5,
             'ip_address' => $request->ip(),
         ]);

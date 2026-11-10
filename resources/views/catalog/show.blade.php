@@ -16,12 +16,22 @@ Algoritma:
 --}}
 @extends('layouts.app')
 
+@php
+    $productImage = $product->image
+        ? (Str::startsWith($product->image, 'http')
+            ? $product->image
+            : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image)))
+        : asset('images/products/gantungan-kunci-bunga.jpg');
+
+    $shortDesc = \Illuminate\Support\Str::limit(strip_tags($product->description ?? 'Karya inovatif siswa SMK Plus Al Hilal.'), 155);
+@endphp
+
 @section('title', $product->product_name . ' — hilalkraf')
 @section('og_type', 'product')
 @section('og_title', $product->product_name . ' — ' . $product->formatted_price . ' | hilalkraf')
-@section('og_description', 'Beli ' . $product->product_name . ' (' . $product->formatted_price . ') dari toko ' . ($product->store->store_name ?? 'SMK Plus Al Hilal') . '. ' . \Illuminate\Support\Str::limit(strip_tags($product->description ?? 'Karya inovatif siswa SMK Plus Al Hilal'), 120))
-@section('og_image', Str::startsWith($product->image, 'http') ? $product->image : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image)))
-@section('og_image_banner', Str::startsWith($product->image, 'http') ? $product->image : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image)))
+@section('og_description', 'Beli ' . $product->product_name . ' (' . $product->formatted_price . ') di toko ' . ($product->store->store_name ?? 'SMK Plus Al Hilal') . '. ' . $shortDesc)
+@section('og_image', $productImage)
+@section('og_image_banner', $productImage)
 
 @section('content')
 @php
@@ -412,10 +422,11 @@ Algoritma:
             <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-5">
                 @foreach($relatedProducts as $rel)
                     <article class="group rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 overflow-hidden hover:shadow-md transition flex flex-col">
-                        <a href="{{ route('products.show', $rel->slug) }}" class="relative aspect-square bg-slate-100 overflow-hidden block">
+                        <a href="{{ route('products.show', $rel->slug) }}" class="relative aspect-square w-full bg-slate-100 overflow-hidden block" style="aspect-ratio: 1 / 1;">
                             <img src="{{ Str::startsWith($rel->image, 'http') ? $rel->image : asset('storage/' . $rel->image) }}"
                                  alt="{{ $rel->product_name }}"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                 style="aspect-ratio: 1 / 1; object-fit: cover;"
                                  onerror="this.src='{{ $fallbackImg }}'">
                         </a>
                         <div class="p-2.5 sm:p-4 space-y-1 sm:space-y-1.5 flex-1 flex flex-col justify-between">

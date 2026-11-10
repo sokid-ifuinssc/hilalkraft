@@ -140,6 +140,27 @@ class Product extends Model
     }
 
     /**
+     * Mutator & Accessor: Otomatis konversi Judul Produk menjadi Capital Case (Title Case)
+     */
+    public function setProductNameAttribute($value): void
+    {
+        $this->attributes['product_name'] = mb_convert_case(trim((string) $value), MB_CASE_TITLE, 'UTF-8');
+    }
+
+    public function getProductNameAttribute($value): string
+    {
+        return mb_convert_case((string) ($value ?? ''), MB_CASE_TITLE, 'UTF-8');
+    }
+
+    /**
+     * Mutator: Sanitasi deskripsi produk untuk menghapus tag HTML / JavaScript (Anti XSS)
+     */
+    public function setDescriptionAttribute($value): void
+    {
+        $this->attributes['description'] = strip_tags(trim((string) $value));
+    }
+
+    /**
      * Scope agar galeri dan pencarian publik HANYA menampilkan produk aktif
      * dari toko yang berstatus aktif, terverifikasi, dan tidak terhapus.
      */

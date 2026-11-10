@@ -183,6 +183,15 @@ class AppServiceProvider extends ServiceProvider
             // Abaikan jika migrasi sedang berjalan
         }
 
+        try {
+            if (Schema::hasTable('cms_contents')) {
+                DB::statement("UPDATE cms_contents SET content = REPLACE(content, 'dikeola', 'dikelola') WHERE content LIKE '%dikeola%'");
+                DB::statement("UPDATE cms_contents SET title = REPLACE(title, 'dikeola', 'dikelola') WHERE title LIKE '%dikeola%'");
+            }
+        } catch (Throwable $e) {
+            // Abaikan jika belum siap
+        }
+
         if (
             ! Schema::hasTable('users') ||
             ! Schema::hasTable('categories') ||

@@ -33,7 +33,7 @@ Route::get('/', [CatalogController::class, 'index'])->name('home');
 Route::get('/produk/{product:slug}', [CatalogController::class, 'show'])->name('products.show');
 Route::post('/produk/{product:slug}/like', [CatalogController::class, 'toggleLike'])->name('products.like');
 Route::post('/produk/{product:slug}/komentar', [CatalogController::class, 'storeComment'])
-    ->middleware('auth')
+    ->middleware(['auth', 'throttle:10,1'])
     ->name('products.comment');
 Route::get('/toko/{store:slug}', [CatalogController::class, 'storeProfile'])->name('stores.show');
 
@@ -44,10 +44,14 @@ Route::get('/toko/{store:slug}', [CatalogController::class, 'storeProfile'])->na
 */
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
+    Route::post('/login', [AuthController::class, 'login'])
+        ->middleware('throttle:5,1')
+        ->name('login.attempt');
 
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register'])->name('register.store');
+    Route::post('/register', [AuthController::class, 'register'])
+        ->middleware('throttle:6,1')
+        ->name('register.store');
 });
 
 Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])

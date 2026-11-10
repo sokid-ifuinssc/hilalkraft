@@ -186,7 +186,7 @@ Algoritma:
                             <span class="text-xs font-bold text-[#0B6E4F] mt-2.5">
                                 {{ $product ? '+ Ganti / Tambah foto produk' : 'Klik untuk upload foto produk' }}
                             </span>
-                            <span class="text-[11px] text-slate-400 mt-0.5">atau tarik dan letakkan di sini • JPG / PNG • Maks. 3 MB</span>
+                            <span class="text-[11px] text-slate-400 mt-0.5">atau tarik dan letakkan di sini • JPG / PNG / WebP • Maks. 2 MB (Otomatis Dikompresi)</span>
                             <span class="text-[10px] text-slate-400 mt-0.5">Rekomendasi ukuran 1:1, minimal 800 × 800 px.</span>
                             <input type="file" name="image" accept="image/jpeg,image/png,image/webp" {{ $product ? '' : 'required' }} onchange="previewUploadedImage(this)" class="hidden">
                         </label>

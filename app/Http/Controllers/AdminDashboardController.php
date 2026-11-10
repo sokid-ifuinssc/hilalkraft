@@ -424,14 +424,16 @@ class AdminDashboardController extends Controller
             'price'        => ['required', 'numeric', 'min:1000'],
             'stock'        => ['required', 'integer', 'min:0'],
             'description'  => ['required', 'string'],
-            'image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'image_url'    => ['nullable', 'string', 'max:500'],
             'allowed_delivery_methods' => ['nullable', 'array'],
+        ], [
+            'image_file.max' => 'Ukuran file foto produk maksimal 2 MB.',
         ]);
 
         $imagePath = $validated['image_url'] ?? '/images/product-karya-1.jpg';
         if ($request->hasFile('image_file')) {
-            $imagePath = $request->file('image_file')->store('products', 'public');
+            $imagePath = $this->compressAndStoreProductImage($request->file('image_file'));
         }
 
         $allowedMethods = $request->input('allowed_delivery_methods');
@@ -439,20 +441,23 @@ class AdminDashboardController extends Controller
             $allowedMethods = Product::ALL_DELIVERY_METHODS;
         }
 
+        $capitalName = mb_convert_case(trim($validated['product_name']), MB_CASE_TITLE, 'UTF-8');
+        $cleanDesc   = strip_tags(trim($validated['description']));
+
         Product::create([
             'store_id'     => $validated['store_id'],
-            'product_name' => $validated['product_name'],
-            'slug'         => Str::slug($validated['product_name']) . '-' . Str::lower(Str::random(4)),
+            'product_name' => $capitalName,
+            'slug'         => Str::slug($capitalName) . '-' . Str::lower(Str::random(4)),
             'category'     => $validated['category'],
             'price'        => $validated['price'],
             'stock'        => $validated['stock'],
-            'description'  => $validated['description'],
+            'description'  => $cleanDesc,
             'image'        => $imagePath,
             'allowed_delivery_methods' => array_values($allowedMethods),
             'is_active'    => true,
         ]);
 
-        return redirect()->to(route('admin.dashboard') . '#sec-cms-produk')->with('success', "Karya produk '{$validated['product_name']}' berhasil ditambahkan dan disimpan melalui CMS.");
+        return redirect()->to(route('admin.dashboard') . '#sec-cms-produk')->with('success', "Karya produk '{$capitalName}' berhasil ditambahkan dan disimpan melalui CMS.");
     }
 
     /**
@@ -467,9 +472,11 @@ class AdminDashboardController extends Controller
             'price'        => ['required', 'numeric', 'min:1000'],
             'stock'        => ['required', 'integer', 'min:0'],
             'description'  => ['required', 'string'],
-            'image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'image_url'    => ['nullable', 'string', 'max:500'],
             'allowed_delivery_methods' => ['nullable', 'array'],
+        ], [
+            'image_file.max' => 'Ukuran file foto produk maksimal 2 MB.',
         ]);
 
         $imagePath = $product->image;
@@ -480,7 +487,7 @@ class AdminDashboardController extends Controller
             if ($product->image && ! Str::startsWith($product->image, 'http')) {
                 Storage::disk('public')->delete($product->image);
             }
-            $imagePath = $request->file('image_file')->store('products', 'public');
+            $imagePath = $this->compressAndStoreProductImage($request->file('image_file'));
         }
 
         $allowedMethods = $request->input('allowed_delivery_methods');
@@ -488,18 +495,21 @@ class AdminDashboardController extends Controller
             $allowedMethods = Product::ALL_DELIVERY_METHODS;
         }
 
+        $capitalName = mb_convert_case(trim($validated['product_name']), MB_CASE_TITLE, 'UTF-8');
+        $cleanDesc   = strip_tags(trim($validated['description']));
+
         $product->update([
             'store_id'     => $validated['store_id'],
-            'product_name' => $validated['product_name'],
+            'product_name' => $capitalName,
             'category'     => $validated['category'],
             'price'        => $validated['price'],
             'stock'        => $validated['stock'],
-            'description'  => $validated['description'],
+            'description'  => $cleanDesc,
             'image'        => $imagePath,
             'allowed_delivery_methods' => array_values($allowedMethods),
         ]);
 
-        return redirect()->to(route('admin.dashboard') . '#sec-cms-produk')->with('success', "Karya produk '{$product->product_name}' berhasil disimpan melalui CMS.");
+        return redirect()->to(route('admin.dashboard') . '#sec-cms-produk')->with('success', "Karya produk '{$capitalName}' berhasil diperbarui.");
     }
 
     public function promoteTeacherToAdmin(Request $request, User $user): RedirectResponse
@@ -1366,5 +1376,61 @@ class AdminDashboardController extends Controller
         );
 
         return back()->with('success', $msg);
+    }
+
+    /**
+     * Kompresi gambar produk otomatis & batasi dimensi maksimal 1200px
+     * untuk menjaga ketajaman resolusi sekaligus menghemat kapasitas storage.
+     */
+    private function compressAndStoreProductImage($file): string
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $filename = 'products/' . Str::random(40) . '.jpg';
+        $destinationPath = storage_path('app/public/' . $filename);
+
+        if (! file_exists(dirname($destinationPath))) {
+            @mkdir(dirname($destinationPath), 0755, true);
+        }
+
+        try {
+            if (extension_loaded('gd')) {
+                $image = match ($extension) {
+                    'jpg', 'jpeg' => @imagecreatefromjpeg($file->getRealPath()),
+                    'png'         => @imagecreatefrompng($file->getRealPath()),
+                    'webp'        => @imagecreatefromwebp($file->getRealPath()),
+                    default       => null,
+                };
+
+                if ($image) {
+                    $origWidth = imagesx($image);
+                    $origHeight = imagesy($image);
+
+                    $maxDim = 1200;
+                    if ($origWidth > $maxDim || $origHeight > $maxDim) {
+                        if ($origWidth >= $origHeight) {
+                            $newWidth = $maxDim;
+                            $newHeight = (int) round(($origHeight / $origWidth) * $maxDim);
+                        } else {
+                            $newHeight = $maxDim;
+                            $newWidth = (int) round(($origWidth / $origHeight) * $maxDim);
+                        }
+
+                        $resized = imagecreatetruecolor($newWidth, $newHeight);
+                        imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
+                        imagedestroy($image);
+                        $image = $resized;
+                    }
+
+                    imagejpeg($image, $destinationPath, 82);
+                    imagedestroy($image);
+
+                    return $filename;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback ke penyimpanan default
+        }
+
+        return $file->store('products', 'public');
     }
 }

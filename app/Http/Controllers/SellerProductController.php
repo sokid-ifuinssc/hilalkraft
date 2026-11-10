@@ -230,25 +230,32 @@ class SellerProductController extends Controller
             'price'                    => ['required', 'numeric', 'min:1000'],
             'stock'                    => ['required', 'integer', 'min:0'],
             'description'              => ['required', 'string'],
-            'image'                    => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'image'                    => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'allowed_delivery_methods' => ['nullable', 'array'],
             'allowed_delivery_methods.*' => ['string', 'in:pickup,delivery_lokal,shipping_transfer'],
+        ], [
+            'image.max' => 'Ukuran file foto produk maksimal 2 MB.',
+            'image.uploaded' => 'Ukuran file foto produk melebihi batas maksimal 2 MB.',
         ]);
 
-        $imagePath = $request->file('image')->store('products', 'public');
+        $imagePath = $this->compressAndStoreProductImage($request->file('image'));
 
         $allowedMethods = $request->input('allowed_delivery_methods');
         if (empty($allowedMethods)) {
             $allowedMethods = Product::ALL_DELIVERY_METHODS;
         }
 
+        // Format Judul Produk Otomatis Menjadi Capital Case & Sanitasi Deskripsi (Anti XSS)
+        $capitalName = mb_convert_case(trim($validated['product_name']), MB_CASE_TITLE, 'UTF-8');
+        $cleanDesc = strip_tags(trim($validated['description']));
+
         $store->products()->create([
-            'product_name'             => $validated['product_name'],
-            'slug'                     => Str::slug($validated['product_name']) . '-' . Str::lower(Str::random(5)),
+            'product_name'             => $capitalName,
+            'slug'                     => Str::slug($capitalName) . '-' . Str::lower(Str::random(5)),
             'category'                 => $validated['category'],
             'price'                    => $validated['price'],
             'stock'                    => $validated['stock'],
-            'description'              => $validated['description'],
+            'description'              => $cleanDesc,
             'image'                    => $imagePath,
             'allowed_delivery_methods' => array_values($allowedMethods),
             'is_active'                => true,
@@ -281,16 +288,19 @@ class SellerProductController extends Controller
             'price'                    => ['required', 'numeric', 'min:1000'],
             'stock'                    => ['required', 'integer', 'min:0'],
             'description'              => ['required', 'string'],
-            'image'                    => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
+            'image'                    => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'allowed_delivery_methods' => ['nullable', 'array'],
             'allowed_delivery_methods.*' => ['string', 'in:pickup,delivery_lokal,shipping_transfer'],
+        ], [
+            'image.max' => 'Ukuran file foto produk maksimal 2 MB.',
+            'image.uploaded' => 'Ukuran file foto produk melebihi batas maksimal 2 MB.',
         ]);
 
         if ($request->hasFile('image')) {
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
-            $validated['image'] = $request->file('image')->store('products', 'public');
+            $validated['image'] = $this->compressAndStoreProductImage($request->file('image'));
         }
 
         $allowedMethods = $request->input('allowed_delivery_methods');
@@ -298,6 +308,10 @@ class SellerProductController extends Controller
             $allowedMethods = Product::ALL_DELIVERY_METHODS;
         }
         $validated['allowed_delivery_methods'] = array_values($allowedMethods);
+
+        // Format Judul Produk Otomatis Menjadi Capital Case & Sanitasi Deskripsi
+        $validated['product_name'] = mb_convert_case(trim($validated['product_name']), MB_CASE_TITLE, 'UTF-8');
+        $validated['description']  = strip_tags(trim($validated['description']));
 
         $product->update($validated);
 
@@ -416,5 +430,61 @@ class SellerProductController extends Controller
             403,
             'Anda hanya dapat mengelola produk milik toko Anda sendiri.'
         );
+    }
+
+    /**
+     * Kompresi gambar produk otomatis & batasi dimensi maksimal 1200px
+     * untuk menjaga ketajaman resolusi sekaligus menghemat kapasitas storage.
+     */
+    private function compressAndStoreProductImage($file): string
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $filename = 'products/' . Str::random(40) . '.jpg';
+        $destinationPath = storage_path('app/public/' . $filename);
+
+        if (! file_exists(dirname($destinationPath))) {
+            @mkdir(dirname($destinationPath), 0755, true);
+        }
+
+        try {
+            if (extension_loaded('gd')) {
+                $image = match ($extension) {
+                    'jpg', 'jpeg' => @imagecreatefromjpeg($file->getRealPath()),
+                    'png'         => @imagecreatefrompng($file->getRealPath()),
+                    'webp'        => @imagecreatefromwebp($file->getRealPath()),
+                    default       => null,
+                };
+
+                if ($image) {
+                    $origWidth = imagesx($image);
+                    $origHeight = imagesy($image);
+
+                    $maxDim = 1200;
+                    if ($origWidth > $maxDim || $origHeight > $maxDim) {
+                        if ($origWidth >= $origHeight) {
+                            $newWidth = $maxDim;
+                            $newHeight = (int) round(($origHeight / $origWidth) * $maxDim);
+                        } else {
+                            $newHeight = $maxDim;
+                            $newWidth = (int) round(($origWidth / $origHeight) * $maxDim);
+                        }
+
+                        $resized = imagecreatetruecolor($newWidth, $newHeight);
+                        imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
+                        imagedestroy($image);
+                        $image = $resized;
+                    }
+
+                    imagejpeg($image, $destinationPath, 82);
+                    imagedestroy($image);
+
+                    return $filename;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback ke penyimpanan default
+        }
+
+        return $file->store('products', 'public');
     }
 }

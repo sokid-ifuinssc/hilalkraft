@@ -40,5 +40,13 @@ class ProductComment extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Mutator: Sanitasi teks komentar untuk menghapus tag HTML / JavaScript (Anti XSS)
+     */
+    public function setCommentAttribute($value): void
+    {
+        $this->attributes['comment'] = strip_tags(trim((string) $value));
+    }
 }
 

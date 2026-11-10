@@ -32,6 +32,12 @@ Algoritma:
         $ogImage = trim($__env->yieldContent('og_image', asset('images/og-hilalkraf-square.png') . '?v=4'));
         $ogImageBanner = trim($__env->yieldContent('og_image_banner', asset('images/og-hilalkraf-share.png') . '?v=4'));
         $ogUrl = url()->current();
+        $ext = strtolower(pathinfo(parse_url($ogImage, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
+        $ogMime = match($ext) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'webp'        => 'image/webp',
+            default       => 'image/png',
+        };
     @endphp
 
     <!-- Meta SEO & Social Sharing (WhatsApp, Facebook, Twitter, Telegram, LinkedIn) -->
@@ -39,6 +45,7 @@ Algoritma:
     <link rel="canonical" href="{{ $ogUrl }}">
 
     <!-- Open Graph / WhatsApp Preview Card (HD Ultra-Sharp) -->
+    <meta property="og:locale" content="id_ID">
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:site_name" content="hilalkraf — SMK Plus Al Hilal">
     <meta property="og:url" content="{{ $ogUrl }}">
@@ -46,9 +53,7 @@ Algoritma:
     <meta property="og:description" content="{{ $ogDescription }}">
     <meta property="og:image" content="{{ $ogImage }}">
     <meta property="og:image:secure_url" content="{{ $ogImage }}">
-    <meta property="og:image:type" content="image/png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="1200">
+    <meta property="og:image:type" content="{{ $ogMime }}">
     <meta property="og:image:alt" content="{{ $ogTitle }}">
 
     <!-- Twitter Card Meta Tags -->

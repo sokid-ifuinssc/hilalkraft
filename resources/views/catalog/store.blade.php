@@ -48,10 +48,11 @@ Algoritma:
     <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
         @forelse($store->products as $product)
             <article class="rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-lg transition flex flex-col">
-                <a href="{{ route('products.show', $product->slug) }}" class="aspect-[4/3] bg-slate-100 block overflow-hidden">
+                <a href="{{ route('products.show', $product->slug) }}" class="relative aspect-square w-full bg-slate-100 block overflow-hidden" style="aspect-ratio: 1 / 1;">
                     <img src="{{ Str::startsWith($product->image, 'http') ? $product->image : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image)) }}"
                          alt="{{ $product->product_name }}"
                          class="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                         style="aspect-ratio: 1 / 1; object-fit: cover;"
                          onerror="this.src='{{ asset('images/logo-hilalkraf.jpg') }}'">
                 </a>
                 <div class="p-2.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2">

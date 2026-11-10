@@ -145,9 +145,9 @@ Algoritma:
      2. HERO SECTION RINGKAS & ELEGAN (TERINTEGRASI CMS)
      ======================================================================== -->
 @php
-    $heroBadge    = \App\Models\CmsContent::val('hero_badge', 'KARYA LOKAL, POTENSI BESAR.');
-    $heroTitle    = \App\Models\CmsContent::val('hero_title', 'Karya Inovatif Siswa SMK Plus Al Hilal');
-    $heroSubtitle = \App\Models\CmsContent::val('hero_subtitle', 'Temukan karya yang punya cerita. Dari kerajinan tangan hingga inovasi teknologi, dibuat dengan hati oleh talenta muda.');
+    $heroBadge    = str_replace(['dikeola', 'Dikeola'], ['dikelola', 'Dikelola'], \App\Models\CmsContent::val('hero_badge', 'KARYA LOKAL, POTENSI BESAR.'));
+    $heroTitle    = str_replace(['dikeola', 'Dikeola'], ['dikelola', 'Dikelola'], \App\Models\CmsContent::val('hero_title', 'Karya Inovatif Siswa SMK Plus Al Hilal'));
+    $heroSubtitle = str_replace(['dikeola', 'Dikeola'], ['dikelola', 'Dikelola'], \App\Models\CmsContent::val('hero_subtitle', 'Temukan karya yang punya cerita. Dari kerajinan tangan hingga inovasi teknologi, dibuat dengan hati oleh talenta muda.'));
     $heroCtaText  = \App\Models\CmsContent::val('hero_cta_text', 'Jelajahi Produk');
     $heroStats    = \App\Models\CmsContent::val('hero_stats_text', 'Siswa & Guru Berkarya');
 @endphp
@@ -338,12 +338,13 @@ Algoritma:
                     : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image));
             @endphp
             <article class="group rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 overflow-hidden hover:shadow-md hover:border-[#0B6E4F]/40 transition-all duration-300 flex flex-col">
-                <div class="relative aspect-square bg-slate-100 overflow-hidden">
+                <div class="relative aspect-square w-full bg-slate-100 overflow-hidden" style="aspect-ratio: 1 / 1;">
                     <a href="{{ route('products.show', $product->slug) }}" class="block w-full h-full">
                         <img
                             src="{{ $cardImage }}"
                             alt="{{ $product->product_name }}"
                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            style="aspect-ratio: 1 / 1; object-fit: cover;"
                             onerror="this.src='{{ $fallbackImage }}'"
                         >
                     </a>
