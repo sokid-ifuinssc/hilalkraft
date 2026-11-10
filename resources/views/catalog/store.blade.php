@@ -67,16 +67,25 @@ Algoritma:
                             {{ $product->description ?: 'Karya terbaik dari toko siswa SMK Plus Al Hilal.' }}
                         </p>
                     </div>
-                    <div class="pt-2 sm:pt-3 border-t border-slate-100 flex items-center justify-between">
-                        <span class="text-xs sm:text-sm font-extrabold text-[#059669]">{{ $product->formatted_price }}</span>
-                        <div class="flex items-center gap-2">
+                    <div class="pt-2 sm:pt-2.5 border-t border-slate-100/90 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs sm:text-sm font-black text-[#0B6E4F]">{{ $product->formatted_price }}</span>
                             <button type="button"
                                     onclick="copyProductUrl('{{ route('products.show', $product->slug) }}', '{{ addslashes($product->product_name) }}')"
-                                    class="text-[10px] sm:text-xs font-semibold text-slate-500 hover:text-[#0B6E4F] transition"
-                                    title="Bagikan produk">
+                                    class="text-[10px] sm:text-xs font-semibold text-slate-400 hover:text-[#0B6E4F] transition"
+                                    title="Bagikan tautan karya">
                                 ↗ Bagikan
                             </button>
-                            <a href="{{ route('products.show', $product->slug) }}" class="text-[10px] sm:text-xs font-bold text-[#059669] hover:underline">Detail →</a>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5 sm:gap-2">
+                            <a href="{{ route('products.show', $product->slug) }}"
+                               class="inline-flex items-center justify-center rounded-lg sm:rounded-xl bg-[#F8FAFC] hover:bg-slate-100 text-slate-700 border border-slate-200/80 py-1.5 px-2 text-[10px] sm:text-xs font-bold transition text-center hover:text-[#0B6E4F]">
+                                <span>Detail</span>
+                            </a>
+                            <a href="{{ route('products.show', $product->slug) }}"
+                               class="inline-flex items-center justify-center rounded-lg sm:rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white py-1.5 px-2 text-[10px] sm:text-xs font-extrabold transition text-center active:scale-95 shadow-2xs">
+                                <span>💬 Pesan</span>
+                            </a>
                         </div>
                     </div>
                 </div>

@@ -48,7 +48,7 @@ Algoritma:
     $waMessage = urlencode("Assalamu'alaikum {$product->store->owner->name} ({$product->store->store_name}), saya tertarik membeli produk *{$product->product_name}* seharga {$product->formatted_price} di hilalkraf SMK Plus Al Hilal. Saya ingin konsultasi transaksi (Datang ke Sekolah / Delivery Lokal Arjawinangun, Susukan, Kaliwedi / Transfer Antar).");
 @endphp
 
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 lg:pb-12 space-y-12">
 
     <!-- Breadcrumb -->
     <nav class="text-xs text-slate-400 flex items-center gap-2">
@@ -212,34 +212,57 @@ Algoritma:
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Tombol Transaksi Utama WhatsApp (Mencolok, Hijau WA #25D366, Rounded Melengkung, Hover Shadow) -->
+                <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
+                   target="_blank"
+                   rel="noopener"
+                   id="btn-main-whatsapp"
+                   class="w-full inline-flex items-center justify-center gap-2.5 rounded-xl sm:rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] active:scale-[0.98] text-white px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all duration-200 group">
+                    <svg class="w-5 h-5 fill-current shrink-0 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.073.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.112.551 4.148 1.6 5.952l-1.6 5.848 6.002-1.574c1.735 1.002 3.731 1.574 5.998 1.574 6.627 0 12-5.373 12-12s-5.373-12-12-12zm.001 22.083c-1.899 0-3.69-.536-5.231-1.465l-.375-.224-3.568.937.953-3.479-.247-.393c-1.026-1.633-1.568-3.528-1.568-5.459 0-5.556 4.519-10.075 10.076-10.075 5.556 0 10.075 4.519 10.075 10.075 0 5.557-4.519 10.076-10.075 10.076z"/>
+                    </svg>
+                    <span>💬 Pesan via WhatsApp</span>
+                </a>
+
+                <!-- Opsi Tambah ke Keranjang & Pesan Form Web -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     @auth
                         <form action="{{ route('buyer.cart.add', $product) }}" method="POST">
                             @csrf
                             <input type="hidden" name="quantity" id="cart-qty-input" value="1">
-                            <button type="submit" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs sm:text-sm font-semibold text-[#0F291E] hover:border-[#0B6E4F] hover:text-[#0B6E4F] transition">
+                            <button type="submit" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:border-[#0B6E4F] hover:text-[#0B6E4F] px-4 py-2.5 text-xs font-bold text-[#0F291E] transition">
                                 <span>🛍️</span>
                                 <span>Tambah ke Keranjang</span>
                             </button>
                         </form>
 
-                        <button type="button" onclick="openDirectOrderModal()" class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B6E4F] px-5 py-3 text-xs sm:text-sm font-semibold text-white hover:bg-[#08583F] transition shadow-sm">
+                        <button type="button" onclick="openDirectOrderModal()" class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] px-4 py-2.5 text-xs font-bold text-white transition shadow-xs">
                             <span>🚚</span>
-                            <span>Pesan & Pantau Progres</span>
+                            <span>Pesan via Web</span>
                         </button>
                     @else
-                        <a href="{{ route('login') }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs sm:text-sm font-semibold text-[#0F291E] hover:border-[#0B6E4F] hover:text-[#0B6E4F] transition">
+                        <a href="{{ route('login') }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:border-[#0B6E4F] hover:text-[#0B6E4F] px-4 py-2.5 text-xs font-bold text-[#0F291E] transition">
                             <span>🛍️</span>
                             <span>Tambah ke Keranjang</span>
                         </a>
 
-                        <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
-                           target="_blank"
-                           rel="noopener"
-                           class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B6E4F] px-5 py-3 text-xs sm:text-sm font-semibold text-white hover:bg-[#08583F] transition shadow-sm">
-                            <span>Beli Sekarang (WA)</span>
+                        <a href="{{ route('login') }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] px-4 py-2.5 text-xs font-bold text-white transition shadow-xs">
+                            <span>🚚</span>
+                            <span>Pesan via Web</span>
                         </a>
                     @endauth
+                </div>
+
+                <!-- Deretan Micro-Badges Visual Nilai Tambah Produk -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <div class="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-2xs">
+                        <span class="text-base shrink-0">🌱</span>
+                        <span class="truncate">100% Original Karya Siswa</span>
+                    </div>
+                    <div class="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-2xs">
+                        <span class="text-base shrink-0">📦</span>
+                        <span class="truncate">Gratis Ongkir (Ambil di Sekolah)</span>
+                    </div>
                 </div>
 
                 @auth
@@ -442,9 +465,19 @@ Algoritma:
                                 </p>
                                 <p class="text-xs sm:text-sm font-extrabold text-[#0B6E4F] mt-1">{{ $rel->formatted_price }}</p>
                             </div>
-                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-400">
-                                <span class="text-[#0B6E4F] font-semibold">💬 Chat</span>
-                                <span>👁️ {{ $rel->views_count ?? 0 }} • ❤️ {{ $rel->likes_count ?? 0 }}</span>
+                            <div class="pt-2 border-t border-slate-100/90 space-y-2">
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <a href="{{ route('products.show', $rel->slug) }}" class="inline-flex items-center justify-center rounded-lg bg-[#F8FAFC] hover:bg-slate-100 text-slate-700 border border-slate-200/80 py-1.5 px-2 text-[10px] sm:text-xs font-bold transition text-center hover:text-[#0B6E4F]">
+                                        <span>Detail</span>
+                                    </a>
+                                    <a href="{{ route('products.show', $rel->slug) }}" class="inline-flex items-center justify-center rounded-lg bg-[#0B6E4F] hover:bg-[#08583F] text-white py-1.5 px-2 text-[10px] sm:text-xs font-extrabold transition text-center active:scale-95 shadow-2xs">
+                                        <span>💬 Pesan</span>
+                                    </a>
+                                </div>
+                                <div class="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-400 font-medium px-0.5">
+                                    <span>👁️ {{ $rel->views_count ?? 0 }}</span>
+                                    <span>❤️ {{ $rel->likes_count ?? 0 }}</span>
+                                </div>
                             </div>
                         </div>
                     </article>
@@ -793,7 +826,59 @@ Algoritma:
 
 </div>
 
+<!-- ========================================================================
+     STICKY MOBILE CTA BAR (KHUSUS BREAKPOINT MOBILE / HP)
+     ======================================================================== -->
+<aside class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] px-4 py-3 lg:hidden"
+       style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
+    <div class="max-w-md mx-auto flex items-center justify-between gap-3">
+        <!-- Kiri: Label & Nilai Harga -->
+        <div class="min-w-0">
+            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Harga</span>
+            <div class="flex items-baseline gap-1.5">
+                <span id="mobile-sticky-price" class="text-base sm:text-lg font-black text-[#0B6E4F] tracking-tight">
+                    {{ $product->formatted_price }}
+                </span>
+                @if($product->stock > 0 && $product->stock <= 5)
+                    <span class="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200">
+                        Sisa {{ $product->stock }}
+                    </span>
+                @endif
+            </div>
+        </div>
+
+        <!-- Kanan: Tombol Pesan via WA yang Mencolok -->
+        <div class="flex items-center gap-2 shrink-0">
+            @auth
+                <button type="button"
+                        onclick="openDirectOrderModal()"
+                        class="rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 px-3 py-2 text-xs font-bold text-[#0F291E] transition"
+                        title="Pesan lewat Form Web">
+                    Web
+                </button>
+            @endauth
+
+            <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
+               target="_blank"
+               rel="noopener"
+               id="btn-sticky-whatsapp"
+               class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all duration-150">
+                <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.073.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.112.551 4.148 1.6 5.952l-1.6 5.848 6.002-1.574c1.735 1.002 3.731 1.574 5.998 1.574 6.627 0 12-5.373 12-12s-5.373-12-12-12zm.001 22.083c-1.899 0-3.69-.536-5.231-1.465l-.375-.224-3.568.937.953-3.479-.247-.393c-1.026-1.633-1.568-3.528-1.568-5.459 0-5.556 4.519-10.075 10.076-10.075 5.556 0 10.075 4.519 10.075 10.075 0 5.557-4.519 10.076-10.075 10.076z"/>
+                </svg>
+                <span>💬 Pesan via WA</span>
+            </a>
+        </div>
+    </div>
+</aside>
+
 <script>
+    const unitPriceProduct = {{ (int) $product->price }};
+    const baseWaProductUrl = @json($product->store->whatsapp_url);
+    const sellerOwnerName = @json($product->store->owner->name ?? $product->store->store_name);
+    const storeTitleName = @json($product->store->store_name);
+    const productItemName = @json($product->product_name);
+
     function changeQty(delta) {
         const display = document.getElementById('qty-display');
         const hiddenInput = document.getElementById('cart-qty-input');
@@ -806,6 +891,20 @@ Algoritma:
         display.value = next;
         if (hiddenInput) hiddenInput.value = next;
         if (directInput) directInput.value = next;
+
+        // Update Total Harga di Sticky Mobile Bar
+        const stickyPrice = document.getElementById('mobile-sticky-price');
+        if (stickyPrice) {
+            const totalCalc = unitPriceProduct * next;
+            stickyPrice.textContent = 'Rp ' + totalCalc.toLocaleString('id-ID');
+        }
+
+        // Update Link WhatsApp dengan kuantitas yang dipilih
+        const dynamicWaMsg = encodeURIComponent("Assalamu'alaikum " + sellerOwnerName + " (" + storeTitleName + "), saya tertarik membeli produk *" + productItemName + "* sebanyak " + next + " pcs (Total: Rp " + (unitPriceProduct * next).toLocaleString('id-ID') + ") di hilalkraf SMK Plus Al Hilal. Saya ingin konsultasi transaksi (Datang ke Sekolah / Delivery Lokal / Transfer Antar).");
+        const mainWa = document.getElementById('btn-main-whatsapp');
+        const stickyWa = document.getElementById('btn-sticky-whatsapp');
+        if (mainWa) mainWa.href = baseWaProductUrl + '?text=' + dynamicWaMsg;
+        if (stickyWa) stickyWa.href = baseWaProductUrl + '?text=' + dynamicWaMsg;
     }
 
     function switchProductTab(tab) {

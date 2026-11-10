@@ -396,22 +396,31 @@ Algoritma:
                         </p>
                     </div>
 
-                    <!-- Baris Bawah: Tombol Detail & Interaksi (Lihat, Suka, Komentar) -->
-                    <div class="pt-2 sm:pt-2.5 border-t border-slate-100 flex items-center justify-between gap-1 text-[10px] sm:text-[11px]">
-                        <a href="{{ route('products.show', $product->slug) }}" class="inline-flex items-center gap-0.5 sm:gap-1 font-semibold text-[#0B6E4F] hover:underline">
-                            <span>💬</span>
-                            <span class="hidden xs:inline sm:inline">Detail</span>
-                            <span class="xs:hidden sm:hidden">Pesan</span>
-                        </a>
+                    <!-- Baris Bawah: Tombol Action "Pesan" & "Detail" (Hierarki Visual Jelas) serta Interaksi -->
+                    <div class="pt-2 sm:pt-2.5 border-t border-slate-100/90 space-y-2">
+                        <div class="grid grid-cols-2 gap-1.5 sm:gap-2">
+                            <!-- Tombol Sekunder: Detail -->
+                            <a href="{{ route('products.show', $product->slug) }}"
+                               class="inline-flex items-center justify-center gap-1 rounded-lg sm:rounded-xl bg-[#F8FAFC] hover:bg-slate-100 text-slate-700 border border-slate-200/80 py-1.5 sm:py-2 px-2 text-[10px] sm:text-xs font-bold transition text-center hover:text-[#0B6E4F]">
+                                <span>Detail</span>
+                            </a>
 
-                        <div class="flex items-center gap-1.5 sm:gap-2 font-medium text-slate-400 text-[9px] sm:text-[11px]">
-                            <span class="inline-flex items-center gap-0.5" title="Dilihat">
+                            <!-- Tombol Utama: Pesan (Lebih Kontras & Mencolok) -->
+                            <a href="{{ route('products.show', $product->slug) }}"
+                               class="inline-flex items-center justify-center gap-1 rounded-lg sm:rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white shadow-xs hover:shadow-sm py-1.5 sm:py-2 px-2 text-[10px] sm:text-xs font-extrabold transition text-center active:scale-95">
+                                <span>💬 Pesan</span>
+                            </a>
+                        </div>
+
+                        <!-- Metrik Interaksi (Lihat, Suka, Komentar) -->
+                        <div class="flex items-center justify-between text-[9px] sm:text-[11px] text-slate-400 font-medium px-0.5">
+                            <span class="inline-flex items-center gap-1" title="Dilihat">
                                 👁️ {{ number_format($product->views_count ?? 0) }}
                             </span>
-                            <span class="inline-flex items-center gap-0.5 text-rose-500" title="Disukai">
+                            <span class="inline-flex items-center gap-1 text-rose-500 font-semibold" title="Disukai">
                                 ❤️ {{ number_format($product->likes_count ?? 0) }}
                             </span>
-                            <span class="inline-flex items-center gap-0.5 text-slate-500" title="Komentar">
+                            <span class="inline-flex items-center gap-1 text-slate-500" title="Komentar">
                                 💬 {{ number_format($product->comments_count ?? 0) }}
                             </span>
                         </div>
