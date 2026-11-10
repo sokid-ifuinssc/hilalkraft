@@ -708,62 +708,172 @@ Algoritma:
                         </div>
                     @endif
 
-                    <!-- Filter Role Pengguna (Semua, Super Admin, Admin Guru, Toko Siswa, Pembeli) -->
-                    <div class="flex flex-wrap items-center gap-1.5 pt-1">
-                        <span class="text-[11px] font-bold text-slate-400 mr-1">Filter Role:</span>
-                        <button type="button" onclick="setAdminUserRoleFilter('all', this)"
-                                class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-bold transition bg-[#0B6E4F] text-white shadow-xs">
-                            Semua ({{ $stats['total_users'] }})
-                        </button>
-                        @if(auth()->user()->role === 'super_admin')
-                            <button type="button" onclick="setAdminUserRoleFilter('super_admin', this)"
-                                    class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
-                                Super Admin ({{ $superAdminCount }})
-                            </button>
-                        @endif
-                        <button type="button" onclick="setAdminUserRoleFilter('admin', this)"
-                                class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
-                            Admin / Guru ({{ $adminCount }})
-                        </button>
-                        <button type="button" onclick="setAdminUserRoleFilter('seller', this)"
-                                class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
-                            Toko Siswa ({{ $sellerCount }})
-                        </button>
-                        <button type="button" onclick="setAdminUserRoleFilter('buyer', this)"
-                                class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
-                            Pembeli ({{ $buyerCount }})
-                        </button>
-                    </div>
+                    <!-- Form Filter Manajemen User (Role, Khusus Siswa, Kelas, Jurusan, dan Daerah) -->
+                    @php
+                        $isFiltering = request()->filled('class_name') || request()->filled('major_name') || request()->filled('kabupaten') || request()->filled('kecamatan') || request()->filled('q') || request()->boolean('student_only') || request()->filled('role');
+                        $currentRole = request('role');
+                        $isStudentOnly = request()->boolean('student_only');
+                    @endphp
 
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <div class="relative flex-1 min-w-[240px]">
-                            <input
-                                type="search"
-                                oninput="filterAdminUserRows(this.value)"
-                                placeholder="Cari nama, email, atau User ID..."
-                                class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] pl-9 pr-4 py-2 text-xs text-[#0F291E] focus:bg-white focus:border-[#0B6E4F] focus:outline-none"
-                            >
-                            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
+                    <form method="GET" action="{{ route('admin.dashboard') }}#sec-manajemen-user" class="space-y-3">
+                        <!-- Baris 1: Filter Cepat Role / Khusus Siswa -->
+                        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                            <span class="text-[11px] font-bold text-slate-400 mr-1">Filter Cepat:</span>
+                            <a href="{{ route('admin.dashboard') }}#sec-manajemen-user"
+                               class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-bold transition {{ (!$currentRole && !$isStudentOnly && !request()->filled('class_name') && !request()->filled('kabupaten') && !request()->filled('kecamatan')) ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                                Semua ({{ $stats['total_users'] }})
+                            </a>
+
+                            <!-- Filter Khusus Siswa -->
+                            <a href="{{ route('admin.dashboard', array_merge(request()->except(['page', 'role']), ['student_only' => 1])) }}#sec-manajemen-user"
+                               class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-bold transition flex items-center gap-1.5 {{ $isStudentOnly ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-emerald-50 text-[#0B6E4F] border border-emerald-300 hover:bg-emerald-100' }}">
+                                <span>🎓 Khusus Siswa (Toko & Pelajar)</span>
+                                <span class="rounded-full bg-emerald-200/60 px-1.5 py-0.2 text-[10px] text-[#0B6E4F] font-extrabold">{{ $sellerCount + ($visitorByCategory['Pelajar'] ?? 0) }}</span>
+                            </a>
+
+                            @if(auth()->user()->role === 'super_admin')
+                                <a href="{{ route('admin.dashboard', array_merge(request()->except(['page', 'student_only']), ['role' => 'super_admin'])) }}#sec-manajemen-user"
+                                   class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition {{ $currentRole === 'super_admin' ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                                    Super Admin ({{ $superAdminCount }})
+                                </a>
+                            @endif
+                            <a href="{{ route('admin.dashboard', array_merge(request()->except(['page', 'student_only']), ['role' => 'admin'])) }}#sec-manajemen-user"
+                               class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition {{ $currentRole === 'admin' ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                                Admin / Guru ({{ $adminCount }})
+                            </a>
+                            <a href="{{ route('admin.dashboard', array_merge(request()->except(['page', 'student_only']), ['role' => 'seller'])) }}#sec-manajemen-user"
+                               class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition {{ $currentRole === 'seller' ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                                Toko Siswa ({{ $sellerCount }})
+                            </a>
+                            <a href="{{ route('admin.dashboard', array_merge(request()->except(['page', 'student_only']), ['role' => 'buyer'])) }}#sec-manajemen-user"
+                               class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition {{ $currentRole === 'buyer' ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                                Pembeli ({{ $buyerCount }})
+                            </a>
                         </div>
-                        <span class="text-xs text-slate-400">{{ $stats['total_users'] }} pengguna terdaftar</span>
-                    </div>
+
+                        <!-- Baris 2: Panel Filter Lanjutan (Kelas, Jurusan, Kabupaten, Kecamatan & Pencarian) -->
+                        <div class="rounded-2xl bg-[#F8FAFC] border border-slate-200 p-4 space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-[#0F291E]">
+                                <div class="flex items-center gap-1.5">
+                                    <span>🔎</span>
+                                    <span>Filter Siswa (Kelas & Jurusan) serta Filter Wilayah (Daerah)</span>
+                                </div>
+                                @if($isFiltering)
+                                    <a href="{{ route('admin.dashboard') }}#sec-manajemen-user" class="text-[11px] font-bold text-rose-600 hover:underline flex items-center gap-1">
+                                        <span>✕</span>
+                                        <span>Reset Semua Filter</span>
+                                    </a>
+                                @endif
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                                <!-- 1. Filter Kelas Siswa -->
+                                <div>
+                                    <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Kelas Siswa</label>
+                                    <select name="class_name" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
+                                        <option value="">Semua Kelas</option>
+                                        @foreach($availableClasses as $cls)
+                                            <option value="{{ $cls }}" @selected(request('class_name') === (string)$cls)>Kelas {{ $cls }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- 2. Filter Jurusan Siswa -->
+                                <div>
+                                    <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Jurusan Siswa</label>
+                                    <select name="major_name" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
+                                        <option value="">Semua Jurusan</option>
+                                        @foreach($availableMajors as $mj)
+                                            <option value="{{ $mj }}" @selected(request('major_name') === $mj)>{{ $mj }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- 3. Filter Daerah: Kabupaten / Kota -->
+                                <div>
+                                    <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Daerah (Kabupaten / Kota)</label>
+                                    <select name="kabupaten" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
+                                        <option value="">Semua Kabupaten/Kota</option>
+                                        @foreach($availableKabupatens as $kab)
+                                            <option value="{{ $kab }}" @selected(request('kabupaten') === $kab)>{{ $kab }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- 4. Filter Daerah: Kecamatan -->
+                                <div>
+                                    <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Daerah (Kecamatan)</label>
+                                    <select name="kecamatan" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
+                                        <option value="">Semua Kecamatan</option>
+                                        @foreach($availableKecamatans as $kec)
+                                            <option value="{{ $kec }}" @selected(request('kecamatan') === $kec)>{{ $kec }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- 5. Pencarian Kata Kunci -->
+                                <div>
+                                    <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Cari Nama / Email / NISN</label>
+                                    <div class="flex gap-1.5">
+                                        <input type="search" name="q" value="{{ request('q') }}" placeholder="Ketik kata kunci..." class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
+                                        <button type="submit" class="rounded-xl bg-[#0B6E4F] px-3.5 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shrink-0 shadow-xs">
+                                            Cari
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if($isStudentOnly)
+                                <input type="hidden" name="student_only" value="1">
+                            @endif
+                            @if($currentRole)
+                                <input type="hidden" name="role" value="{{ $currentRole }}">
+                            @endif
+
+                            <!-- Ringkasan Filter Aktif (Pills) -->
+                            @if($isFiltering)
+                                <div class="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
+                                    <span class="text-slate-500 font-semibold">Filter aktif:</span>
+                                    @if($isStudentOnly)
+                                        <span class="rounded-full bg-emerald-100 text-[#0B6E4F] px-2.5 py-0.5 font-bold">🎓 Khusus Siswa</span>
+                                    @endif
+                                    @if(request('class_name'))
+                                        <span class="rounded-full bg-blue-100 text-blue-800 px-2.5 py-0.5 font-bold">Kelas: {{ request('class_name') }}</span>
+                                    @endif
+                                    @if(request('major_name'))
+                                        <span class="rounded-full bg-blue-100 text-blue-800 px-2.5 py-0.5 font-bold">Jurusan: {{ Str::limit(request('major_name'), 25) }}</span>
+                                    @endif
+                                    @if(request('kabupaten'))
+                                        <span class="rounded-full bg-amber-100 text-amber-900 px-2.5 py-0.5 font-bold">Kab: {{ request('kabupaten') }}</span>
+                                    @endif
+                                    @if(request('kecamatan'))
+                                        <span class="rounded-full bg-amber-100 text-amber-900 px-2.5 py-0.5 font-bold">Kec: {{ request('kecamatan') }}</span>
+                                    @endif
+                                    @if(request('q'))
+                                        <span class="rounded-full bg-slate-200 text-slate-800 px-2.5 py-0.5 font-bold">"{{ request('q') }}"</span>
+                                    @endif
+                                    <span class="text-slate-400 font-semibold">• Ditemukan {{ $users->total() }} akun</span>
+                                </div>
+                            @endif
+                        </div>
+                    </form>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-[#F8FAFC] border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                <th class="py-3 px-5">USER ID</th>
+                                <th class="py-3 px-4">USER ID</th>
                                 <th class="py-3 px-4">NAMA & EMAIL</th>
+                                <th class="py-3 px-4">IDENTITAS SISWA & KELAS</th>
+                                <th class="py-3 px-4">DAERAH ASAL (WILAYAH)</th>
                                 @if(auth()->user()->role === 'super_admin')
                                     <th class="py-3 px-4">PASSWORD REALTIME</th>
                                 @endif
                                 <th class="py-3 px-4">PERAN</th>
                                 <th class="py-3 px-4">STATUS</th>
                                 <th class="py-3 px-4">BERGABUNG</th>
-                                <th class="py-3 px-5 text-right">AKSI</th>
+                                <th class="py-3 px-4 text-right">AKSI</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -783,21 +893,85 @@ Algoritma:
                                         'seller' => 'Pemilik Toko',
                                         default => 'Pembeli',
                                     };
+                                    $isUserStudent = ($user->class_name || in_array($user->user_subtype, ['siswa', 'pelajar']) || ($user->role === 'seller' && !$user->is_teacher));
                                 @endphp
-                                <tr class="hover:bg-slate-50/70 transition admin-user-row" data-role="{{ $user->role }}" data-search="{{ strtolower($user->name . ' ' . $user->email . ' usr-00' . $user->id) }}">
-                                    <td class="py-3.5 px-5 font-mono text-slate-400">
+                                <tr class="hover:bg-slate-50/70 transition admin-user-row"
+                                    data-role="{{ $user->role }}"
+                                    data-class="{{ strtolower($user->class_name ?? '') }}"
+                                    data-major="{{ strtolower($user->major_name ?? '') }}"
+                                    data-kabupaten="{{ strtolower($user->kabupaten ?? '') }}"
+                                    data-kecamatan="{{ strtolower($user->kecamatan ?? '') }}"
+                                    data-is-student="{{ $isUserStudent ? '1' : '0' }}"
+                                    data-search="{{ strtolower($user->name . ' ' . $user->email . ' usr-00' . $user->id . ' ' . $user->phone . ' ' . $user->nis_nisn . ' ' . $user->class_name . ' ' . $user->major_name . ' ' . $user->kabupaten . ' ' . $user->kecamatan . ' ' . $user->desa) }}">
+                                    <td class="py-3.5 px-4 font-mono text-slate-400">
                                         USR-{{ str_pad((string) $user->id, 4, '0', STR_PAD_LEFT) }}
                                     </td>
                                     <td class="py-3.5 px-4">
-                                        <div class="flex items-center gap-3">
+                                        <div class="flex items-center gap-2.5">
                                             <div class="w-8 h-8 rounded-full bg-[#EBF9F2] text-[#0B6E4F] font-bold text-[11px] flex items-center justify-center shrink-0">
                                                 {{ strtoupper(substr($user->name, 0, 2)) }}
                                             </div>
                                             <div>
                                                 <p class="font-bold text-[#0F291E]">{{ $user->name }}</p>
                                                 <p class="text-[11px] text-slate-400">{{ $user->email }}</p>
+                                                @if($user->phone)
+                                                    <p class="text-[10px] text-slate-400">📱 {{ $user->phone }}</p>
+                                                @endif
                                             </div>
                                         </div>
+                                    </td>
+
+                                    <!-- IDENTITAS SISWA & KELAS -->
+                                    <td class="py-3.5 px-4">
+                                        @if($user->class_name || $user->major_name)
+                                            <div class="space-y-0.5">
+                                                <span class="inline-flex items-center gap-1 rounded-md bg-[#EBF9F2] px-2 py-0.5 text-[11px] font-extrabold text-[#0B6E4F]">
+                                                    <span>🎓</span>
+                                                    <span>Kelas {{ $user->class_name }} {{ $user->major_name ? '— ' . $user->major_name : '' }}</span>
+                                                </span>
+                                                @if($user->nis_nisn)
+                                                    <p class="text-[10px] text-slate-400 font-mono">NIS/NISN: {{ $user->nis_nisn }}</p>
+                                                @endif
+                                            </div>
+                                        @elseif($user->is_teacher || $user->nuptk)
+                                            <div class="space-y-0.5">
+                                                <span class="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                                                    <span>👨‍🏫</span>
+                                                    <span>Guru SMK {{ $user->major_name ? '• ' . $user->major_name : '' }}</span>
+                                                </span>
+                                                @if($user->nuptk)
+                                                    <p class="text-[10px] text-slate-400 font-mono">NUPTK: {{ $user->nuptk }}</p>
+                                                @endif
+                                            </div>
+                                        @elseif($user->user_subtype === 'keluarga')
+                                            <div class="text-[11px] text-slate-600">
+                                                <span class="font-bold">Keluarga Siswa</span>
+                                                <span class="block text-[10px] text-slate-400">({{ $user->family_student_name }} - {{ $user->family_student_class }})</span>
+                                            </div>
+                                        @elseif($user->user_subtype === 'alumni')
+                                            <span class="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                                                Alumni ({{ $user->graduation_year ?? 'SMK' }})
+                                            </span>
+                                        @else
+                                            <span class="text-slate-400 text-[11px] italic">Umum / Luar Sekolah</span>
+                                        @endif
+                                    </td>
+
+                                    <!-- DAERAH ASAL (WILAYAH) -->
+                                    <td class="py-3.5 px-4">
+                                        @if($user->kabupaten || $user->kecamatan)
+                                            <div class="space-y-0.5">
+                                                <p class="font-bold text-[#0F291E] flex items-center gap-1 text-xs">
+                                                    <span>📍</span>
+                                                    <span>{{ $user->kabupaten }}</span>
+                                                </p>
+                                                <p class="text-[11px] text-slate-500">
+                                                    {{ $user->kecamatan ? 'Kec. ' . $user->kecamatan : '' }}{{ $user->desa ? ', Desa ' . $user->desa : '' }}
+                                                </p>
+                                            </div>
+                                        @else
+                                            <span class="text-slate-300 text-[11px] italic">Belum dilengkapi</span>
+                                        @endif
                                     </td>
 
                                     @if(auth()->user()->role === 'super_admin')

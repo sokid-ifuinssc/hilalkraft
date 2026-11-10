@@ -49,6 +49,7 @@ class AdminDashboardController extends Controller
             $usersQuery->whereIn('role', ['seller', 'buyer']);
         }
 
+        // 1. Filter Role Pengguna
         if ($request->filled('role')) {
             $roleFilter = $request->query('role');
             if (in_array($roleFilter, ['super_admin', 'admin', 'seller', 'buyer'])) {
@@ -56,7 +57,100 @@ class AdminDashboardController extends Controller
             }
         }
 
-        $users = $usersQuery->paginate(50);
+        // 2. Filter Khusus Siswa (Toko Siswa & Pembeli Pelajar)
+        if ($request->boolean('student_only') || $request->query('filter_type') === 'siswa') {
+            $usersQuery->where(function ($q) {
+                $q->whereIn('user_subtype', ['siswa', 'pelajar'])
+                  ->orWhere(function ($sq) {
+                      $sq->where('role', 'seller')->where('is_teacher', false);
+                  })
+                  ->orWhereNotNull('class_name');
+            });
+        }
+
+        // 3. Filter Kelas Siswa (X, XI, XII, dsb)
+        if ($request->filled('class_name')) {
+            $usersQuery->where('class_name', $request->query('class_name'));
+        }
+
+        // 4. Filter Jurusan Siswa (TKJT, DKV, TBS, dsb)
+        if ($request->filled('major_name')) {
+            $usersQuery->where('major_name', $request->query('major_name'));
+        }
+
+        // 5. Filter Daerah Kabupaten / Kota
+        if ($request->filled('kabupaten')) {
+            $usersQuery->where('kabupaten', 'like', '%' . $request->query('kabupaten') . '%');
+        }
+
+        // 6. Filter Daerah Kecamatan
+        if ($request->filled('kecamatan')) {
+            $usersQuery->where('kecamatan', 'like', '%' . $request->query('kecamatan') . '%');
+        }
+
+        // 7. Filter Daerah Desa / Kelurahan
+        if ($request->filled('desa')) {
+            $usersQuery->where('desa', 'like', '%' . $request->query('desa') . '%');
+        }
+
+        // 8. Pencarian Kata Kunci (Nama, Email, No. HP, NISN, User ID, Daerah, Kelas)
+        if ($request->filled('q') || $request->filled('search')) {
+            $kw = trim((string) ($request->query('q') ?: $request->query('search')));
+            $usersQuery->where(function ($q) use ($kw) {
+                $q->where('name', 'like', "%{$kw}%")
+                  ->orWhere('email', 'like', "%{$kw}%")
+                  ->orWhere('phone', 'like', "%{$kw}%")
+                  ->orWhere('nis_nisn', 'like', "%{$kw}%")
+                  ->orWhere('nuptk', 'like', "%{$kw}%")
+                  ->orWhere('class_name', 'like', "%{$kw}%")
+                  ->orWhere('major_name', 'like', "%{$kw}%")
+                  ->orWhere('kabupaten', 'like', "%{$kw}%")
+                  ->orWhere('kecamatan', 'like', "%{$kw}%")
+                  ->orWhere('desa', 'like', "%{$kw}%");
+
+                if (is_numeric($kw)) {
+                    $q->orWhere('id', (int) $kw);
+                }
+            });
+        }
+
+        $users = $usersQuery->paginate(50)->withQueryString();
+
+        // Opsi Dropdown Filter Dinamis dari Database
+        $availableClasses = User::whereNotNull('class_name')
+            ->where('class_name', '!=', '')
+            ->pluck('class_name')
+            ->concat(ClassMajor::pluck('class_name'))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+        if ($availableClasses->isEmpty()) {
+            $availableClasses = collect(['X', 'XI', 'XII']);
+        }
+
+        $availableMajors = User::whereNotNull('major_name')
+            ->where('major_name', '!=', '')
+            ->pluck('major_name')
+            ->concat(ClassMajor::pluck('major_name'))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        $availableKabupatens = User::whereNotNull('kabupaten')
+            ->where('kabupaten', '!=', '')
+            ->pluck('kabupaten')
+            ->unique()
+            ->sort()
+            ->values();
+
+        $availableKecamatans = User::whereNotNull('kecamatan')
+            ->where('kecamatan', '!=', '')
+            ->pluck('kecamatan')
+            ->unique()
+            ->sort()
+            ->values();
 
         $stores = Store::withTrashed()
             ->with(['owner', 'products', 'orders', 'comments'])
@@ -173,7 +267,11 @@ class AdminDashboardController extends Controller
             'cmsContents',
             'bazaarEvents',
             'allProducts',
-            'stats'
+            'stats',
+            'availableClasses',
+            'availableMajors',
+            'availableKabupatens',
+            'availableKecamatans'
         ));
     }
 
