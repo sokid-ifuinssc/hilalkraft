@@ -449,8 +449,9 @@ class BuyerOrderController extends Controller
                     'user_id'    => $request->user()->id,
                 ],
                 [
-                    'rating'  => (int) $validated['rating'],
-                    'comment' => $reviewText,
+                    'rating'     => (int) $validated['rating'],
+                    'comment'    => $reviewText,
+                    'ip_address' => $request->ip(),
                 ]
             );
         }

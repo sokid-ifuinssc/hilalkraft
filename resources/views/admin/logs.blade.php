@@ -56,6 +56,10 @@ Akses:
                     <span>📋</span>
                     <span>Log Akses & Aktivitas</span>
                 </a>
+                <a href="{{ route('admin.interactions') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
+                    <span>🔍</span>
+                    <span>Audit Interaksi & Reset</span>
+                </a>
                 <a href="{{ route('admin.dashboard') }}#sec-cms" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span>✨</span>
                     <span>CMS Konten Website</span>

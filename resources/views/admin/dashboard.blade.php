@@ -85,6 +85,13 @@ Algoritma:
                     </span>
                     <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Sistem</span>
                 </a>
+                <a href="{{ route('admin.interactions') }}" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
+                    <span class="flex items-center gap-3">
+                        <span>🔍</span>
+                        <span>Audit Interaksi & Reset</span>
+                    </span>
+                    <span class="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">Radar</span>
+                </a>
                 <a href="#sec-cms" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span>✨</span>
                     <span>CMS Konten Website</span>
@@ -225,6 +232,9 @@ Algoritma:
                     <a href="{{ route('admin.logs') }}" class="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
                         📋 Log Audit
                     </a>
+                    <a href="{{ route('admin.interactions') }}" class="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
+                        🔍 Audit Interaksi & Reset
+                    </a>
                     <a href="#sec-cms" class="rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] px-3.5 py-2 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
                         ✨ CMS Website
                     </a>
@@ -264,7 +274,12 @@ Algoritma:
                         <span class="text-[#0B6E4F]">🎨</span>
                     </div>
                     <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ number_format($stats['total_products']) }}</p>
-                    <p class="text-[11px] font-semibold text-[#0B6E4F]">👁️ {{ number_format($stats['total_views']) }} dilihat • ❤️ {{ number_format($stats['total_likes']) }} suka</p>
+                    <p class="text-[11px] font-semibold text-[#0B6E4F]">
+                        <a href="{{ route('admin.interactions') }}" class="hover:underline flex items-center gap-1" title="Buka menu audit interaksi & deteksi akun">
+                            <span>👁️ {{ number_format($stats['total_views']) }} dilihat • ❤️ {{ number_format($stats['total_likes']) }} suka</span>
+                            <span>→</span>
+                        </a>
+                    </p>
                 </div>
 
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
@@ -604,13 +619,27 @@ Algoritma:
                                         {{ $prod->stock }} unit
                                     </td>
                                     <td class="py-3.5 px-4 text-center whitespace-nowrap">
-                                        <span class="inline-flex items-center gap-2 rounded-lg bg-[#F8FAFC] border border-slate-200/80 px-2.5 py-1 text-[11px]">
-                                            <span title="Dilihat">👁️ {{ number_format($prod->views_count) }}</span>
-                                            <span title="Disukai">❤️ {{ number_format($prod->likes_count ?? 0) }}</span>
-                                            <span title="Komentar">💬 {{ number_format($prod->comments_count ?? 0) }}</span>
-                                        </span>
+                                        <div class="space-y-1">
+                                            <span class="inline-flex items-center gap-2 rounded-lg bg-[#F8FAFC] border border-slate-200/80 px-2.5 py-1 text-[11px]">
+                                                <span title="Dilihat">👁️ {{ number_format($prod->views_count) }}</span>
+                                                <span title="Disukai">❤️ {{ number_format($prod->likes_count ?? 0) }}</span>
+                                                <span title="Komentar">💬 {{ number_format($prod->comments_count ?? 0) }}</span>
+                                            </span>
+                                            <div>
+                                                <a href="{{ route('admin.interactions', ['product_id' => $prod->id]) }}" class="text-[10px] font-bold text-[#0B6E4F] hover:underline flex items-center justify-center gap-1" title="Lihat siapa yang komentar, suka, dan melihat produk ini">
+                                                    <span>🔍 Audit Akun</span>
+                                                </a>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="py-3.5 px-5 text-right whitespace-nowrap space-x-2">
+                                        <button type="button"
+                                                onclick="openProductResetModal({{ $prod->id }}, '{{ addslashes($prod->product_name) }}', {{ $prod->views_count }}, {{ $prod->likes_count ?? 0 }}, {{ $prod->comments_count ?? 0 }})"
+                                                class="font-bold text-amber-600 hover:underline text-xs"
+                                                title="Reset interaksi suka, komentar, atau lihat untuk karya ini">
+                                            🔄 Reset
+                                        </button>
+
                                         <button type="button"
                                                 data-url="{{ route('admin.products.update', $prod) }}"
                                                 data-store="{{ $prod->store_id }}"
@@ -2053,6 +2082,93 @@ Algoritma:
     </div>
 </div>
 
+<!-- Modal Reset Interaksi Produk (Views, Likes, Komentar) -->
+<div id="product-reset-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+    <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4 my-8">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+                <span class="rounded-full bg-rose-100 text-rose-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase">Kontrol Interaksi</span>
+                <h3 class="text-base font-extrabold text-[#0F291E] mt-1">Reset Interaksi Karya Siswa</h3>
+            </div>
+            <button type="button" onclick="closeProductResetModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+        </div>
+
+        <form id="product-reset-form" method="POST" action="" class="space-y-4">
+            @csrf
+
+            <div>
+                <label class="block text-[11px] font-extrabold uppercase text-slate-400 mb-1">Karya yang Direset:</label>
+                <p id="modal-product-name" class="text-xs font-extrabold text-[#0B6E4F] bg-[#EBF9F2] p-2.5 rounded-xl border border-emerald-200">
+                    -
+                </p>
+            </div>
+
+            <!-- Statistik Saat Ini -->
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-3.5 space-y-1.5 text-xs">
+                <span class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1">Statistik Saat Ini:</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-600">Total Dilihat (Views):</span>
+                    <span id="modal-product-views" class="font-bold text-[#0F291E]">0</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-600">Total Suka (Likes):</span>
+                    <span id="modal-product-likes" class="font-bold text-rose-600">0</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-600">Total Komentar:</span>
+                    <span id="modal-product-comments" class="font-bold text-blue-600">0</span>
+                </div>
+            </div>
+
+            <!-- Opsi Pilihan Reset -->
+            <div class="space-y-2">
+                <span class="block text-[11px] font-extrabold uppercase text-slate-400">Pilih Interaksi yang Ingin Direset:</span>
+
+                <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" name="reset_views" value="1" class="mt-0.5 rounded text-[#0B6E4F] focus:ring-[#0B6E4F]">
+                    <div>
+                        <p class="font-bold text-xs text-[#0F291E]">👁️ Reset Dilihat (Views -> 0)</p>
+                        <p class="text-[10px] text-slate-400">Set counter dilihat ke 0 & bersihkan log kunjungan terkait.</p>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" name="reset_likes" value="1" class="mt-0.5 rounded text-rose-600 focus:ring-rose-500">
+                    <div>
+                        <p class="font-bold text-xs text-rose-700">❤️ Reset Suka (Likes -> 0)</p>
+                        <p class="text-[10px] text-slate-400">Set counter suka ke 0 & hapus riwayat likes karya ini.</p>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" name="reset_comments" value="1" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500">
+                    <div>
+                        <p class="font-bold text-xs text-blue-800">💬 Hapus Seluruh Komentar</p>
+                        <p class="text-[10px] text-slate-400">Bersihkan seluruh ulasan dan komentar pengunjung pada karya ini.</p>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-50 cursor-pointer">
+                    <input type="checkbox" name="reset_all" value="1" id="chk-reset-all" onchange="toggleSelectAllProductReset(this)" class="mt-0.5 rounded text-rose-700 focus:ring-rose-500">
+                    <div>
+                        <p class="font-bold text-xs text-rose-800">⚠️ Reset Total Semuanya Sekaligus</p>
+                        <p class="text-[10px] text-rose-600">Reset Dilihat, Suka, dan Komentar kembali bersih seperti baru.</p>
+                    </div>
+                </label>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeProductResetModal()" class="rounded-xl px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100">
+                    Batal
+                </button>
+                <button type="submit" onclick="return confirm('Apakah Anda yakin ingin mengeksekusi reset interaksi pada karya ini? Tindakan ini akan dicatat di log audit sistem.')" class="rounded-xl bg-rose-600 px-5 py-2 text-xs font-bold text-white hover:bg-rose-700 shadow-xs transition">
+                    Eksekusi Reset
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @php
     $chartRawData = [];
     foreach ($stores as $s) {
@@ -2404,6 +2520,36 @@ Algoritma:
         const modal = document.getElementById('edit-class-major-modal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+    }
+
+    function openProductResetModal(productId, productName, views, likes, comments) {
+        const modal = document.getElementById('product-reset-modal');
+        const form = document.getElementById('product-reset-form');
+        form.action = `/panel-admin/interaksi/produk/${productId}/reset`;
+
+        document.getElementById('modal-product-name').textContent = productName;
+        document.getElementById('modal-product-views').textContent = views + ' views';
+        document.getElementById('modal-product-likes').textContent = likes + ' suka';
+        document.getElementById('modal-product-comments').textContent = comments + ' komentar';
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeProductResetModal() {
+        const modal = document.getElementById('product-reset-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function toggleSelectAllProductReset(masterChk) {
+        const form = document.getElementById('product-reset-form');
+        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(chk => {
+            if (chk !== masterChk) {
+                chk.checked = masterChk.checked;
+            }
+        });
     }
 
     // Auto-scroll ke section hash setelah simpan tanpa reload melompat

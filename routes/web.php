@@ -135,4 +135,13 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('panel-admin')->na
     Route::post('/class-majors', [AdminDashboardController::class, 'storeClassMajor'])->name('class-majors.store');
     Route::put('/class-majors/{classMajor}', [AdminDashboardController::class, 'updateClassMajor'])->name('class-majors.update');
     Route::delete('/class-majors/{classMajor}', [AdminDashboardController::class, 'destroyClassMajor'])->name('class-majors.destroy');
+
+    // Audit Interaksi & Reset (Komentar, Suka, Dilihat & Deteksi Akun Terhubung)
+    Route::get('/interaksi', [AdminDashboardController::class, 'interactions'])->name('interactions');
+    Route::delete('/interaksi/komentar/{comment}', [AdminDashboardController::class, 'destroyComment'])->name('interactions.destroy-comment');
+    Route::delete('/interaksi/suka/{like}', [AdminDashboardController::class, 'destroyLike'])->name('interactions.destroy-like');
+    Route::delete('/interaksi/kunjungan/{log}', [AdminDashboardController::class, 'destroyVisitorLog'])->name('interactions.destroy-visitor-log');
+    Route::post('/interaksi/produk/{product}/reset', [AdminDashboardController::class, 'resetProductInteractions'])->name('interactions.reset-product');
+    Route::post('/interaksi/toko/{store}/reset', [AdminDashboardController::class, 'resetStoreInteractions'])->name('interactions.reset-store');
+    Route::post('/interaksi/massal/reset', [AdminDashboardController::class, 'bulkResetInteractions'])->name('interactions.reset-bulk');
 });

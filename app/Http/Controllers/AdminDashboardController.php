@@ -10,6 +10,7 @@ use App\Models\CmsContent;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductComment;
+use App\Models\ProductLike;
 use App\Models\Store;
 use App\Models\User;
 use App\Models\VisitorLog;
@@ -948,5 +949,345 @@ class AdminDashboardController extends Controller
         ];
 
         return view('admin.logs', compact('logs', 'stats'));
+    }
+
+    /**
+     * ========================================================================
+     * MENU AUDIT INTERAKSI & DETEKSI AKUN TERHUBUNG (KOMENTAR, SUKA, DILIHAT)
+     * ========================================================================
+     * Fungsi:
+     *   1. Menampilkan rincian siapa saja yang berkomentar, menyukai (like),
+     *      dan melihat (views) produk & toko karya siswa.
+     *   2. Mendeteksi akun-akun yang terhubung:
+     *      - Akun pemilik toko sendiri yang menyukai/mengomentari produknya sendiri (self-like / self-comment)
+     *      - Akun yang mengakses dari alamat IP yang sama dengan pemilik toko (duplikasi perangkat)
+     *      - Akun teman sekelas & sejurusan dengan siswa pemilik toko
+     *      - Akun keluarga siswa
+     *   3. Menyediakan menu Reset Komentar, Reset Suka, dan Reset Dilihat
+     *      (baik per-item, per-produk, per-toko, maupun reset massal).
+     * ========================================================================
+     */
+    public function interactions(Request $request): View
+    {
+        $tab = $request->query('tab', 'all'); // 'all', 'comments', 'likes', 'views', 'connected'
+        $productId = $request->query('product_id');
+        $storeId = $request->query('store_id');
+        $search = trim((string) $request->query('q'));
+        $detectionFilter = $request->query('detection', 'all'); // 'all', 'self', 'same_ip', 'same_class', 'family', 'guest'
+
+        // 1. Ringkasan Total Interaksi
+        $stats = [
+            'total_comments' => ProductComment::count(),
+            'total_likes'    => ProductLike::count(),
+            'total_views'    => (int) Product::sum('views_count') + (int) Store::sum('views_count'),
+            'total_visitor_logs' => VisitorLog::count(),
+        ];
+
+        // 2. Query Komentar Produk
+        $commentsQuery = ProductComment::with(['user', 'product.store.owner'])->latest();
+        if ($productId) {
+            $commentsQuery->where('product_id', $productId);
+        }
+        if ($storeId) {
+            $commentsQuery->whereHas('product', fn ($q) => $q->where('store_id', $storeId));
+        }
+        if ($search !== '') {
+            $commentsQuery->where(function ($q) use ($search) {
+                $q->where('comment', 'like', "%{$search}%")
+                  ->orWhere('ip_address', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('nis_nisn', 'like', "%{$search}%")
+                        ->orWhere('class_name', 'like', "%{$search}%")
+                        ->orWhere('kabupaten', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('product', function ($pq) use ($search) {
+                      $pq->where('product_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // 3. Query Suka / Likes Produk
+        $likesQuery = ProductLike::with(['user', 'product.store.owner'])->latest();
+        if ($productId) {
+            $likesQuery->where('product_id', $productId);
+        }
+        if ($storeId) {
+            $likesQuery->whereHas('product', fn ($q) => $q->where('store_id', $storeId));
+        }
+        if ($search !== '') {
+            $likesQuery->where(function ($q) use ($search) {
+                $q->where('ip_address', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('nis_nisn', 'like', "%{$search}%")
+                        ->orWhere('class_name', 'like', "%{$search}%")
+                        ->orWhere('kabupaten', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('product', function ($pq) use ($search) {
+                      $pq->where('product_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // 4. Query Kunjungan / Views (Visitor Logs)
+        $viewsQuery = VisitorLog::with(['user', 'product.store.owner', 'store.owner'])->latest();
+        if ($productId) {
+            $viewsQuery->where('product_id', $productId);
+        }
+        if ($storeId) {
+            $viewsQuery->where('store_id', $storeId);
+        }
+        if ($search !== '') {
+            $viewsQuery->where(function ($q) use ($search) {
+                $q->where('visitor_name', 'like', "%{$search}%")
+                  ->orWhere('origin_region', 'like', "%{$search}%")
+                  ->orWhere('ip_address', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('nis_nisn', 'like', "%{$search}%")
+                        ->orWhere('class_name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('product', function ($pq) use ($search) {
+                      $pq->where('product_name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('store', function ($sq) use ($search) {
+                      $sq->where('store_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Pagination sesuai tab aktif
+        $comments = ($tab === 'all' || $tab === 'comments' || $tab === 'connected')
+            ? $commentsQuery->paginate(25, ['*'], 'comments_page')->withQueryString()
+            : null;
+
+        $likes = ($tab === 'all' || $tab === 'likes' || $tab === 'connected')
+            ? $likesQuery->paginate(25, ['*'], 'likes_page')->withQueryString()
+            : null;
+
+        $views = ($tab === 'all' || $tab === 'views' || $tab === 'connected')
+            ? $viewsQuery->paginate(25, ['*'], 'views_page')->withQueryString()
+            : null;
+
+        // Opsi Dropdown Filter Produk & Toko
+        $allProducts = Product::with('store')->select('id', 'store_id', 'product_name', 'image', 'views_count', 'likes_count')->orderBy('product_name')->get();
+        $allStores = Store::select('id', 'user_id', 'store_name', 'views_count')->orderBy('store_name')->get();
+
+        // Cari produk / toko yang sedang difilter spesifik
+        $selectedProduct = $productId ? Product::with('store.owner')->find($productId) : null;
+        $selectedStore = $storeId ? Store::with('owner')->find($storeId) : null;
+
+        return view('admin.interactions', compact(
+            'tab',
+            'stats',
+            'comments',
+            'likes',
+            'views',
+            'allProducts',
+            'allStores',
+            'selectedProduct',
+            'selectedStore',
+            'productId',
+            'storeId',
+            'search',
+            'detectionFilter'
+        ));
+    }
+
+    /**
+     * Hapus satu komentar tertentu oleh admin.
+     */
+    public function destroyComment(Request $request, ProductComment $comment): RedirectResponse
+    {
+        $product = $comment->product;
+        $userName = $comment->user->name ?? 'User #' . $comment->user_id;
+        $prodName = $product->product_name ?? 'Produk #' . $comment->product_id;
+
+        $comment->delete();
+
+        ActivityLog::record(
+            'comment_delete',
+            'Hapus Komentar Produk',
+            "Admin " . ($request->user()->name ?? 'Admin') . " menghapus komentar dari {$userName} pada karya '{$prodName}'."
+        );
+
+        return back()->with('success', "Komentar dari {$userName} berhasil dihapus dari karya {$prodName}.");
+    }
+
+    /**
+     * Hapus / batalkan satu tanda suka (like) tertentu oleh admin.
+     */
+    public function destroyLike(Request $request, ProductLike $like): RedirectResponse
+    {
+        $product = $like->product;
+        $userName = $like->user ? $like->user->name : ('Tamu IP ' . ($like->ip_address ?? '-'));
+        $prodName = $product->product_name ?? 'Produk #' . $like->product_id;
+
+        if ($product && $product->likes_count > 0) {
+            $product->decrement('likes_count');
+        }
+
+        $like->delete();
+
+        ActivityLog::record(
+            'like_delete',
+            'Hapus Tanda Suka (Like)',
+            "Admin " . ($request->user()->name ?? 'Admin') . " membatalkan tanda suka dari {$userName} pada karya '{$prodName}'."
+        );
+
+        return back()->with('success', "Tanda suka dari {$userName} berhasil dihapus dari karya {$prodName}.");
+    }
+
+    /**
+     * Hapus satu riwayat kunjungan (visitor log) tertentu oleh admin.
+     */
+    public function destroyVisitorLog(Request $request, VisitorLog $log): RedirectResponse
+    {
+        $visitorName = $log->visitor_name ?? 'Pengunjung';
+        $targetName = $log->product->product_name ?? ($log->store->store_name ?? 'Toko/Produk');
+
+        if ($log->product_id) {
+            Product::where('id', $log->product_id)->where('views_count', '>', 0)->decrement('views_count');
+        }
+        if ($log->store_id) {
+            Store::where('id', $log->store_id)->where('views_count', '>', 0)->decrement('views_count');
+        }
+
+        $log->delete();
+
+        ActivityLog::record(
+            'view_delete',
+            'Hapus Log Kunjungan',
+            "Admin " . ($request->user()->name ?? 'Admin') . " menghapus log kunjungan {$visitorName} pada {$targetName}."
+        );
+
+        return back()->with('success', "Log kunjungan dari {$visitorName} berhasil dihapus.");
+    }
+
+    /**
+     * Reset interaksi spesifik pada suatu produk (Views, Likes, Komentar, atau Seluruhnya).
+     */
+    public function resetProductInteractions(Request $request, Product $product): RedirectResponse
+    {
+        $resetViews = $request->boolean('reset_views');
+        $resetLikes = $request->boolean('reset_likes');
+        $resetComments = $request->boolean('reset_comments');
+        $resetAll = $request->boolean('reset_all') || (! $resetViews && ! $resetLikes && ! $resetComments);
+
+        $details = [];
+
+        if ($resetAll || $resetViews) {
+            $prevViews = (int) $product->views_count;
+            $product->update(['views_count' => 0]);
+            VisitorLog::where('product_id', $product->id)->delete();
+            $details[] = "Dilihat direset ke 0 (sebelumnya {$prevViews})";
+        }
+
+        if ($resetAll || $resetLikes) {
+            $prevLikes = (int) $product->likes_count;
+            $product->update(['likes_count' => 0]);
+            ProductLike::where('product_id', $product->id)->delete();
+            $details[] = "Suka direset ke 0 (sebelumnya {$prevLikes})";
+        }
+
+        if ($resetAll || $resetComments) {
+            $commentCount = ProductComment::where('product_id', $product->id)->count();
+            ProductComment::where('product_id', $product->id)->delete();
+            $details[] = "{$commentCount} komentar berhasil dibersihkan";
+        }
+
+        $detailStr = implode(', ', $details);
+
+        ActivityLog::record(
+            'interaction_reset',
+            'Reset Interaksi Karya Siswa',
+            "Admin " . ($request->user()->name ?? 'Admin') . " mereset interaksi pada produk '{$product->product_name}': {$detailStr}."
+        );
+
+        return back()->with('success', "Interaksi karya '{$product->product_name}' berhasil direset: {$detailStr}.");
+    }
+
+    /**
+     * Reset interaksi pada toko siswa (Views toko & seluruh produk toko).
+     */
+    public function resetStoreInteractions(Request $request, Store $store): RedirectResponse
+    {
+        $resetAllProducts = $request->boolean('reset_all_products', true);
+
+        $prevStoreViews = (int) $store->views_count;
+        $store->update(['views_count' => 0]);
+        VisitorLog::where('store_id', $store->id)->whereNull('product_id')->delete();
+
+        if ($resetAllProducts) {
+            $productIds = $store->products()->pluck('id');
+            Product::whereIn('id', $productIds)->update(['views_count' => 0, 'likes_count' => 0]);
+            VisitorLog::whereIn('product_id', $productIds)->delete();
+            ProductLike::whereIn('product_id', $productIds)->delete();
+            if ($request->boolean('reset_comments')) {
+                ProductComment::whereIn('product_id', $productIds)->delete();
+            }
+        }
+
+        ActivityLog::record(
+            'store_interaction_reset',
+            'Reset Interaksi Toko Siswa',
+            "Admin " . ($request->user()->name ?? 'Admin') . " mereset statistik dilihat pada toko '{$store->store_name}' (sebelumnya {$prevStoreViews} views)."
+        );
+
+        return back()->with('success', "Statistik interaksi toko '{$store->store_name}' berhasil direset ke 0.");
+    }
+
+    /**
+     * Reset Massal Interaksi (Seluruh Komentar, Seluruh Suka, atau Seluruh Views di Sistem).
+     * Fitur khusus untuk Super Admin & Admin saat pembersihan data atau awal tahun ajaran baru.
+     */
+    public function bulkResetInteractions(Request $request): RedirectResponse
+    {
+        $type = $request->input('reset_type', 'all'); // 'comments', 'likes', 'views', 'all'
+        $adminName = $request->user()->name ?? 'Admin';
+
+        switch ($type) {
+            case 'comments':
+                $count = ProductComment::count();
+                ProductComment::query()->delete();
+                $msg = "Seluruh komentar produk ({$count} ulasan) berhasil direset dan dibersihkan dari sistem.";
+                break;
+
+            case 'likes':
+                $count = ProductLike::count();
+                ProductLike::query()->delete();
+                Product::query()->update(['likes_count' => 0]);
+                $msg = "Seluruh tanda suka / like produk ({$count} suka) berhasil direset ke 0.";
+                break;
+
+            case 'views':
+                VisitorLog::query()->delete();
+                Product::query()->update(['views_count' => 0]);
+                Store::query()->update(['views_count' => 0]);
+                $msg = "Seluruh counter dan log dilihat (views) pada produk dan toko berhasil direset ke 0.";
+                break;
+
+            case 'all':
+            default:
+                ProductComment::query()->delete();
+                ProductLike::query()->delete();
+                VisitorLog::query()->delete();
+                Product::query()->update(['views_count' => 0, 'likes_count' => 0]);
+                Store::query()->update(['views_count' => 0]);
+                $msg = "Seluruh komentar, suka, dan riwayat dilihat (views) pada seluruh produk & toko berhasil direset total ke 0.";
+                break;
+        }
+
+        ActivityLog::record(
+            'bulk_interaction_reset',
+            'Reset Massal Interaksi Sistem',
+            "Admin {$adminName} melakukan reset massal interaksi: {$msg}"
+        );
+
+        return back()->with('success', $msg);
     }
 }

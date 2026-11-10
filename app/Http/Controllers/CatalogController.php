@@ -153,6 +153,7 @@ class CatalogController extends Controller
             'user_id'    => $request->user()->id,
             'comment'    => $validated['comment'],
             'rating'     => $validated['rating'] ?? 5,
+            'ip_address' => $request->ip(),
         ]);
 
         return back()->with('success', 'Komentar Anda berhasil ditambahkan pada produk ini.');
