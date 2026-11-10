@@ -78,6 +78,18 @@ class User extends Authenticatable
         ];
     }
 
+    public function setMajorNameAttribute($value): void
+    {
+        $trimmed = ! is_null($value) ? trim((string) $value) : '';
+        $this->attributes['major_name'] = $trimmed !== '' ? ClassMajor::findMatchingMasterMajor($trimmed) : null;
+    }
+
+    public function setClassNameAttribute($value): void
+    {
+        $trimmed = ! is_null($value) ? trim((string) $value) : '';
+        $this->attributes['class_name'] = $trimmed !== '' ? ClassMajor::findMatchingMasterClass($trimmed) : null;
+    }
+
     /**
      * Fungsi: Relasi 1-ke-1 (Satu Toko Satu Akun) untuk Pemilik Toko (Siswa/Guru).
      */

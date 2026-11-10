@@ -72,12 +72,43 @@ class AdminDashboardController extends Controller
 
         // 3. Filter Kelas Siswa (X, XI, XII, dsb)
         if ($request->filled('class_name')) {
-            $usersQuery->where('class_name', $request->query('class_name'));
+            $filterClass = trim($request->query('class_name'));
+            $matchedClass = ClassMajor::findMatchingMasterClass($filterClass);
+            $romanMap = [
+                '10' => 'X', '11' => 'XI', '12' => 'XII',
+                'X' => '10', 'XI' => '11', 'XII' => '12',
+            ];
+            $altClass = $romanMap[strtoupper($filterClass)] ?? null;
+
+            $usersQuery->where(function ($q) use ($filterClass, $matchedClass, $altClass) {
+                $q->where('class_name', $filterClass)
+                  ->orWhere('class_name', $matchedClass)
+                  ->orWhere('class_name', 'like', "{$filterClass}%")
+                  ->orWhere('class_name', 'like', "%{$filterClass}");
+                if ($altClass) {
+                    $q->orWhere('class_name', $altClass);
+                }
+            });
         }
 
-        // 4. Filter Jurusan Siswa (TKJT, DKV, TBS, dsb)
+        // 4. Filter Jurusan Siswa (Cerdas & Menyesuaikan Master Database yang Diinputkan Super Admin)
         if ($request->filled('major_name')) {
-            $usersQuery->where('major_name', $request->query('major_name'));
+            $filterMajor = trim($request->query('major_name'));
+            $matchedMajor = ClassMajor::findMatchingMasterMajor($filterMajor);
+            [$baseMajor, $acronym] = ClassMajor::cleanMajorName($filterMajor);
+
+            $usersQuery->where(function ($q) use ($filterMajor, $matchedMajor, $baseMajor, $acronym) {
+                $q->where('major_name', $filterMajor);
+                if ($matchedMajor && $matchedMajor !== $filterMajor) {
+                    $q->orWhere('major_name', $matchedMajor);
+                }
+                if (! empty($baseMajor)) {
+                    $q->orWhere('major_name', 'like', "%{$baseMajor}%");
+                }
+                if (! empty($acronym)) {
+                    $q->orWhere('major_name', 'like', "%{$acronym}%");
+                }
+            });
         }
 
         // 5. Filter Daerah Kabupaten / Kota
@@ -118,27 +149,30 @@ class AdminDashboardController extends Controller
 
         $users = $usersQuery->paginate(50)->withQueryString();
 
-        // Opsi Dropdown Filter Dinamis dari Database
-        $availableClasses = User::whereNotNull('class_name')
-            ->where('class_name', '!=', '')
-            ->pluck('class_name')
-            ->concat(ClassMajor::pluck('class_name'))
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values();
+        // Selaraskan data pengguna dengan master database Kelas & Jurusan yang diinputkan Super Admin
+        ClassMajor::syncUsersWithMaster();
+
+        // Opsi Dropdown Filter Dinamis MURNI DARI DATABASE MASTER CLASS_MAJORS yang diinputkan Super Admin
+        $masterClassMajors = ClassMajor::where('is_active', true)->orderBy('class_name')->orderBy('major_name')->get();
+        if ($masterClassMajors->isEmpty()) {
+            $masterClassMajors = ClassMajor::orderBy('class_name')->orderBy('major_name')->get();
+        }
+
+        $availableClasses = $masterClassMajors->pluck('class_name')->filter()->unique()->values();
         if ($availableClasses->isEmpty()) {
             $availableClasses = collect(['X', 'XI', 'XII']);
         }
 
-        $availableMajors = User::whereNotNull('major_name')
-            ->where('major_name', '!=', '')
-            ->pluck('major_name')
-            ->concat(ClassMajor::pluck('major_name'))
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values();
+        $availableMajors = $masterClassMajors->pluck('major_name')->filter()->unique()->values();
+        if ($availableMajors->isEmpty()) {
+            $availableMajors = User::whereNotNull('major_name')
+                ->where('major_name', '!=', '')
+                ->pluck('major_name')
+                ->filter()
+                ->unique()
+                ->sort()
+                ->values();
+        }
 
         // Master Kabupaten & Kota se-Indonesia dari database
         $availableKabupatens = Regency::getFlatList();
@@ -804,12 +838,15 @@ class AdminDashboardController extends Controller
         ]);
 
         ClassMajor::create([
-            'class_name' => $validated['class_name'],
-            'major_name' => $validated['major_name'],
+            'class_name' => trim($validated['class_name']),
+            'major_name' => trim($validated['major_name']),
             'is_active'  => true,
         ]);
 
-        return redirect()->to(route('admin.dashboard') . '#sec-master-data')->with('success', "Data Kelas/Unit '{$validated['class_name']} - {$validated['major_name']}' berhasil ditambahkan dan disimpan.");
+        // Otomatis selaraskan data pengguna dengan master baru
+        ClassMajor::syncUsersWithMaster();
+
+        return redirect()->to(route('admin.dashboard') . '#sec-master-data')->with('success', "Data Kelas & Jurusan '{$validated['class_name']} - {$validated['major_name']}' berhasil ditambahkan dan diselaraskan ke database pengguna.");
     }
 
     public function updateClassMajor(Request $request, ClassMajor $classMajor): RedirectResponse
@@ -820,13 +857,27 @@ class AdminDashboardController extends Controller
             'is_active'  => ['nullable', 'boolean'],
         ]);
 
+        $oldMajor = $classMajor->major_name;
+        $oldClass = $classMajor->class_name;
+
         $classMajor->update([
-            'class_name' => $validated['class_name'],
-            'major_name' => $validated['major_name'],
+            'class_name' => trim($validated['class_name']),
+            'major_name' => trim($validated['major_name']),
             'is_active'  => $request->has('is_active') ? $request->boolean('is_active') : true,
         ]);
 
-        return redirect()->to(route('admin.dashboard') . '#sec-master-data')->with('success', 'Data Kelas & Jurusan berhasil disimpan.');
+        // Jika nama jurusan atau kelas diubah oleh superadmin, perbarui langsung semua user yang memakai nama lama
+        if ($oldMajor !== trim($validated['major_name'])) {
+            User::where('major_name', $oldMajor)->update(['major_name' => trim($validated['major_name'])]);
+        }
+        if ($oldClass !== trim($validated['class_name'])) {
+            User::where('class_name', $oldClass)->update(['class_name' => trim($validated['class_name'])]);
+        }
+
+        // Sinkronkan data pengguna secara menyeluruh
+        ClassMajor::syncUsersWithMaster();
+
+        return redirect()->to(route('admin.dashboard') . '#sec-master-data')->with('success', 'Data Kelas & Jurusan berhasil diperbarui dan diselaraskan ke seluruh akun pengguna terkait.');
     }
 
     public function destroyClassMajor(ClassMajor $classMajor): RedirectResponse

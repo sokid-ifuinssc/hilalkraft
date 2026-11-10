@@ -837,7 +837,7 @@ Algoritma:
                             <select name="class_name" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                                 <option value="">Pilih Kelas</option>
                                 @foreach($effectiveClasses as $cl)
-                                    <option value="{{ $cl }}" @selected(old('class_name', $user->class_name) === $cl)>{{ $cl }}</option>
+                                    <option value="{{ $cl }}" @selected(old('class_name', $user->class_name) === $cl || \App\Models\ClassMajor::findMatchingMasterClass(old('class_name', $user->class_name)) === $cl)>{{ $cl }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -846,7 +846,7 @@ Algoritma:
                             <select name="major_name" id="siswa_major_name" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                                 <option value="">Pilih Jurusan</option>
                                 @foreach($effectiveMajors as $mj)
-                                    <option value="{{ $mj }}" @selected(old('major_name', $user->major_name) === $mj)>{{ $mj }}</option>
+                                    <option value="{{ $mj }}" @selected(old('major_name', $user->major_name) === $mj || \App\Models\ClassMajor::findMatchingMasterMajor(old('major_name', $user->major_name)) === $mj)>{{ $mj }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -863,7 +863,7 @@ Algoritma:
                             <select name="teacher_major_name" id="guru_major_name" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                                 <option value="">Pilih Jurusan / Unit</option>
                                 @foreach($effectiveMajors as $mj)
-                                    <option value="{{ $mj }}" @selected(old('teacher_major_name', old('major_name', $user->major_name)) === $mj)>{{ $mj }}</option>
+                                    <option value="{{ $mj }}" @selected(old('teacher_major_name', old('major_name', $user->major_name)) === $mj || \App\Models\ClassMajor::findMatchingMasterMajor(old('teacher_major_name', old('major_name', $user->major_name))) === $mj)>{{ $mj }}</option>
                                 @endforeach
                             </select>
                         </div>

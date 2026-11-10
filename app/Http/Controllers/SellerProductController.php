@@ -122,6 +122,10 @@ class SellerProductController extends Controller
         $nisNisn   = $request->input('nis_nisn') ?: $user->nis_nisn;
         $nuptk     = $request->input('nuptk') ?: $user->nuptk;
 
+        // Selaraskan dengan master database ClassMajor yang diinputkan Super Admin
+        $className = ClassMajor::findMatchingMasterClass($className);
+        $majorName = ClassMajor::findMatchingMasterMajor($majorName);
+
         $request->merge([
             'major_name' => $majorName,
             'class_name' => $className,

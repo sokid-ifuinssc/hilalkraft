@@ -813,7 +813,7 @@ Algoritma:
                                     <select name="class_name" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
                                         <option value="">Semua Kelas</option>
                                         @foreach($availableClasses as $cls)
-                                            <option value="{{ $cls }}" @selected(request('class_name') === (string)$cls)>Kelas {{ $cls }}</option>
+                                            <option value="{{ $cls }}" @selected(request('class_name') === (string)$cls || \App\Models\ClassMajor::findMatchingMasterClass(request('class_name')) === (string)$cls)>Kelas {{ $cls }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -824,7 +824,7 @@ Algoritma:
                                     <select name="major_name" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
                                         <option value="">Semua Jurusan</option>
                                         @foreach($availableMajors as $mj)
-                                            <option value="{{ $mj }}" @selected(request('major_name') === $mj)>{{ $mj }}</option>
+                                            <option value="{{ $mj }}" @selected(request('major_name') === $mj || \App\Models\ClassMajor::findMatchingMasterMajor(request('major_name')) === $mj)>{{ $mj }}</option>
                                         @endforeach
                                     </select>
                                 </div>

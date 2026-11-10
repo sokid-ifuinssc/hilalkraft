@@ -155,6 +155,15 @@ class AuthController extends Controller
             $subtype = $role === 'seller' ? $sellerType : $buyerType;
             $isTeacher = ($role === 'seller' && $sellerType === 'guru');
 
+            // Selaraskan kelas & jurusan siswa/guru dengan database master ClassMajor yang diinputkan Super Admin
+            $rawClass = $validated['class_name'] ?? null;
+            $rawMajor = $validated['major_name'] ?? null;
+            $finalClass = $rawClass ? ClassMajor::findMatchingMasterClass($rawClass) : null;
+            $finalMajor = $rawMajor ? ClassMajor::findMatchingMasterMajor($rawMajor) : null;
+
+            $familyClass = ! empty($validated['family_student_class']) ? ClassMajor::findMatchingMasterClass($validated['family_student_class']) : null;
+            $familyMajor = ! empty($validated['family_student_major']) ? ClassMajor::findMatchingMasterMajor($validated['family_student_major']) : null;
+
             $user = User::create([
                 'name'                 => $validated['name'],
                 'email'                => $validated['email'],
@@ -167,12 +176,12 @@ class AuthController extends Controller
                 'nis_nisn'             => $validated['nis_nisn'] ?? null,
                 'nuptk'                => $validated['nuptk'] ?? null,
                 'nik'                  => $validated['nik'] ?? null,
-                'class_name'           => $validated['class_name'] ?? null,
-                'major_name'           => $validated['major_name'] ?? null,
+                'class_name'           => $finalClass,
+                'major_name'           => $finalMajor,
                 'school_origin'        => $validated['school_origin'] ?? null,
                 'family_student_name'  => $validated['family_student_name'] ?? null,
-                'family_student_class' => $validated['family_student_class'] ?? null,
-                'family_student_major' => $validated['family_student_major'] ?? null,
+                'family_student_class' => $familyClass,
+                'family_student_major' => $familyMajor,
                 'graduation_year'      => $validated['graduation_year'] ?? null,
                 'desa'                 => $validated['desa'],
                 'kecamatan'            => $validated['kecamatan'],
@@ -185,8 +194,8 @@ class AuthController extends Controller
             // Satu Toko Satu Akun (1-to-1) untuk Siswa maupun Guru
             if ($role === 'seller') {
                 $studentClassLabel = $sellerType === 'siswa'
-                    ? trim(($validated['class_name'] ?? '') . ' - ' . ($validated['major_name'] ?? ''))
-                    : 'Guru / Pembina ' . ($validated['major_name'] ?? 'SMK Plus Al Hilal');
+                    ? trim(($finalClass ?? '') . ' - ' . ($finalMajor ?? ''))
+                    : 'Guru / Pembina ' . ($finalMajor ?? 'SMK Plus Al Hilal');
 
                 Store::create([
                     'user_id'        => $user->id,

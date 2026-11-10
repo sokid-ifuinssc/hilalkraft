@@ -188,6 +188,9 @@ class AppServiceProvider extends ServiceProvider
                 DB::statement("UPDATE cms_contents SET content = REPLACE(content, 'dikeola', 'dikelola') WHERE content LIKE '%dikeola%'");
                 DB::statement("UPDATE cms_contents SET title = REPLACE(title, 'dikeola', 'dikelola') WHERE title LIKE '%dikeola%'");
             }
+            if (Schema::hasTable('class_majors') && Schema::hasTable('users')) {
+                \App\Models\ClassMajor::syncUsersWithMaster();
+            }
         } catch (Throwable $e) {
             // Abaikan jika belum siap
         }
