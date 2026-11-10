@@ -254,26 +254,153 @@ Algoritma:
     </div>
 </section>
 
-<!-- Banner Pengumuman Custom CMS (Bila Ditambahkan oleh Super Admin) -->
-@if(isset($customCmsBanners) && $customCmsBanners->count() > 0)
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-    <div class="grid grid-cols-1 md:grid-cols-{{ min(3, $customCmsBanners->count()) }} gap-4">
-        @foreach($customCmsBanners as $banner)
-            <div class="rounded-2xl bg-white border border-emerald-500/25 p-4 sm:p-5 flex items-start justify-between gap-4 shadow-2xs">
-                <div class="space-y-1">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-[#0B6E4F]">Info & Pengumuman</span>
-                    <h3 class="text-sm font-extrabold text-[#0F291E]">{{ $banner->title }}</h3>
+<!-- ========================================================================
+     2. INFO & PENGUMUMAN / PROMO DISKON (HORIZONTAL SLIDER / CAROUSEL RINGKAS)
+     ======================================================================== -->
+@php
+    $promoCards = collect();
+
+    if (isset($customCmsBanners) && $customCmsBanners->count() > 0) {
+        foreach ($customCmsBanners as $b) {
+            $promoCards->push((object)[
+                'category'  => $b->section ?: 'Info & Promo',
+                'title'     => $b->title,
+                'content'   => $b->content,
+                'link_url'  => $b->link_url,
+                'image'     => $b->image,
+            ]);
+        }
+    } else {
+        $dPelajar = (int) \App\Models\CmsContent::val('policy_discount_pelajar', '10');
+        $dKeluarga = (int) \App\Models\CmsContent::val('policy_discount_keluarga', '10');
+        $dAlumni = (int) \App\Models\CmsContent::val('policy_discount_alumni', '5');
+        $bazarEvent = isset($activeBazaarEvents) ? $activeBazaarEvents->first() : null;
+
+        $promoCards->push((object)[
+            'category' => 'Diskon Pelajar',
+            'title'    => "Diskon {$dPelajar}% Pelajar",
+            'content'  => 'Khusus siswa SMK Plus Al Hilal & pelajar terdaftar.',
+            'link_url' => route('register'),
+            'image'    => null,
+        ]);
+        $promoCards->push((object)[
+            'category' => 'Diskon Keluarga',
+            'title'    => "Diskon {$dKeluarga}% Keluarga",
+            'content'  => 'Wali & keluarga besar siswa SMK Plus Al Hilal.',
+            'link_url' => route('register'),
+            'image'    => null,
+        ]);
+        $promoCards->push((object)[
+            'category' => 'Diskon Alumni',
+            'title'    => "Diskon {$dAlumni}% Alumni",
+            'content'  => 'Apresiasi istimewa bagi seluruh alumni SMK.',
+            'link_url' => route('register'),
+            'image'    => null,
+        ]);
+        if ($bazarEvent) {
+            $promoCards->push((object)[
+                'category' => 'Diskon Bazar',
+                'title'    => "Bazar {$bazarEvent->discount_percent}% ({$bazarEvent->voucher_code})",
+                'content'  => $bazarEvent->title . ' • Lokasi: ' . ($bazarEvent->location ?? 'SMK Plus Al Hilal'),
+                'link_url' => '#katalog-produk',
+                'image'    => null,
+            ]);
+        }
+    }
+@endphp
+
+@if($promoCards->count() > 0)
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-1 sm:pt-4 sm:pb-2">
+    <!-- Header Petunjuk: Info & Promo Diskon di Kiri, Geser ➔ di Kanan -->
+    <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-2 px-0.5">
+        <div class="flex items-center gap-1.5 text-[#0F291E]">
+            <span class="inline-block w-2 h-2 rounded-full bg-[#0B6E4F]"></span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-[#0F291E]">Info & Promo Diskon</span>
+        </div>
+        <span class="text-[11px] font-bold text-[#0B6E4F] flex items-center gap-1 cursor-pointer select-none">
+            <span>Geser</span>
+            <span class="animate-pulse">➔</span>
+        </span>
+    </div>
+
+    <!-- Pembungkus Horizontal Scroll (Mobile First Slider / Carousel) -->
+    <div class="flex flex-row overflow-x-auto gap-3 pb-2 scrollbar-none snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0">
+        @foreach($promoCards as $banner)
+            @php
+                $cardText = strtolower($banner->title . ' ' . ($banner->content ?? '') . ' ' . ($banner->category ?? ''));
+                $icon = match(true) {
+                    str_contains($cardText, 'pelajar') || str_contains($cardText, 'siswa') => '🎓',
+                    str_contains($cardText, 'keluarga') || str_contains($cardText, 'wali') => '🏠',
+                    str_contains($cardText, 'alumni') || str_contains($cardText, 'lulus') => '🎖️',
+                    str_contains($cardText, 'bazar') || str_contains($cardText, 'event') || str_contains($cardText, 'promo') => '🎪',
+                    default => match($loop->index % 4) {
+                        0 => '🎓',
+                        1 => '🏠',
+                        2 => '🎖️',
+                        default => '🎪',
+                    }
+                };
+
+                $style = match($loop->index % 4) {
+                    0 => [
+                        'bg'     => 'bg-emerald-50/90 hover:bg-emerald-100/70',
+                        'border' => 'border-emerald-200/80',
+                        'badge'  => 'text-[#0B6E4F] bg-emerald-100/80',
+                        'link'   => 'text-[#0B6E4F]',
+                    ],
+                    1 => [
+                        'bg'     => 'bg-blue-50/90 hover:bg-blue-100/70',
+                        'border' => 'border-blue-200/80',
+                        'badge'  => 'text-blue-700 bg-blue-100/80',
+                        'link'   => 'text-blue-700',
+                    ],
+                    2 => [
+                        'bg'     => 'bg-purple-50/90 hover:bg-purple-100/70',
+                        'border' => 'border-purple-200/80',
+                        'badge'  => 'text-purple-700 bg-purple-100/80',
+                        'link'   => 'text-purple-700',
+                    ],
+                    default => [
+                        'bg'     => 'bg-amber-50/90 hover:bg-amber-100/70',
+                        'border' => 'border-amber-200/80',
+                        'badge'  => 'text-amber-800 bg-amber-100/80',
+                        'link'   => 'text-amber-800',
+                    ],
+                };
+
+                $cardImg = $banner->image
+                    ? (Str::startsWith($banner->image, 'http')
+                        ? $banner->image
+                        : (Str::startsWith($banner->image, 'images/') ? asset($banner->image) : asset('storage/' . $banner->image)))
+                    : null;
+            @endphp
+            <div class="flex-shrink-0 w-[240px] sm:w-[260px] snap-start rounded-xl {{ $style['bg'] }} border {{ $style['border'] }} p-3 sm:p-3.5 shadow-xs hover:shadow-sm transition-all duration-200 flex items-start justify-between gap-2.5">
+                <div class="min-w-0 flex-1 space-y-1">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs shrink-0 select-none">{{ $icon }}</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider {{ $style['badge'] }} px-1.5 py-0.5 rounded-md truncate max-w-full">
+                            {{ $banner->category ?: 'Info & Promo' }}
+                        </span>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-800 line-clamp-1 leading-snug">
+                        {{ $banner->title }}
+                    </h3>
                     @if($banner->content)
-                        <p class="text-xs text-slate-600 leading-relaxed">{{ $banner->content }}</p>
+                        <p class="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">
+                            {{ $banner->content }}
+                        </p>
                     @endif
                     @if($banner->link_url)
-                        <a href="{{ $banner->link_url }}" class="inline-block text-xs font-bold text-[#0B6E4F] hover:underline pt-1">Selengkapnya →</a>
+                        <a href="{{ $banner->link_url }}" class="inline-flex items-center gap-1 text-[10px] font-extrabold {{ $style['link'] }} hover:underline pt-0.5">
+                            <span>Detail Promo</span>
+                            <span>→</span>
+                        </a>
                     @endif
                 </div>
-                @if($banner->image)
-                    <img src="{{ Str::startsWith($banner->image, 'http') ? $banner->image : (Str::startsWith($banner->image, 'images/') ? asset($banner->image) : asset('storage/' . $banner->image)) }}"
+                @if($cardImg)
+                    <img src="{{ $cardImg }}"
                          alt="{{ $banner->title }}"
-                         class="w-16 h-16 rounded-xl object-cover shrink-0">
+                         class="w-11 h-11 rounded-lg object-cover shrink-0 border border-white/80 shadow-2xs">
                 @endif
             </div>
         @endforeach
@@ -284,7 +411,7 @@ Algoritma:
 <!-- ========================================================================
      3. KATALOG KARYA SISWA & FILTER KATEGORI DINAMIS
      ======================================================================== -->
-<section id="katalog-produk" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-6">
+<section id="katalog-produk" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-8 sm:pb-10 space-y-6">
 
     <!-- Baris Filter Kategori & Pengurutan -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
