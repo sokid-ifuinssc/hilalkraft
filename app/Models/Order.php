@@ -218,12 +218,23 @@ class Order extends Model
 
     public function getFormattedShippingCostAttribute(): string
     {
+        if ($this->delivery_method === 'shipping_transfer') {
+            return 'Biaya ongkir ditanggung pembeli, pembayaran langsung dibayarkan kepada kurir.';
+        }
+        if ($this->delivery_method === 'pickup') {
+            return 'Gratis (Datang ke Sekolah)';
+        }
         $cost = (float) ($this->shipping_cost ?? 0);
         return $cost > 0 ? 'Rp ' . number_format($cost, 0, ',', '.') : 'Gratis (Rp 0)';
     }
 
     /**
-     * Hitung Estimasi Biaya Ongkir Menyesuaikan Skema & Lokasi
+     * Hitung Estimasi Biaya Ongkir Menyesuaikan Skema & Lokasi.
+     * Sesuai ketentuan:
+     * 1. Datang ke sekolah (pickup) : Rp 0
+     * 2. Delivery lokal (Arjawinangun, Susukan, Kaliwedi) : Rp 5.000
+     * 3. Transfer antar (luar wilayah) : Biaya ongkir tidak dimunculkan pada tagihan toko
+     *    (karena ditanggung pembeli dan langsung dibayarkan kepada kurir).
      */
     public static function calculateEstimatedShipping(?string $method, ?string $kabupaten, ?string $kecamatan): float
     {
@@ -232,47 +243,14 @@ class Order extends Model
             return 0.0;
         }
 
-        $kec = strtolower(trim((string) $kecamatan));
-        $kab = strtolower(trim((string) $kabupaten));
-
         if ($method === 'delivery_lokal') {
             // Khusus 3 kecamatan lokal Kabupaten Cirebon
             return 5000.0;
         }
 
-        // Metode Transfer Antar (Ekspedisi Luar Kecamatan / Kota)
-        if (str_contains($kab, 'cirebon') && in_array($kec, self::LOCAL_DELIVERY_DISTRICTS, true)) {
-            return 8000.0;
-        }
-
-        if (str_contains($kab, 'cirebon') || str_contains($kab, 'indramayu') || str_contains($kab, 'majalengka') || str_contains($kab, 'kuningan')) {
-            return 12000.0; // Wilayah III Cirebon
-        }
-
-        if (
-            str_contains($kab, 'bandung') || str_contains($kab, 'bekasi') || str_contains($kab, 'bogor') ||
-            str_contains($kab, 'depok') || str_contains($kab, 'jakarta') || str_contains($kab, 'tangerang') ||
-            str_contains($kab, 'karawang') || str_contains($kab, 'purwakarta') || str_contains($kab, 'subang') ||
-            str_contains($kab, 'sumedang') || str_contains($kab, 'garut') || str_contains($kab, 'tasikmalaya') ||
-            str_contains($kab, 'ciamis') || str_contains($kab, 'banjar') || str_contains($kab, 'pangandaran') ||
-            str_contains($kab, 'sukabumi') || str_contains($kab, 'cianjur') || str_contains($kab, 'banten') || str_contains($kab, 'serang')
-        ) {
-            return 18000.0; // Jawa Barat, Banten & Jabodetabek
-        }
-
-        if (
-            str_contains($kab, 'semarang') || str_contains($kab, 'surakarta') || str_contains($kab, 'solo') ||
-            str_contains($kab, 'yogyakarta') || str_contains($kab, 'jogja') || str_contains($kab, 'surabaya') ||
-            str_contains($kab, 'malang') || str_contains($kab, 'jawa') || str_contains($kab, 'jateng') || str_contains($kab, 'jatim')
-        ) {
-            return 24000.0; // Jawa Tengah, DIY, Jawa Timur
-        }
-
-        if ($kab !== '') {
-            return 38000.0; // Luar Pulau Jawa
-        }
-
-        return 15000.0; // Default estimasi transfer antar
+        // Metode Transfer Antar (Luar Wilayah): biaya ongkir tidak dimunculkan di sistem toko
+        // Keterangan: Biaya ongkir ditanggung pembeli, pembayaran langsung dibayarkan kepada kurir.
+        return 0.0;
     }
 
     public function getOrderCodeAttribute(): string

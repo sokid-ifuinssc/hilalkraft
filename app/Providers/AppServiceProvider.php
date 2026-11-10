@@ -175,6 +175,14 @@ class AppServiceProvider extends ServiceProvider
             // Abaikan jika orders belum siap
         }
 
+        try {
+            if (! Schema::hasTable('regencies')) {
+                Artisan::call('migrate', ['--force' => true]);
+            }
+        } catch (Throwable $e) {
+            // Abaikan jika migrasi sedang berjalan
+        }
+
         if (
             ! Schema::hasTable('users') ||
             ! Schema::hasTable('categories') ||

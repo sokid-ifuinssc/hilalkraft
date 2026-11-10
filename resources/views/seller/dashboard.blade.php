@@ -579,11 +579,17 @@ Algoritma:
                                             <span>- Rp {{ number_format($order->bazaar_discount_amount, 0, ',', '.') }}</span>
                                         </div>
                                     @endif
-                                    <div class="flex justify-between text-slate-600">
+                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-slate-600">
                                         <span>Ongkos Kirim ({{ $order->delivery_method_short_label }})</span>
-                                        <span class="font-semibold {{ $order->shipping_cost > 0 ? 'text-[#0F291E]' : 'text-[#0B6E4F]' }}">
-                                            {{ $order->shipping_cost > 0 ? 'Rp ' . number_format($order->shipping_cost, 0, ',', '.') : 'Rp 0 (Gratis)' }}
-                                        </span>
+                                        @if($order->delivery_method === 'shipping_transfer')
+                                            <span class="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
+                                                Biaya ongkir ditanggung pembeli, pembayaran langsung dibayarkan kepada kurir.
+                                            </span>
+                                        @else
+                                            <span class="font-semibold {{ $order->shipping_cost > 0 ? 'text-[#0F291E]' : 'text-[#0B6E4F]' }}">
+                                                {{ $order->shipping_cost > 0 ? 'Rp ' . number_format($order->shipping_cost, 0, ',', '.') : 'Rp 0 (Gratis)' }}
+                                            </span>
+                                        @endif
                                     </div>
                                     <div class="flex justify-between text-sm font-extrabold text-[#0F291E] pt-1.5 border-t border-slate-200">
                                         <span>Total Transaksi</span>

@@ -241,6 +241,14 @@ class AdminDashboardController extends Controller
             ? BazaarEvent::latest()->get()
             : collect();
 
+        $defaultDiscounts = [
+            'pelajar'     => (int) CmsContent::val('policy_discount_pelajar', '10'),
+            'keluarga'    => (int) CmsContent::val('policy_discount_keluarga', '10'),
+            'alumni'      => (int) CmsContent::val('policy_discount_alumni', '5'),
+            'umum'        => (int) CmsContent::val('policy_discount_umum', '0'),
+            'bazar_extra' => (int) CmsContent::val('policy_discount_bazar_extra', '5'),
+        ];
+
         $allProducts = Product::with(['store.owner'])
             ->withCount('comments')
             ->latest()
@@ -273,6 +281,7 @@ class AdminDashboardController extends Controller
             'classMajors',
             'cmsContents',
             'bazaarEvents',
+            'defaultDiscounts',
             'allProducts',
             'stats',
             'availableClasses',
@@ -899,6 +908,67 @@ class AdminDashboardController extends Controller
         $bazaarEvent->delete();
 
         return redirect()->to(route('admin.dashboard') . '#sec-bazar-event')->with('success', "Acara Bazar '{$title}' berhasil dihapus.");
+    }
+
+    /**
+     * Fungsi:
+     *   Memperbarui Kebijakan Besaran Diskon Standar Sekolah (Pelajar, Keluarga SMK, Alumni, Umum, Ekstra Bazar).
+     *   Jika opsi 'apply_to_all_stores' dicentang, besaran diskon ini akan otomatis diterapkan ke seluruh toko aktif.
+     */
+    public function updateDiscountPolicy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'policy_discount_pelajar'     => ['required', 'integer', 'min:0', 'max:90'],
+            'policy_discount_keluarga'    => ['required', 'integer', 'min:0', 'max:90'],
+            'policy_discount_alumni'      => ['required', 'integer', 'min:0', 'max:90'],
+            'policy_discount_umum'        => ['required', 'integer', 'min:0', 'max:90'],
+            'policy_discount_bazar_extra' => ['required', 'integer', 'min:0', 'max:90'],
+            'apply_to_all_stores'         => ['nullable', 'boolean'],
+        ]);
+
+        foreach (['policy_discount_pelajar', 'policy_discount_keluarga', 'policy_discount_alumni', 'policy_discount_umum', 'policy_discount_bazar_extra'] as $key) {
+            CmsContent::updateOrCreate(
+                ['key' => $key],
+                [
+                    'section' => 'discounts',
+                    'title'   => ucwords(str_replace('_', ' ', $key)),
+                    'value_1' => (string) $validated[$key],
+                ]
+            );
+        }
+
+        if ($request->boolean('apply_to_all_stores')) {
+            Store::query()->update([
+                'discount_pelajar'     => (int) $validated['policy_discount_pelajar'],
+                'discount_keluarga'    => (int) $validated['policy_discount_keluarga'],
+                'discount_alumni'      => (int) $validated['policy_discount_alumni'],
+                'discount_umum'        => (int) $validated['policy_discount_umum'],
+                'discount_bazar_extra' => (int) $validated['policy_discount_bazar_extra'],
+            ]);
+        }
+
+        return redirect()->to(route('admin.dashboard') . '#sec-diskon-bazar')
+            ->with('success', 'Kebijakan besaran diskon sekolah (Pelajar, Keluarga SMK, Alumni, Umum) berhasil disimpan' . ($request->boolean('apply_to_all_stores') ? ' dan diterapkan ke seluruh toko aktif.' : '.'));
+    }
+
+    /**
+     * Fungsi:
+     *   Admin mengedit besaran diskon spesifik untuk sebuah toko.
+     */
+    public function updateStoreDiscounts(Request $request, Store $store): RedirectResponse
+    {
+        $validated = $request->validate([
+            'discount_pelajar'     => ['required', 'integer', 'min:0', 'max:90'],
+            'discount_keluarga'    => ['required', 'integer', 'min:0', 'max:90'],
+            'discount_alumni'      => ['required', 'integer', 'min:0', 'max:90'],
+            'discount_umum'        => ['required', 'integer', 'min:0', 'max:90'],
+            'discount_bazar_extra' => ['required', 'integer', 'min:0', 'max:90'],
+        ]);
+
+        $store->update($validated);
+
+        return redirect()->to(route('admin.dashboard') . '#sec-diskon-bazar')
+            ->with('success', "Besaran diskon toko '{$store->store_name}' berhasil diperbarui.");
     }
 
     /**

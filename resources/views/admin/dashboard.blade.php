@@ -115,12 +115,12 @@ Algoritma:
                     <span>🏪</span>
                     <span>Peringkat & Kelola Toko</span>
                 </a>
-                <a href="#sec-bazar-event" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
+                <a href="#sec-diskon-bazar" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span class="flex items-center gap-3">
-                        <span>🎪</span>
-                        <span>Bazar & Skema Diskon</span>
+                        <span>🏷️</span>
+                        <span>Pengelolaan Diskon & Bazar</span>
                     </span>
-                    <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">Event</span>
+                    <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">Promo</span>
                 </a>
                 <a href="#sec-master-data" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span>📦</span>
@@ -1427,119 +1427,441 @@ Algoritma:
             </div>
 
             <!-- =================================================================
-                 5B. SKEMA ACARA BAZAR & EVENT DISKON SMK PLUS AL HILAL
+                 5B. PENGELOLAAN BESARAN DISKON (PELAJAR, KELUARGA, ALUMNI) & ACARA BAZAR SMK
                  ================================================================= -->
-            <div id="sec-bazar-event" class="rounded-2xl bg-white border border-slate-200/80 p-6 space-y-5">
+            <div id="sec-diskon-bazar" class="rounded-2xl bg-white border border-slate-200/80 p-6 space-y-6">
+                <span id="sec-bazar-event" class="sr-only"></span>
                 <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
                     <div>
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-0.5 text-[10px] font-extrabold text-amber-800 mb-1">
-                            🎪 SKEMA DISKON ACARA BAZAR & EVENT SMK PAL
+                            🏷️ PENGELOLAAN BESARAN DISKON & EVENT BAZAR SMK
                         </span>
-                        <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Kelola Acara Bazar & Event Diskon SMK Plus Al Hilal</h2>
+                        <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Kelola Besaran Diskon Pembeli & Acara Bazar SMK Plus Al Hilal</h2>
                         <p class="text-xs text-slate-400">
-                            Buat skema promo bazar atau event sekolah agar pembeli yang datang ke stand bazar / berbelanja saat acara berlangsung mendapatkan potongan diskon khusus.
+                            Atur besaran persentase diskon standar untuk setiap jenis pembeli (Pelajar, Keluarga SMK, Alumni, Umum), kelola event bazar sekolah, serta pantau dan sesuaikan diskon per toko.
                         </p>
                     </div>
                 </div>
 
-                <!-- Form Tambah Acara Bazar / Event Diskon Baru -->
+                <!-- 1. FORMULIR PENGATURAN KEBIJAKAN BESARAN DISKON STANDAR SEKOLAH -->
+                <form action="{{ route('admin.discount-policy.update') }}" method="POST" class="rounded-2xl bg-emerald-50/60 border border-emerald-200/80 p-5 space-y-4 text-xs">
+                    @csrf
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">🏷️</span>
+                            <div>
+                                <p class="font-extrabold text-[#0F291E] text-xs sm:text-sm">Kebijakan Besaran Diskon Standar Sekolah</p>
+                                <p class="text-[11px] text-slate-500">Besaran diskon standar ini berlaku untuk pembeli terverifikasi saat berbelanja di seluruh toko karya SMK.</p>
+                            </div>
+                        </div>
+                        <span class="rounded-full bg-emerald-100 text-[#0B6E4F] font-extrabold text-[10px] px-2.5 py-0.5">
+                            Standar Sekolah
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                        <!-- Diskon Pelajar -->
+                        <div class="bg-white rounded-xl p-3 border border-emerald-200/70">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                🎓 Diskon Pelajar (%)
+                            </label>
+                            <div class="flex items-center gap-1.5">
+                                <input type="number" name="policy_discount_pelajar" required min="0" max="90" value="{{ old('policy_discount_pelajar', $defaultDiscounts['pelajar'] ?? 10) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-[#0B6E4F] focus:bg-white focus:outline-none">
+                                <span class="font-bold text-slate-400">%</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-1 block">Khusus Pelajar SMK/Sekolah</span>
+                        </div>
+
+                        <!-- Diskon Keluarga SMK -->
+                        <div class="bg-white rounded-xl p-3 border border-emerald-200/70">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                👨‍👩‍👧 Diskon Keluarga (%)
+                            </label>
+                            <div class="flex items-center gap-1.5">
+                                <input type="number" name="policy_discount_keluarga" required min="0" max="90" value="{{ old('policy_discount_keluarga', $defaultDiscounts['keluarga'] ?? 10) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-[#0B6E4F] focus:bg-white focus:outline-none">
+                                <span class="font-bold text-slate-400">%</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-1 block">Guru & Keluarga SMK PAL</span>
+                        </div>
+
+                        <!-- Diskon Alumni -->
+                        <div class="bg-white rounded-xl p-3 border border-emerald-200/70">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                🎓 Diskon Alumni (%)
+                            </label>
+                            <div class="flex items-center gap-1.5">
+                                <input type="number" name="policy_discount_alumni" required min="0" max="90" value="{{ old('policy_discount_alumni', $defaultDiscounts['alumni'] ?? 5) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-[#0B6E4F] focus:bg-white focus:outline-none">
+                                <span class="font-bold text-slate-400">%</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-1 block">Alumni SMK Plus Al Hilal</span>
+                        </div>
+
+                        <!-- Diskon Pengunjung Umum -->
+                        <div class="bg-white rounded-xl p-3 border border-emerald-200/70">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                🌐 Diskon Umum (%)
+                            </label>
+                            <div class="flex items-center gap-1.5">
+                                <input type="number" name="policy_discount_umum" required min="0" max="90" value="{{ old('policy_discount_umum', $defaultDiscounts['umum'] ?? 0) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-[#0B6E4F] focus:bg-white focus:outline-none">
+                                <span class="font-bold text-slate-400">%</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-1 block">Masyarakat & Pengunjung Umum</span>
+                        </div>
+
+                        <!-- Diskon Ekstra Bazar Stand -->
+                        <div class="bg-white rounded-xl p-3 border border-amber-300">
+                            <label class="block text-[11px] font-bold text-amber-900 mb-1">
+                                🎪 Ekstra Bazar Toko (%)
+                            </label>
+                            <div class="flex items-center gap-1.5">
+                                <input type="number" name="policy_discount_bazar_extra" required min="0" max="90" value="{{ old('policy_discount_bazar_extra', $defaultDiscounts['bazar_extra'] ?? 5) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-amber-800 focus:bg-white focus:outline-none">
+                                <span class="font-bold text-amber-700">%</span>
+                            </div>
+                            <span class="text-[10px] text-amber-700 mt-1 block">Tambahan Khusus Saat Bazar</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-emerald-200/60">
+                        <label class="flex items-center gap-2 cursor-pointer text-[11px] text-[#0F291E] font-semibold">
+                            <input type="checkbox" name="apply_to_all_stores" value="1" class="rounded border-emerald-400 text-[#0B6E4F] focus:ring-[#0B6E4F]">
+                            <span>Terapkan langsung besaran diskon standar ini ke seluruh toko aktif yang ada di sistem</span>
+                        </label>
+                        <button type="submit" class="rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-xs flex items-center gap-1.5">
+                            <span>💾</span>
+                            <span>Simpan Kebijakan Diskon Sekolah</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- 2. FORMULIR TAMBAH ACARA BAZAR & EVENT DISKON SMK BARU -->
                 <form action="{{ route('admin.bazaar.store') }}" method="POST" class="rounded-2xl bg-[#F8FAFC] border border-slate-200/80 p-5 space-y-4 text-xs">
                     @csrf
-                    <p class="font-extrabold text-[#0F291E]">+ Tambah / Perbarui Acara Bazar & Event Diskon SMK</p>
+                    <div class="flex items-center justify-between">
+                        <p class="font-extrabold text-[#0F291E] text-xs sm:text-sm">+ Buat Acara Bazar & Event Diskon Baru</p>
+                        <span class="text-[11px] text-slate-400">Potongan langsung saat pembeli hadir di bazar atau input kode voucher</span>
+                    </div>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <div>
                             <label class="block font-bold text-slate-600 mb-1">Nama Acara Bazar / Event *</label>
-                            <input type="text" name="title" required placeholder="Contoh: Bazar Karya & Inovasi SMK Plus Al Hilal" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <input type="text" name="title" required placeholder="Contoh: Bazar Karya & Inovasi SMK Plus Al Hilal" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                         </div>
                         <div>
                             <label class="block font-bold text-slate-600 mb-1">Kode Voucher Bazar *</label>
-                            <input type="text" name="voucher_code" required placeholder="Contoh: BAZARSMKPAL" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono font-bold uppercase text-[#0B6E4F]">
+                            <input type="text" name="voucher_code" required placeholder="Contoh: BAZARSMKPAL" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono font-bold uppercase text-[#0B6E4F] text-xs">
                         </div>
                         <div>
                             <label class="block font-bold text-slate-600 mb-1">Diskon Event (%) *</label>
-                            <input type="number" name="discount_percent" required min="1" max="90" value="10" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-extrabold text-[#0B6E4F]">
+                            <input type="number" name="discount_percent" required min="1" max="90" value="10" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-extrabold text-[#0B6E4F] text-xs">
                         </div>
                         <div>
                             <label class="block font-bold text-slate-600 mb-1">Lokasi Bazar / Stand</label>
-                            <input type="text" name="location" placeholder="Halaman Utama SMK Plus Al Hilal" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <input type="text" name="location" placeholder="Halaman Utama SMK Plus Al Hilal" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                         <div>
-                            <label class="block font-bold text-slate-600 mb-1">Mulai Tanggal</label>
-                            <input type="date" name="start_date" value="{{ date('Y-m-d') }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <label class="block font-bold text-slate-600 mb-1">Mulai Tanggal / Waktu</label>
+                            <input type="date" name="start_date" value="{{ date('Y-m-d') }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                         </div>
                         <div>
-                            <label class="block font-bold text-slate-600 mb-1">Sampai Tanggal</label>
-                            <input type="date" name="end_date" value="{{ date('Y-m-d', strtotime('+30 days')) }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <label class="block font-bold text-slate-600 mb-1">Sampai Tanggal / Waktu</label>
+                            <input type="date" name="end_date" value="{{ date('Y-m-d', strtotime('+30 days')) }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                         </div>
                         <div>
                             <label class="block font-bold text-slate-600 mb-1">Maks. Potongan Rp (Opsional)</label>
-                            <input type="number" name="max_discount_amount" min="0" placeholder="Kosongkan jika tanpa batas" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <input type="number" name="max_discount_amount" min="0" placeholder="Kosongkan jika tanpa batas" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                         </div>
                         <div>
-                            <button type="submit" class="w-full rounded-xl bg-[#0B6E4F] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-sm">
-                                + Simpan Acara Bazar
+                            <button type="submit" class="w-full rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 transition shadow-xs flex items-center justify-center gap-1.5">
+                                <span>🎪</span>
+                                <span>Simpan Acara Bazar</span>
                             </button>
                         </div>
                     </div>
                 </form>
 
-                <!-- Tabel Acara Bazar -->
-                <div class="overflow-x-auto border border-slate-100 rounded-xl">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead>
-                            <tr class="bg-[#F8FAFC] border-b border-slate-100 text-[10px] font-bold uppercase text-slate-400">
-                                <th class="py-3 px-4">NAMA ACARA BAZAR / EVENT</th>
-                                <th class="py-3 px-4">KODE VOUCHER</th>
-                                <th class="py-3 px-4">DISKON EVENT</th>
-                                <th class="py-3 px-4">PERIODE ACARA</th>
-                                <th class="py-3 px-4">STATUS</th>
-                                <th class="py-3 px-4 text-right">AKSI</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse($bazaarEvents ?? [] as $bz)
-                                <tr class="hover:bg-slate-50/70">
-                                    <td class="py-3 px-4">
-                                        <p class="font-bold text-[#0F291E]">{{ $bz->title }}</p>
-                                        <p class="text-[11px] text-slate-400">📍 {{ $bz->location ?: 'SMK Plus Al Hilal' }}</p>
-                                    </td>
-                                    <td class="py-3 px-4">
-                                        <span class="font-mono font-extrabold bg-amber-50 border border-amber-200 text-amber-900 px-2.5 py-1 rounded-lg">
-                                            {{ $bz->voucher_code }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3 px-4 font-extrabold text-[#0B6E4F]">
-                                        {{ $bz->discount_percent }}%
-                                        @if($bz->max_discount_amount)
-                                            <span class="block text-[10px] font-normal text-slate-400">Maks. Rp {{ number_format($bz->max_discount_amount, 0, ',', '.') }}</span>
-                                        @endif
-                                    </td>
-                                    <td class="py-3 px-4 text-slate-500">
-                                        {{ $bz->start_date?->format('d M Y') ?? 'Sekarang' }} – {{ $bz->end_date?->format('d M Y') ?? 'Seterusnya' }}
-                                    </td>
-                                    <td class="py-3 px-4">
-                                        <span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold {{ $bz->isActiveNow() ? 'bg-[#EBF9F2] text-[#0B6E4F]' : 'bg-slate-100 text-slate-500' }}">
-                                            {{ $bz->isActiveNow() ? '● Aktif Berlangsung' : 'Nonaktif / Selesai' }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3 px-4 text-right space-x-2">
-                                        <form action="{{ route('admin.bazaar.destroy', $bz) }}" method="POST" class="inline" onsubmit="return confirm('Hapus acara bazar ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="font-bold text-rose-600 hover:underline">Hapus</button>
-                                        </form>
-                                    </td>
+                <!-- 3. TABEL ACARA BAZAR SMK DENGAN TOMBOL EDIT LENGKAP -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <p class="font-extrabold text-[#0F291E] text-xs">Daftar Acara Bazar & Event Diskon Terdaftar</p>
+                        <span class="text-[11px] text-slate-400">{{ count($bazaarEvents ?? []) }} Acara</span>
+                    </div>
+
+                    <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-[#F8FAFC] border-b border-slate-100 text-[10px] font-bold uppercase text-slate-400">
+                                    <th class="py-3 px-4">NAMA ACARA BAZAR / EVENT</th>
+                                    <th class="py-3 px-4">KODE VOUCHER</th>
+                                    <th class="py-3 px-4">DISKON EVENT</th>
+                                    <th class="py-3 px-4">PERIODE ACARA</th>
+                                    <th class="py-3 px-4">STATUS</th>
+                                    <th class="py-3 px-4 text-right">AKSI</th>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="py-6 text-center text-slate-400">Belum ada acara bazar. Tambahkan di atas untuk mengaktifkan promo bazar SMK.</td>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse($bazaarEvents ?? [] as $bz)
+                                    <tr class="hover:bg-slate-50/70">
+                                        <td class="py-3 px-4">
+                                            <p class="font-bold text-[#0F291E]">{{ $bz->title }}</p>
+                                            <p class="text-[11px] text-slate-400">📍 {{ $bz->location ?: 'SMK Plus Al Hilal' }}</p>
+                                        </td>
+                                        <td class="py-3 px-4">
+                                            <span class="font-mono font-extrabold bg-amber-50 border border-amber-200 text-amber-900 px-2.5 py-1 rounded-lg">
+                                                {{ $bz->voucher_code }}
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-4 font-extrabold text-[#0B6E4F]">
+                                            {{ $bz->discount_percent }}%
+                                            @if($bz->max_discount_amount)
+                                                <span class="block text-[10px] font-normal text-slate-400">Maks. Rp {{ number_format($bz->max_discount_amount, 0, ',', '.') }}</span>
+                                            @endif
+                                        </td>
+                                        <td class="py-3 px-4 text-slate-500">
+                                            {{ $bz->start_date?->format('d M Y') ?? 'Sekarang' }} – {{ $bz->end_date?->format('d M Y') ?? 'Seterusnya' }}
+                                        </td>
+                                        <td class="py-3 px-4">
+                                            <span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold {{ $bz->isActiveNow() ? 'bg-[#EBF9F2] text-[#0B6E4F]' : 'bg-slate-100 text-slate-500' }}">
+                                                {{ $bz->isActiveNow() ? '● Aktif Berlangsung' : 'Nonaktif / Selesai' }}
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-4 text-right space-x-2">
+                                            <!-- Tombol Edit Acara Bazar -->
+                                            <button type="button"
+                                                    onclick="openEditBazaarModal({
+                                                        id: {{ $bz->id }},
+                                                        title: '{{ addslashes($bz->title) }}',
+                                                        voucher_code: '{{ addslashes($bz->voucher_code) }}',
+                                                        discount_percent: {{ (int) $bz->discount_percent }},
+                                                        location: '{{ addslashes($bz->location ?? '') }}',
+                                                        description: '{{ addslashes($bz->description ?? '') }}',
+                                                        start_date: '{{ $bz->start_date?->format('Y-m-d') ?? '' }}',
+                                                        end_date: '{{ $bz->end_date?->format('Y-m-d') ?? '' }}',
+                                                        max_discount_amount: '{{ $bz->max_discount_amount ? (int)$bz->max_discount_amount : '' }}',
+                                                        is_active: {{ $bz->is_active ? 1 : 0 }}
+                                                    })"
+                                                    class="font-bold text-[#0B6E4F] hover:underline bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                                                ✏️ Edit
+                                            </button>
+
+                                            <!-- Tombol Hapus Acara Bazar -->
+                                            <form action="{{ route('admin.bazaar.destroy', $bz) }}" method="POST" class="inline" onsubmit="return confirm('Hapus acara bazar \'{{ addslashes($bz->title) }}\'?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="font-bold text-rose-600 hover:underline bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">
+                                                    🗑️ Hapus
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="py-6 text-center text-slate-400">Belum ada acara bazar. Tambahkan di atas untuk mengaktifkan promo bazar SMK.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 4. TABEL PANTAU & SESUAIKAN BESARAN DISKON PER TOKO -->
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <p class="font-extrabold text-[#0F291E] text-xs">Besaran Diskon per Toko Karya Siswa & Guru</p>
+                        <span class="text-[11px] text-slate-400">Dapat disesuaikan secara individual per toko jika diperlukan</span>
+                    </div>
+
+                    <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-[#F8FAFC] border-b border-slate-100 text-[10px] font-bold uppercase text-slate-400">
+                                    <th class="py-3 px-4">NAMA TOKO & PEMILIK</th>
+                                    <th class="py-3 px-4">PELAJAR</th>
+                                    <th class="py-3 px-4">KELUARGA</th>
+                                    <th class="py-3 px-4">ALUMNI</th>
+                                    <th class="py-3 px-4">UMUM</th>
+                                    <th class="py-3 px-4">EKSTRA BAZAR</th>
+                                    <th class="py-3 px-4 text-right">AKSI</th>
                                 </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse($stores ?? [] as $st)
+                                    <tr class="hover:bg-slate-50/70">
+                                        <td class="py-3 px-4">
+                                            <p class="font-bold text-[#0F291E]">{{ $st->store_name }}</p>
+                                            <p class="text-[11px] text-slate-400">{{ $st->owner?->name ?? 'Pemilik' }} ({{ $st->seller_type_label }})</p>
+                                        </td>
+                                        <td class="py-3 px-4 font-bold text-[#0B6E4F]">{{ $st->discount_pelajar }}%</td>
+                                        <td class="py-3 px-4 font-bold text-[#0B6E4F]">{{ $st->discount_keluarga }}%</td>
+                                        <td class="py-3 px-4 font-bold text-[#0B6E4F]">{{ $st->discount_alumni }}%</td>
+                                        <td class="py-3 px-4 font-bold text-slate-600">{{ $st->discount_umum }}%</td>
+                                        <td class="py-3 px-4 font-bold text-amber-800">{{ $st->discount_bazar_extra }}%</td>
+                                        <td class="py-3 px-4 text-right">
+                                            <button type="button"
+                                                    onclick="openEditStoreDiscountModal({
+                                                        id: {{ $st->id }},
+                                                        name: '{{ addslashes($st->store_name) }}',
+                                                        pelajar: {{ (int)$st->discount_pelajar }},
+                                                        keluarga: {{ (int)$st->discount_keluarga }},
+                                                        alumni: {{ (int)$st->discount_alumni }},
+                                                        umum: {{ (int)$st->discount_umum }},
+                                                        bazar: {{ (int)$st->discount_bazar_extra }}
+                                                    })"
+                                                    class="font-bold text-[#0B6E4F] hover:underline bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                                                ✏️ Sesuaikan Diskon
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="py-6 text-center text-slate-400">Belum ada toko yang terdaftar.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL EDIT ACARA BAZAR & EVENT (WAKTU, DISKON, NAMA, STATUS, DLL) -->
+            <div id="modalEditBazaar" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden border border-slate-100">
+                    <div class="px-6 py-4 bg-amber-50/80 border-b border-amber-200/80 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">🎪</span>
+                            <h3 class="font-extrabold text-[#0F291E] text-sm">Edit Acara Bazar & Event Diskon</h3>
+                        </div>
+                        <button type="button" onclick="closeEditBazaarModal()" class="text-slate-400 hover:text-slate-700 font-extrabold text-lg">&times;</button>
+                    </div>
+
+                    <form id="formEditBazaar" method="POST" class="p-6 space-y-4 text-xs">
+                        @csrf
+                        @method('PUT')
+
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Nama Acara Bazar / Event *</label>
+                            <input type="text" id="edit_bz_title" name="title" required class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 focus:bg-white focus:outline-none">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Kode Voucher *</label>
+                                <input type="text" id="edit_bz_voucher" name="voucher_code" required class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 font-mono font-bold uppercase text-[#0B6E4F] focus:bg-white focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Diskon Event (%) *</label>
+                                <input type="number" id="edit_bz_discount" name="discount_percent" required min="1" max="90" class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 font-extrabold text-[#0B6E4F] focus:bg-white focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Mulai Tanggal / Waktu</label>
+                                <input type="date" id="edit_bz_start_date" name="start_date" class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 focus:bg-white focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Sampai Tanggal / Waktu</label>
+                                <input type="date" id="edit_bz_end_date" name="end_date" class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 focus:bg-white focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Maks. Potongan Rp (Opsional)</label>
+                                <input type="number" id="edit_bz_max_discount" name="max_discount_amount" min="0" placeholder="Kosongkan jika tanpa batas" class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 focus:bg-white focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Lokasi Stand / Acara</label>
+                                <input type="text" id="edit_bz_location" name="location" class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 focus:bg-white focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Deskripsi Acara / Keterangan</label>
+                            <textarea id="edit_bz_description" name="description" rows="2" class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 focus:bg-white focus:outline-none"></textarea>
+                        </div>
+
+                        <div class="rounded-xl bg-slate-50 p-3 border border-slate-200 flex items-center justify-between">
+                            <div>
+                                <p class="font-bold text-slate-700">Status Keaktifan Acara</p>
+                                <p class="text-[10px] text-slate-400">Jika aktif, voucher dan diskon bazar dapat digunakan pembeli.</p>
+                            </div>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="hidden" name="is_active" value="0">
+                                <input type="checkbox" id="edit_bz_is_active" name="is_active" value="1" class="rounded border-slate-300 text-[#0B6E4F] focus:ring-[#0B6E4F]">
+                                <span class="font-bold text-[#0B6E4F]">Aktifkan Acara</span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                            <button type="button" onclick="closeEditBazaarModal()" class="rounded-xl px-4 py-2 border border-slate-200 font-bold text-slate-600 hover:bg-slate-50">
+                                Batal
+                            </button>
+                            <button type="submit" class="rounded-xl bg-[#0B6E4F] px-5 py-2 font-bold text-white hover:bg-[#08583F] shadow-xs">
+                                Simpan Perubahan Acara
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- MODAL EDIT DISKON KHUSUS TOKO -->
+            <div id="modalEditStoreDiscount" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-slate-100">
+                    <div class="px-6 py-4 bg-emerald-50/80 border-b border-emerald-200/80 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">🏪</span>
+                            <div>
+                                <h3 class="font-extrabold text-[#0F291E] text-sm">Sesuaikan Diskon Toko</h3>
+                                <p id="edit_store_name_title" class="text-[11px] text-[#0B6E4F] font-bold"></p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="closeEditStoreDiscountModal()" class="text-slate-400 hover:text-slate-700 font-extrabold text-lg">&times;</button>
+                    </div>
+
+                    <form id="formEditStoreDiscount" method="POST" class="p-6 space-y-4 text-xs">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-[#F8FAFC] rounded-xl p-3 border border-slate-200">
+                                <label class="block font-bold text-slate-700 mb-1">🎓 Pelajar (%)</label>
+                                <input type="number" id="edit_store_pelajar" name="discount_pelajar" required min="0" max="90" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-bold text-[#0B6E4F]">
+                            </div>
+                            <div class="bg-[#F8FAFC] rounded-xl p-3 border border-slate-200">
+                                <label class="block font-bold text-slate-700 mb-1">👨‍👩‍👧 Keluarga SMK (%)</label>
+                                <input type="number" id="edit_store_keluarga" name="discount_keluarga" required min="0" max="90" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-bold text-[#0B6E4F]">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-[#F8FAFC] rounded-xl p-3 border border-slate-200">
+                                <label class="block font-bold text-slate-700 mb-1">🎓 Alumni (%)</label>
+                                <input type="number" id="edit_store_alumni" name="discount_alumni" required min="0" max="90" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-bold text-[#0B6E4F]">
+                            </div>
+                            <div class="bg-[#F8FAFC] rounded-xl p-3 border border-slate-200">
+                                <label class="block font-bold text-slate-700 mb-1">🌐 Umum (%)</label>
+                                <input type="number" id="edit_store_umum" name="discount_umum" required min="0" max="90" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-bold text-[#0B6E4F]">
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 rounded-xl p-3 border border-amber-200">
+                            <label class="block font-bold text-amber-900 mb-1">🎪 Diskon Ekstra Bazar Stand (%)</label>
+                            <input type="number" id="edit_store_bazar" name="discount_bazar_extra" required min="0" max="90" class="w-full rounded-lg border border-amber-300 bg-white px-2.5 py-1.5 font-extrabold text-amber-800">
+                            <span class="text-[10px] text-amber-700 mt-1 block">Potongan ekstra dari toko saat acara bazar berlangsung.</span>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                            <button type="button" onclick="closeEditStoreDiscountModal()" class="rounded-xl px-4 py-2 border border-slate-200 font-bold text-slate-600 hover:bg-slate-50">
+                                Batal
+                            </button>
+                            <button type="submit" class="rounded-xl bg-[#0B6E4F] px-5 py-2 font-bold text-white hover:bg-[#08583F] shadow-xs">
+                                Simpan Diskon Toko
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -2571,6 +2893,59 @@ Algoritma:
                 chk.checked = masterChk.checked;
             }
         });
+    }
+
+    function openEditBazaarModal(data) {
+        const modal = document.getElementById('modalEditBazaar');
+        const form = document.getElementById('formEditBazaar');
+        if (!modal || !form) return;
+
+        form.action = "{{ url('panel-admin/bazaar-events') }}/" + data.id;
+
+        document.getElementById('edit_bz_title').value = data.title || '';
+        document.getElementById('edit_bz_voucher').value = data.voucher_code || '';
+        document.getElementById('edit_bz_discount').value = data.discount_percent || 10;
+        document.getElementById('edit_bz_start_date').value = data.start_date || '';
+        document.getElementById('edit_bz_end_date').value = data.end_date || '';
+        document.getElementById('edit_bz_max_discount').value = data.max_discount_amount || '';
+        document.getElementById('edit_bz_location').value = data.location || '';
+        document.getElementById('edit_bz_description').value = data.description || '';
+        document.getElementById('edit_bz_is_active').checked = !!data.is_active;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeEditBazaarModal() {
+        const modal = document.getElementById('modalEditBazaar');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function openEditStoreDiscountModal(data) {
+        const modal = document.getElementById('modalEditStoreDiscount');
+        const form = document.getElementById('formEditStoreDiscount');
+        if (!modal || !form) return;
+
+        form.action = "{{ url('panel-admin/stores') }}/" + data.id + "/discounts";
+        document.getElementById('edit_store_name_title').textContent = data.name;
+
+        document.getElementById('edit_store_pelajar').value = data.pelajar ?? 10;
+        document.getElementById('edit_store_keluarga').value = data.keluarga ?? 10;
+        document.getElementById('edit_store_alumni').value = data.alumni ?? 5;
+        document.getElementById('edit_store_umum').value = data.umum ?? 0;
+        document.getElementById('edit_store_bazar').value = data.bazar ?? 5;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeEditStoreDiscountModal() {
+        const modal = document.getElementById('modalEditStoreDiscount');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
     }
 
     // Auto-scroll ke section hash setelah simpan tanpa reload melompat

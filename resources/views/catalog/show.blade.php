@@ -649,10 +649,10 @@ Algoritma:
                             <input type="radio" name="delivery_method" value="shipping_transfer" @checked($defaultMethod === 'shipping_transfer') @disabled(!$canTransfer) class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateModalDeliveryUI('shipping_transfer')">
                             <div class="flex-1 space-y-0.5">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-[#0F291E]">📦 3. Transfer Antar (Ekspedisi Luar Wilayah)</span>
-                                    <span id="modal-transfer-badge" class="text-[10px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">+ Ongkir Wilayah</span>
+                                    <span class="text-xs font-extrabold text-[#0F291E]">📦 3. Transfer Antar (Luar Wilayah / Ekspedisi)</span>
+                                    <span id="modal-transfer-badge" class="text-[10px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">Ongkir Kurir Langsung</span>
                                 </div>
-                                <p class="text-[11px] text-slate-600">Dikirim lewat ekspedisi reguler. Pembeli transfer ke rekening/e-wallet toko.</p>
+                                <p class="text-[11px] text-amber-950 font-medium leading-snug">Biaya ongkir ditanggung pembeli, pembayaran langsung dibayarkan kepada kurir. Pembeli hanya mentransfer biaya karya ke rekening/e-wallet toko.</p>
                                 <div class="flex items-center justify-between text-[10px]">
                                     <span class="font-bold text-slate-500">Alur: Dipesan → Dikemas → Dikirim → Diterima (4 Tahap)</span>
                                     @if(!$canTransfer)
@@ -1031,29 +1031,16 @@ Algoritma:
                 if (submitBtn) submitBtn.disabled = false;
             }
         } else {
-            const cleanKab = (kabInput ? kabInput.value : '').toLowerCase().trim();
-            const cleanKec = (kecInput ? kecInput.value : '').toLowerCase().trim();
-
-            if (cleanKab.includes('cirebon')) {
-                ongkir = localDistricts.some(d => cleanKec.includes(d)) ? 8000 : 10000;
-            } else if (['indramayu', 'majalengka', 'kuningan'].some(d => cleanKab.includes(d))) {
-                ongkir = 12000;
-            } else if (['bandung', 'jakarta', 'bekasi', 'bogor', 'depok', 'tangerang', 'karawang', 'purwakarta', 'subang'].some(d => cleanKab.includes(d))) {
-                ongkir = 18000;
-            } else if (['semarang', 'solo', 'surabaya', 'malang', 'jogja', 'yogyakarta', 'banyumas', 'tegal', 'brebes'].some(d => cleanKab.includes(d))) {
-                ongkir = 24000;
-            } else if (cleanKab.length > 2) {
-                ongkir = 38000;
-            } else {
-                ongkir = 15000;
-            }
-
+            // shipping_transfer (Luar Wilayah)
+            ongkir = 0; // Biaya ongkir tidak ditambahkan ke tagihan toko
             if (ongkirText) {
-                ongkirText.textContent = 'Rp ' + Number(ongkir).toLocaleString('id-ID');
-                ongkirText.className = 'font-bold text-amber-800';
+                ongkirText.innerHTML = '<span class="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md inline-block text-right">Biaya ongkir ditanggung pembeli, pembayaran langsung dibayarkan kepada kurir.</span>';
+                ongkirText.className = '';
             }
             const badge = document.getElementById('modal-transfer-badge');
-            if (badge) badge.textContent = 'Rp ' + Number(ongkir).toLocaleString('id-ID');
+            if (badge) badge.textContent = 'Ongkir Langsung ke Kurir';
+            if (warning) warning.classList.add('hidden');
+            if (submitBtn) submitBtn.disabled = false;
         }
 
         const grand = subtotal + ongkir;

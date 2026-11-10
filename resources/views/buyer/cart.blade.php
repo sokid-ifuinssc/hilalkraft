@@ -160,11 +160,11 @@ Fungsi:
                             <input type="radio" name="delivery_method" value="shipping_transfer" @checked($defaultCartMethod === 'shipping_transfer') @disabled(!$canCartTransfer) class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('shipping_transfer')">
                             <div class="flex-1 space-y-1">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-[#0F291E]">📦 3. Transfer Antar (Ekspedisi)</span>
-                                    <span id="transfer-badge-cost" class="text-[11px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">+ Ongkir Wilayah</span>
+                                    <span class="text-xs font-extrabold text-[#0F291E]">📦 3. Transfer Antar (Luar Wilayah / Ekspedisi)</span>
+                                    <span id="transfer-badge-cost" class="text-[11px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">Ongkir Kurir Langsung</span>
                                 </div>
-                                <p class="text-[11px] text-slate-600 leading-snug">
-                                    Ditambah biaya ongkir ekspedisi menyesuaikan estimasi lokasi pengiriman. Pembeli mentransfer ke rekening / e-wallet toko.
+                                <p class="text-[11px] text-amber-950 font-medium leading-snug">
+                                    Biaya ongkir ditanggung pembeli, pembayaran langsung dibayarkan kepada kurir. Pembeli hanya mentransfer biaya karya ke rekening / e-wallet toko.
                                 </p>
                                 <div class="flex items-center justify-between text-[10px]">
                                     <div class="inline-flex items-center gap-1.5 font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
@@ -441,29 +441,15 @@ Fungsi:
                 if (submitBtn) submitBtn.disabled = false;
             }
         } else {
-            // shipping_transfer
-            ongkirLabel.textContent = 'Estimasi Ongkir (Transfer Antar)';
-            const cleanKab = (kabInput ? kabInput.value : '').toLowerCase().trim();
-            const cleanKec = (kecInput ? kecInput.value : '').toLowerCase().trim();
-
-            if (cleanKab.includes('cirebon')) {
-                ongkir = validLocalDistricts.some(d => cleanKec.includes(d)) ? 8000 : 10000;
-            } else if (['indramayu', 'majalengka', 'kuningan'].some(d => cleanKab.includes(d))) {
-                ongkir = 12000;
-            } else if (['bandung', 'jakarta', 'bekasi', 'bogor', 'depok', 'tangerang', 'karawang', 'purwakarta', 'subang'].some(d => cleanKab.includes(d))) {
-                ongkir = 18000;
-            } else if (['semarang', 'solo', 'surabaya', 'malang', 'jogja', 'yogyakarta', 'banyumas', 'tegal', 'brebes'].some(d => cleanKab.includes(d))) {
-                ongkir = 24000;
-            } else if (cleanKab.length > 2) {
-                ongkir = 38000;
-            } else {
-                ongkir = 15000;
-            }
-
-            ongkirDisplay.textContent = formatRupiah(ongkir);
-            ongkirDisplay.className = 'font-bold text-amber-800';
+            // shipping_transfer (Luar Wilayah)
+            ongkir = 0; // Biaya ongkir tidak ditambahkan ke tagihan toko
+            ongkirLabel.textContent = 'Ongkos Kirim (Transfer Antar / Luar Wilayah)';
+            ongkirDisplay.innerHTML = '<span class="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md inline-block text-right">Biaya ongkir ditanggung pembeli, pembayaran langsung dibayarkan kepada kurir.</span>';
+            ongkirDisplay.className = '';
             const badgeCost = document.getElementById('transfer-badge-cost');
-            if (badgeCost) badgeCost.textContent = formatRupiah(ongkir);
+            if (badgeCost) badgeCost.textContent = 'Ongkir Langsung ke Kurir';
+            if (warning) warning.classList.add('hidden');
+            if (submitBtn) submitBtn.disabled = false;
         }
 
         const grandTotal = Math.max(0, subtotalBase + ongkir);

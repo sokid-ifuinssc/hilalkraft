@@ -106,6 +106,8 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('panel-admin')->na
     Route::delete('/cms/{cmsContent}', [AdminDashboardController::class, 'destroyCms'])->name('cms.destroy');
 
     // Skema Diskon Bazar & Event Resmi SMK
+    Route::post('/discount-policy', [AdminDashboardController::class, 'updateDiscountPolicy'])->name('discount-policy.update');
+    Route::put('/stores/{store}/discounts', [AdminDashboardController::class, 'updateStoreDiscounts'])->name('stores.discounts.update');
     Route::post('/bazaar-events', [AdminDashboardController::class, 'storeBazaarEvent'])->name('bazaar.store');
     Route::put('/bazaar-events/{bazaarEvent}', [AdminDashboardController::class, 'updateBazaarEvent'])->name('bazaar.update');
     Route::delete('/bazaar-events/{bazaarEvent}', [AdminDashboardController::class, 'destroyBazaarEvent'])->name('bazaar.destroy');
