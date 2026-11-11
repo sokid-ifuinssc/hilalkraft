@@ -29,8 +29,8 @@ Algoritma:
 
 @section('content')
 @php
-    $effectiveClasses = $classList->count() > 0 ? $classList : collect(['X', 'XI', 'XII']);
-    $effectiveMajors  = $majorList->count() > 0 ? $majorList : collect([
+    $effectiveClasses = (!empty($classList) && $classList->count() > 0) ? $classList : collect(['X', 'XI', 'XII']);
+    $effectiveMajors  = (!empty($majorList) && $majorList->count() > 0) ? $majorList : collect([
         'Teknik Komputer dan Jaringan Telekomunikasi (TKJT)',
         'Teknik Otomotif (TO)',
         'Akuntansi dan Keuangan Lembaga (AKL)',

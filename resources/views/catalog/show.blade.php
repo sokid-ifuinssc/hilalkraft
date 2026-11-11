@@ -1114,7 +1114,7 @@ Algoritma:
         const bankBox = document.getElementById('modal-transfer-bank-box');
 
         if (method === 'pickup') {
-            addressLabel.textContent = 'Stand / Ruang Penyerahan di Sekolah *';
+            if (addressLabel) addressLabel.textContent = 'Stand / Ruang Penyerahan di Sekolah *';
             if (addressInput && (!addressInput.value || addressInput.value.includes('Jl.'))) {
                 addressInput.value = 'Stand Bazar / Kampus SMK Plus Al Hilal';
             }
@@ -1123,11 +1123,11 @@ Algoritma:
             if (bankBox) bankBox.classList.add('hidden');
             if (submitBtn) submitBtn.disabled = false;
         } else if (method === 'delivery_lokal') {
-            addressLabel.textContent = 'Alamat Pengantaran (Arjawinangun/Susukan/Kaliwedi) *';
+            if (addressLabel) addressLabel.textContent = 'Alamat Pengantaran (Arjawinangun/Susukan/Kaliwedi) *';
             if (shortcuts) shortcuts.classList.remove('hidden');
             if (bankBox) bankBox.classList.add('hidden');
         } else {
-            addressLabel.textContent = 'Alamat Lengkap Pengiriman Ekspedisi *';
+            if (addressLabel) addressLabel.textContent = 'Alamat Lengkap Pengiriman Ekspedisi *';
             if (shortcuts) shortcuts.classList.add('hidden');
             if (warning) warning.classList.add('hidden');
             if (bankBox) bankBox.classList.remove('hidden');

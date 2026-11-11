@@ -1532,6 +1532,10 @@ class AdminDashboardController extends Controller
             abort(403);
         }
 
+        if ($user->id === $currentAuth->id) {
+            return back()->with('info', 'Anda sudah berada pada akun ini.');
+        }
+
         // Hanya Super Admin (atau yang sedang dalam sesi impersonasi) yang boleh switch
         if ($currentAuth->role !== 'super_admin' && ! $request->session()->has('impersonator_id')) {
             abort(403, 'Akses terbatas untuk Super Admin.');
@@ -1596,7 +1600,7 @@ class AdminDashboardController extends Controller
         $hasSimulatedRole = $request->session()->has('view_as_role');
 
         if (! $hasImpersonator && ! $hasSimulatedRole) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('home');
         }
 
         if ($hasImpersonator) {

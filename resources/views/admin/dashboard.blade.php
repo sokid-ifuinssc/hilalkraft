@@ -2750,7 +2750,7 @@ Algoritma:
 @endphp
 
 <script>
-    const RAW_STORES_ANALYTICS = {!! $chartRawJson !!};
+    const RAW_STORES_ANALYTICS = @json($chartRawData);
     let storeAnalyticsChartInstance = null;
 
     function updateStoreAnalyticsChart() {
