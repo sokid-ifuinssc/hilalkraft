@@ -130,6 +130,20 @@ class User extends Authenticatable
     }
 
     /**
+     * Fungsi: Menghasilkan label peran resmi pengguna (Super Admin, Admin Guru, Toko Siswa, Pembeli).
+     */
+    public function getRoleLabelAttribute(): string
+    {
+        return match ($this->role) {
+            'super_admin' => 'Super Admin',
+            'admin'       => 'Admin (Guru)',
+            'seller'      => 'Pemilik Toko (Seller)',
+            'buyer'       => 'Pembeli (Buyer)',
+            default       => ucfirst((string) $this->role),
+        };
+    }
+
+    /**
      * Fungsi: Menghasilkan label kategori pengunjung/pemilik toko yang mudah dibaca.
      */
     public function getSubtypeLabelAttribute(): string

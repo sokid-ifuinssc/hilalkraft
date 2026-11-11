@@ -233,6 +233,10 @@ Algoritma:
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
+                    <a href="#sec-role-matrix" class="rounded-xl bg-purple-50 border border-purple-200 px-3.5 py-2 text-xs font-bold text-purple-900 hover:bg-purple-100 transition flex items-center gap-1.5 shadow-2xs">
+                        <span>🎭</span>
+                        <span>Lihat Sebagai & Skema Role</span>
+                    </a>
                     <a href="{{ route('seller.dashboard') }}" class="rounded-xl bg-emerald-50 border border-emerald-300 px-3.5 py-2 text-xs font-bold text-[#0B6E4F] hover:bg-emerald-100 transition flex items-center gap-1.5 shadow-2xs">
                         <span>🏪</span>
                         <span>Toko Guru Saya</span>
@@ -300,6 +304,204 @@ Algoritma:
                     </div>
                     <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ number_format($cmsContents->count()) }}</p>
                     <p class="text-[11px] font-semibold text-[#0B6E4F]">Bisa diedit & ditambah langsung</p>
+                </div>
+            </div>
+
+            <!-- ========================================================================
+                 SKEMA ROLE & MATRIX HAK AKSES SISTEM (BISA SEBAGAI APA SAJA?)
+                 ======================================================================== -->
+            <div id="sec-role-matrix" class="rounded-2xl bg-white border border-slate-200/80 p-6 sm:p-7 space-y-6 shadow-xs">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-0.5 text-[10px] font-black uppercase text-[#0B6E4F] mb-1">
+                            🎭 SKEMA PERAN & KEMAMPUAN SISTEM HILALKRAFT
+                        </div>
+                        <h2 class="text-base sm:text-xl font-black text-[#0F291E]">Panduan Peran: Siapa Bisa Menjadi Apa Saja?</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Super Admin memiliki hak kendali penuh untuk beralih (switch view) atau masuk merasakan website dari sudut pandang peran mana pun.
+                        </p>
+                    </div>
+
+                    @if(session()->has('view_as_role') || session()->has('impersonator_id'))
+                        <form action="{{ route('admin.impersonate.leave') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black px-4 py-2 text-xs shadow-sm transition active:scale-95 flex items-center gap-2">
+                                <span>↶</span>
+                                <span>Reset / Keluar ke Super Admin</span>
+                            </button>
+                        </form>
+                    @endif
+                </div>
+
+                <!-- 4 Kartu Peran & Kemampuan -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                    <!-- 1. SUPER ADMIN -->
+                    <div class="rounded-2xl border-2 {{ (!session()->has('view_as_role') && auth()->user()->role === 'super_admin') ? 'border-emerald-600 bg-emerald-50/20 shadow-md ring-2 ring-emerald-500/20' : 'border-slate-200 bg-[#F8FAFC]' }} p-4 sm:p-5 flex flex-col justify-between space-y-4">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-900 to-[#0F291E] text-white flex items-center justify-center text-lg font-bold shadow-xs">👑</span>
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">God Mode</span>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black text-[#0F291E]">Super Admin</h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Pemegang Otoritas & Kebijakan Tertinggi</p>
+                            </div>
+                            <div class="space-y-1.5 text-xs text-slate-600 border-t border-slate-200/60 pt-3">
+                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Bisa Sebagai Apa Saja?</p>
+                                <ul class="space-y-1 text-[11px]">
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <span><strong>Semua Akses:</strong> Super Admin, Admin Guru, Toko, & Pembeli.</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <span>Kelola User & tetapkan Guru jadi Admin.</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <span>Reset massal like, view & deteksi akun.</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <span>Atur CMS, Kelas, Jurusan & Diskon Global.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <form action="{{ route('admin.impersonate.role', 'super_admin') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full rounded-xl bg-[#0F291E] hover:bg-[#0B6E4F] text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5">
+                                <span>👑</span>
+                                <span>Mode Super Admin</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- 2. ADMIN (GURU) -->
+                    <div class="rounded-2xl border-2 {{ session()->get('view_as_role') === 'admin' ? 'border-blue-600 bg-blue-50/30 shadow-md ring-2 ring-blue-500/20' : 'border-slate-200 bg-[#F8FAFC]' }} p-4 sm:p-5 flex flex-col justify-between space-y-4">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg font-bold shadow-xs">👨‍🏫</span>
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Admin Sekolah</span>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black text-[#0F291E]">Admin (Guru)</h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Pendamping & Pengelola Produk Siswa</p>
+                            </div>
+                            <div class="space-y-1.5 text-xs text-slate-600 border-t border-slate-200/60 pt-3">
+                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Bisa Sebagai Apa Saja?</p>
+                                <ul class="space-y-1 text-[11px]">
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-blue-600 font-bold">✓</span>
+                                        <span><strong>Admin:</strong> Moderasi karya & pantau toko siswa.</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-600 font-bold">★</span>
+                                        <span><strong>Bisa Jadi Seller:</strong> Guru admin bisa punya toko sendiri untuk jual karya guru/jurusan!</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-blue-600 font-bold">✓</span>
+                                        <span><strong>Pembeli:</strong> Belanja karya siswa (Diskon Keluarga 10%).</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-slate-400 font-bold">✗</span>
+                                        <span class="text-slate-400">Tidak bisa hapus atau ubah akun Super Admin.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <form action="{{ route('admin.impersonate.role', 'admin') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5">
+                                <span>👨‍🏫</span>
+                                <span>Lihat Tampilan Admin Guru</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- 3. PEMILIK TOKO (SELLER) -->
+                    <div class="rounded-2xl border-2 border-slate-200 bg-[#F8FAFC] p-4 sm:p-5 flex flex-col justify-between space-y-4">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="w-9 h-9 rounded-xl bg-[#0B6E4F] text-white flex items-center justify-center text-lg font-bold shadow-xs">🏪</span>
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Ruang Karya</span>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black text-[#0F291E]">Pemilik Toko (Seller)</h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Siswa & Guru Pembuat Karya Inovasi</p>
+                            </div>
+                            <div class="space-y-1.5 text-xs text-slate-600 border-t border-slate-200/60 pt-3">
+                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Bisa Sebagai Apa Saja?</p>
+                                <ul class="space-y-1 text-[11px]">
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <span>Tambah/edit produk karya, harga, foto, & stok.</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <span>Atur rekening bank / e-wallet toko untuk transfer.</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <span>Kelola 4 tahap pesanan: Dipesan ➔ Dikemas ➔ Dikirim.</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <span>Atur diskon khusus toko & klaim diskon bazar.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <a href="{{ route('seller.dashboard') }}" class="w-full rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5 text-center">
+                            <span>🏪</span>
+                            <span>Buka Ruang Toko / Seller</span>
+                        </a>
+                    </div>
+
+                    <!-- 4. PEMBELI (BUYER) -->
+                    <div class="rounded-2xl border-2 border-slate-200 bg-[#F8FAFC] p-4 sm:p-5 flex flex-col justify-between space-y-4">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg font-bold shadow-xs">🛍️</span>
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Ruang Pembeli</span>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black text-[#0F291E]">Pembeli (Buyer)</h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Siswa, Guru, Wali, Alumni & Umum</p>
+                            </div>
+                            <div class="space-y-1.5 text-xs text-slate-600 border-t border-slate-200/60 pt-3">
+                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Bisa Sebagai Apa Saja?</p>
+                                <ul class="space-y-1 text-[11px]">
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-amber-600 font-bold">✓</span>
+                                        <span>Pesan produk resmi lewat web (Keranjang & Direct).</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-amber-600 font-bold">✓</span>
+                                        <span>Dapat diskon otomatis (Pelajar 10%, Keluarga 10%, dll).</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-amber-600 font-bold">✓</span>
+                                        <span>Lacak status pesanan live & riwayat transaksi.</span>
+                                    </li>
+                                    <li class="flex items-start gap-1.5">
+                                        <span class="text-amber-600 font-bold">✓</span>
+                                        <span>Beri rating bintang (★ 1-5) & ulasan komentar.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <a href="{{ route('buyer.dashboard') }}" class="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5 text-center">
+                            <span>🛍️</span>
+                            <span>Buka Dashboard Pembeli</span>
+                        </a>
+                    </div>
+
                 </div>
             </div>
 
@@ -1053,6 +1255,15 @@ Algoritma:
                                     </td>
 
                                     <td class="py-3.5 px-5 text-right whitespace-nowrap space-x-2">
+                                        @if($user->id !== auth()->id() && auth()->user()->role === 'super_admin')
+                                            <form action="{{ route('admin.impersonate', $user) }}" method="POST" class="inline" onsubmit="return confirm('Masuk dan lihat tampilan website sebagai {{ addslashes($user->name) }} ({{ $user->role_label }})?');">
+                                                @csrf
+                                                <button type="submit" class="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1 text-[10px] font-bold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs" title="Simulasikan dan lihat website sebagai pengguna ini">
+                                                    👁️ Masuk Akun
+                                                </button>
+                                            </form>
+                                        @endif
+
                                         @if(auth()->user()->role === 'super_admin' && ($user->is_teacher || !empty($user->nuptk)))
                                             <form action="{{ route('admin.users.promote-teacher', $user) }}" method="POST" class="inline">
                                                 @csrf
@@ -1372,6 +1583,16 @@ Algoritma:
                                     <td class="py-3.5 px-4 text-right">
                                         <div class="flex items-center justify-end gap-1.5 flex-wrap">
                                             @if(!$store->trashed())
+                                                {{-- Masuk / Buka Dashboard Toko Ini sebagai Pemilik --}}
+                                                @if(auth()->user()->role === 'super_admin' && $store->owner)
+                                                    <form action="{{ route('admin.impersonate', $store->owner) }}" method="POST" class="inline" onsubmit="return confirm('Buka dan kelola dashboard toko ini sebagai {{ addslashes($store->owner->name ?? $store->store_name) }}?');">
+                                                        @csrf
+                                                        <button type="submit" class="rounded-xl px-2.5 py-1 text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 transition shadow-2xs" title="Masuk dan kelola toko sebagai pemilik toko">
+                                                            🏪 Masuk Toko
+                                                        </button>
+                                                    </form>
+                                                @endif
+
                                                 {{-- Toggle Verifikasi / Nonaktifkan --}}
                                                 <form action="{{ route('admin.stores.verify', $store->id) }}" method="POST" class="inline">
                                                     @csrf

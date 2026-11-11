@@ -33,6 +33,7 @@ Penggunaan:
         ],
         'admin' => [
             ['⊞',  'Ringkasan',          route('admin.dashboard'),                              false],
+            ['🎭', 'Skema Role & Akses', route('admin.dashboard') . '#sec-role-matrix',        false],
             ['📊', 'Laporan & Rekap',    route('admin.reports'),                                request()->routeIs('admin.reports')],
             ['📋', 'Log Akses & Audit',   route('admin.logs'),                                   request()->routeIs('admin.logs')],
             ['✨', 'CMS Konten Website', route('admin.dashboard') . '#sec-cms',                  false],
@@ -118,8 +119,50 @@ Penggunaan:
                     {{ $panelName }} / <span class="text-slate-700 font-semibold">@yield('panel_title', 'Laporan')</span>
                 </div>
             </div>
-            <div class="w-8 h-8 rounded-full bg-[#D5F5E6] text-[#0B6E4F] font-extrabold text-xs flex items-center justify-center shrink-0">
-                {{ strtoupper(substr($authUser->name, 0, 2)) }}
+            <div class="flex items-center gap-2 sm:gap-3">
+                @if($authUser->role === 'super_admin' || session()->has('impersonator_id'))
+                    <div class="relative inline-block text-left" id="role-switcher-dropdown">
+                        <button type="button" onclick="document.getElementById('role-switcher-menu').classList.toggle('hidden')" class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-[#EBF9F2] px-3 py-1.5 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition shadow-2xs">
+                            <span>🎭</span>
+                            <span class="hidden sm:inline">Lihat Sebagai Role</span>
+                            <span class="text-[10px]">▾</span>
+                        </button>
+                        <div id="role-switcher-menu" class="hidden absolute right-0 mt-2 w-56 rounded-2xl bg-white shadow-xl border border-slate-200 p-2 z-50 text-xs space-y-1">
+                            <div class="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Pilih Peran Tampilan:</div>
+                            <form action="{{ route('admin.impersonate.role', 'super_admin') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-50 font-bold text-slate-700">
+                                    <span>👑</span>
+                                    <span>Super Admin (Penuh)</span>
+                                </button>
+                            </form>
+                            <form action="{{ route('admin.impersonate.role', 'admin') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-50 font-semibold text-slate-700">
+                                    <span>👨‍🏫</span>
+                                    <span>Admin (Guru)</span>
+                                </button>
+                            </form>
+                            <a href="{{ route('seller.dashboard') }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 text-[#0B6E4F] font-semibold">
+                                <span>🏪</span>
+                                <span>Pemilik Toko (Seller)</span>
+                            </a>
+                            <a href="{{ route('buyer.dashboard') }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-amber-50 text-amber-800 font-semibold">
+                                <span>🛍️</span>
+                                <span>Pembeli (Buyer)</span>
+                            </a>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <a href="{{ route('home') }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-50 text-slate-500 font-medium text-[11px]">
+                                <span>🌐</span>
+                                <span>Katalog Publik</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="w-8 h-8 rounded-full bg-[#D5F5E6] text-[#0B6E4F] font-extrabold text-xs flex items-center justify-center shrink-0">
+                    {{ strtoupper(substr($authUser->name, 0, 2)) }}
+                </div>
             </div>
         </header>
 
@@ -134,6 +177,14 @@ Penggunaan:
         document.getElementById('panelSidebar').classList.toggle('-translate-x-full', !open);
         document.getElementById('panelOverlay').classList.toggle('hidden', !open);
     }
+
+    document.addEventListener('click', function(e) {
+        const switcher = document.getElementById('role-switcher-dropdown');
+        const menu = document.getElementById('role-switcher-menu');
+        if (switcher && menu && !switcher.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
 
     // Format angka rupiah singkat untuk grafik
     window.hkRupiah = (v) => 'Rp ' + Number(v || 0).toLocaleString('id-ID');

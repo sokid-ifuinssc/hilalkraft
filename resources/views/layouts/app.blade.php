@@ -108,6 +108,27 @@ Algoritma:
 </head>
 <body class="min-h-screen flex flex-col bg-[#F8FAFC] text-[#0F291E] antialiased selection:bg-[#0B6E4F] selection:text-white">
 
+    @if(session()->has('impersonator_id') || session()->has('view_as_role'))
+        <aside class="sticky top-0 z-[100] bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white px-4 py-2 text-xs font-semibold shadow-md flex items-center justify-between gap-3 border-b border-amber-900/40">
+            <div class="flex items-center gap-2 truncate">
+                <span class="text-sm shrink-0 animate-pulse">👀</span>
+                @if(session()->has('impersonator_id'))
+                    <span class="truncate">Mode Simulasi: Anda sedang melihat sebagai <strong>{{ auth()->user()->name }}</strong> (Peran: <span class="bg-black/30 px-2 py-0.5 rounded-full font-bold uppercase text-[10px]">{{ auth()->user()->role_label }}</span>)</span>
+                @else
+                    <span class="truncate">Mode Simulasi: Anda sedang melihat tampilan sebagai <strong>Admin (Guru)</strong></span>
+                @endif
+            </div>
+            <form action="{{ route('admin.impersonate.leave') }}" method="POST" class="shrink-0">
+                @csrf
+                <button type="submit" class="rounded-lg bg-white text-amber-950 font-black px-3 py-1 text-xs hover:bg-amber-100 shadow-sm transition active:scale-95 flex items-center gap-1.5">
+                    <span>↶</span>
+                    <span class="hidden sm:inline">Kembali ke Super Admin</span>
+                    <span class="sm:hidden">Keluar</span>
+                </button>
+            </form>
+        </aside>
+    @endif
+
     @unless(View::hasSection('hide_navbar'))
         @php
             $topbarLeft = \App\Models\CmsContent::val('topbar_left', 'Dari ruang kelas, untuk kehidupan sehari-hari.');
@@ -223,7 +244,11 @@ Algoritma:
                             @if(in_array(auth()->user()->role, ['admin', 'super_admin']))
                                 <a href="{{ route('seller.dashboard') }}" class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-white px-2.5 sm:px-3 py-1.5 text-xs font-bold text-[#0B6E4F] hover:bg-emerald-50 transition shadow-2xs" title="Kelola Toko Guru Saya (Produk & Pesanan)">
                                     <span>🏪</span>
-                                    <span class="hidden xs:inline">Toko Guru</span>
+                                    <span class="hidden xs:inline">Toko</span>
+                                </a>
+                                <a href="{{ route('buyer.dashboard') }}" class="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-white px-2.5 sm:px-3 py-1.5 text-xs font-bold text-amber-800 hover:bg-amber-50 transition shadow-2xs" title="Lihat Akun Pembeli (Pesanan & Keranjang)">
+                                    <span>🛍️</span>
+                                    <span class="hidden md:inline">Pembeli</span>
                                 </a>
                             @endif
 

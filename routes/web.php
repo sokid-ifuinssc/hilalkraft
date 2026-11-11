@@ -150,4 +150,11 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('panel-admin')->na
     Route::post('/interaksi/produk/{product}/reset', [AdminDashboardController::class, 'resetProductInteractions'])->name('interactions.reset-product');
     Route::post('/interaksi/toko/{store}/reset', [AdminDashboardController::class, 'resetStoreInteractions'])->name('interactions.reset-store');
     Route::post('/interaksi/massal/reset', [AdminDashboardController::class, 'bulkResetInteractions'])->name('interactions.reset-bulk');
+
+    // Simulasi Peran & Impersonasi Pengguna untuk Super Admin
+    Route::post('/impersonate/{user}', [AdminDashboardController::class, 'impersonate'])->name('impersonate');
+    Route::post('/impersonate-role/{role}', [AdminDashboardController::class, 'impersonateRole'])->name('impersonate.role');
 });
+
+// Route Keluar dari Mode Simulasi / Impersonasi (Dapat diakses di role mana pun selama sesi aktif)
+Route::middleware('auth')->post('/kembali-ke-super-admin', [AdminDashboardController::class, 'leaveImpersonate'])->name('admin.impersonate.leave');

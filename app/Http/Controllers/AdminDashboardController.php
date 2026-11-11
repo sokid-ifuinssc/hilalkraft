@@ -45,9 +45,11 @@ class AdminDashboardController extends Controller
     public function index(Request $request): View
     {
         $currentUser = $request->user() ?: auth()->user();
+        $isSimulatingAdmin = $request->session()->get('view_as_role') === 'admin';
+        $isEffectiveAdmin = ($currentUser && $currentUser->role === 'admin') || $isSimulatingAdmin;
 
         $usersQuery = User::with('store')->latest('updated_at');
-        if ($currentUser && $currentUser->role === 'admin') {
+        if ($isEffectiveAdmin && $currentUser && $currentUser->role === 'admin') {
             $usersQuery->whereIn('role', ['seller', 'buyer']);
         }
 
@@ -1517,5 +1519,100 @@ class AdminDashboardController extends Controller
         }
 
         return $file->store('products', 'public');
+    }
+
+    /**
+     * Masuk dan melihat sistem sebagai pengguna spesifik (User Impersonation).
+     * Memungkinkan Super Admin merasakan pengalaman nyata dari akun siswa/toko/pembeli.
+     */
+    public function impersonate(Request $request, User $user): RedirectResponse
+    {
+        $currentAuth = $request->user() ?: auth()->user();
+        if (! $currentAuth) {
+            abort(403);
+        }
+
+        // Hanya Super Admin (atau yang sedang dalam sesi impersonasi) yang boleh switch
+        if ($currentAuth->role !== 'super_admin' && ! $request->session()->has('impersonator_id')) {
+            abort(403, 'Akses terbatas untuk Super Admin.');
+        }
+
+        if (! $request->session()->has('impersonator_id')) {
+            $request->session()->put('impersonator_id', $currentAuth->id);
+            $request->session()->put('impersonator_name', $currentAuth->name);
+        }
+
+        \Illuminate\Support\Facades\Auth::login($user);
+
+        ActivityLog::record(
+            'impersonate_user',
+            'Simulasi Akun Pengguna',
+            "Super Admin masuk untuk melihat website sebagai {$user->name} ({$user->role_label})"
+        );
+
+        $targetRoute = match ($user->role) {
+            'seller'               => route('seller.dashboard'),
+            'buyer'                => route('buyer.dashboard'),
+            'admin', 'super_admin' => route('admin.dashboard'),
+            default                => route('home'),
+        };
+
+        return redirect($targetRoute)->with('success', "Sekarang Anda melihat website sebagai {$user->name} ({$user->role_label}).");
+    }
+
+    /**
+     * Berpindah cepat antar peran sistem (Role Switcher).
+     */
+    public function impersonateRole(Request $request, string $role): RedirectResponse
+    {
+        $currentUser = $request->user() ?: auth()->user();
+        if (! $currentUser) {
+            abort(403);
+        }
+
+        if ($currentUser->role !== 'super_admin' && ! $request->session()->has('impersonator_id')) {
+            abort(403, 'Hanya Super Admin yang dapat mengganti peran.');
+        }
+
+        return match ($role) {
+            'seller' => redirect()->route('seller.dashboard')->with('info', 'Membuka Ruang Toko (Mode Pemilik Toko).'),
+            'buyer'  => redirect()->route('buyer.dashboard')->with('info', 'Membuka Ruang Transaksi (Mode Pembeli).'),
+            'admin'  => tap(redirect()->route('admin.dashboard'), function () use ($request) {
+                $request->session()->put('view_as_role', 'admin');
+            })->with('info', 'Melihat Dashboard Admin dari sudut pandang Guru / Admin Sekolah.'),
+            'super_admin' => tap(redirect()->route('admin.dashboard'), function () use ($request) {
+                $request->session()->forget('view_as_role');
+            })->with('success', 'Kembali ke mode kendali penuh Super Admin.'),
+            default => redirect()->route('home'),
+        };
+    }
+
+    /**
+     * Keluar dari mode simulasi / impersonasi dan kembali ke akun Super Admin asli.
+     */
+    public function leaveImpersonate(Request $request): RedirectResponse
+    {
+        $hasImpersonator = $request->session()->has('impersonator_id');
+        $hasSimulatedRole = $request->session()->has('view_as_role');
+
+        if (! $hasImpersonator && ! $hasSimulatedRole) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($hasImpersonator) {
+            $origId = $request->session()->get('impersonator_id');
+            $originalAdmin = User::find($origId);
+            $request->session()->forget(['impersonator_id', 'impersonator_name']);
+
+            if ($originalAdmin) {
+                \Illuminate\Support\Facades\Auth::login($originalAdmin);
+            }
+        }
+
+        if ($hasSimulatedRole) {
+            $request->session()->forget('view_as_role');
+        }
+
+        return redirect()->route('admin.dashboard')->with('success', 'Berhasil kembali ke sesi kendali penuh Super Admin.');
     }
 }
