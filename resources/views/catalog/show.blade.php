@@ -1,28 +1,25 @@
 {{--
 ============================================================================
-VIEW: DETAIL PRODUK, IKON LIHAT (👁️), SUKA (❤️) & KOMENTAR (💬) (catalog/show.blade.php)
+VIEW: DETAIL PRODUK, GALERI FOTO ASLI, KENALI PEMBUATNYA & ULASAN (catalog/show.blade.php)
 ============================================================================
 Fungsi:
-  Menampilkan halaman detail produk sesuai referensi desain Figma
-  `Detail produk · Desktop.png` (Galeri + 4 Thumbnail, Detail Harga/Stok/Toko,
-  Ikon Lihat 👁️, Suka ❤️, Komentar 💬, Tab Deskripsi & Ulasan, Kartu "Kenali
-  pembuatnya" dengan tombol WhatsApp, serta bagian "Karya lain untukmu").
-Algoritma:
-  1. Setiap halaman dibuka, `CatalogController@show` otomatis meng-increment
-     `views_count` dan mencatat `VisitorLog`.
-  2. Fungsi JS `switchProductTab(tab)` mengganti tampilan antara tab
-     "Deskripsi Produk" dan "Ulasan / Komentar".
+  Menampilkan halaman detail produk dengan tata letak 2 kolom yang seimbang
+  tanpa ruang kosong terbuang:
+  - Kolom Kiri: Foto Utama + Galeri Foto Asli yang Diupload (tanpa foto produk lain)
+    serta Kartu "Kenali Pembuatnya & Profil Toko" tepat di bawah foto.
+  - Kolom Kanan: Informasi Produk, Harga, Skema Diskon, Pilihan Kuantitas,
+    Tombol Beli/Pesan Sekarang (menuju Halaman Transaksi), Tambah ke Keranjang,
+    serta Konsultasi WhatsApp.
+  - Bagian Bawah: Tab Deskripsi Lengkap & Ulasan/Komentar, diikuti Karya Lainnya.
+  Seluruh ikon menggunakan Flat SVG Icon bersih tanpa emoji.
 ============================================================================
 --}}
 @extends('layouts.app')
 
 @php
-    $productImage = $product->image
-        ? (Str::startsWith($product->image, 'http')
-            ? $product->image
-            : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image)))
-        : asset('images/products/gantungan-kunci-bunga.jpg');
-
+    $uploadedUrls = $product->all_image_urls;
+    $mainImg = $uploadedUrls[0] ?? asset('images/logo-hilalkraf.jpg');
+    $fallbackImg = asset('images/logo-hilalkraf.jpg');
     $shortDesc = \Illuminate\Support\Str::limit(strip_tags($product->description ?? 'Karya inovatif siswa SMK Plus Al Hilal.'), 155);
 @endphp
 
@@ -30,233 +27,333 @@ Algoritma:
 @section('og_type', 'product')
 @section('og_title', $product->product_name . ' — ' . $product->formatted_price . ' | hilalkraf')
 @section('og_description', 'Beli ' . $product->product_name . ' (' . $product->formatted_price . ') di toko ' . ($product->store->store_name ?? 'SMK Plus Al Hilal') . '. ' . $shortDesc)
-@section('og_image', $productImage)
-@section('og_image_banner', $productImage)
+@section('og_image', $mainImg)
+@section('og_image_banner', $mainImg)
 
 @section('content')
 @php
-    $mainImg = Str::startsWith($product->image, 'http')
-        ? $product->image
-        : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image));
-    $fallbackImg = asset('images/products/gantungan-kunci-bunga.jpg');
-    $thumbImages = [
-        $mainImg,
-        asset('images/products/gantungan-kunci-bunga.jpg'),
-        asset('images/products/tokoganci-iyung-iyung.jpg'),
-        $mainImg,
-    ];
-
-    // Status Skema Transaksi & Default Delivery Method (Tersedia Global untuk Tamu & Pengguna Login)
     $canPickup = $product->canPickup();
     $canDelivery = $product->canDeliveryLokal();
     $canTransfer = $product->canShippingTransfer();
     $defaultMethod = $canPickup ? 'pickup' : ($canDelivery ? 'delivery_lokal' : 'shipping_transfer');
 
-    // Pesan WhatsApp KHUSUS KONSULTASI PRODUK (Bukan Pemesanan Langsung Tanpa Sistem)
     $productPageUrl = request()->fullUrl();
     $waConsultationMessage = urlencode("Assalamu'alaikum {$product->store->owner->name} ({$product->store->store_name}), saya ingin berkonsultasi seputar produk *{$product->product_name}* ({$product->formatted_price}) di Hilalkraf SMK Plus Al Hilal. Mohon infonya kak.\n\n(Catatan: Pemesanan resmi akan saya lakukan via aplikasi Hilalkraf agar aman & tercatat status transaksinya).\nLink: {$productPageUrl}");
     $waMessage = $waConsultationMessage;
 @endphp
 
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 lg:pb-12 space-y-12">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-28 lg:pb-12 space-y-8">
 
     <!-- Breadcrumb -->
     <nav class="text-xs text-slate-400 flex items-center gap-2">
-        <a href="{{ route('home') }}" class="hover:text-[#0B6E4F]">Home</a>
+        <a href="{{ route('home') }}" class="hover:text-[#0B6E4F] transition">Home</a>
         <span>›</span>
-        <a href="{{ route('home', ['category' => $product->category]) }}" class="hover:text-[#0B6E4F]">{{ $product->category }}</a>
+        <a href="{{ route('home', ['category' => $product->category]) }}" class="hover:text-[#0B6E4F] transition">{{ $product->category }}</a>
         <span>›</span>
-        <span class="text-slate-600 font-medium truncate">{{ $product->product_name }}</span>
+        <span class="text-slate-600 font-semibold truncate">{{ $product->product_name }}</span>
     </nav>
 
-    <!-- Bagian Atas: 2 Kolom (Foto & Informasi Utama) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+    <!-- Bagian Utama: 2 Kolom Seimbang (Kiri: Foto + Kenali Pembuatnya, Kanan: Detail & Aksi Transaksi) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-        <!-- Kolom Kiri: Foto Utama & 4 Thumbnail -->
-        <div class="lg:col-span-6 space-y-3">
-            <div class="relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 border border-slate-100">
-                <img
-                    id="main-product-image"
-                    src="{{ $mainImg }}"
-                    alt="{{ $product->product_name }}"
-                    class="w-full h-full object-cover"
-                    onerror="this.src='{{ $fallbackImg }}'"
-                >
+        <!-- KOLOM KIRI (5 Kolom): Galeri Foto Produk Asli + Kartu Kenali Pembuatnya (Memaksimalkan Ruang Kosong) -->
+        <div class="lg:col-span-5 space-y-5">
+
+            <!-- Kotak Galeri Foto Produk -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 p-3.5 space-y-3 shadow-2xs">
+                <div class="relative aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-100">
+                    <img
+                        id="main-product-image"
+                        src="{{ $mainImg }}"
+                        alt="{{ $product->product_name }}"
+                        class="w-full h-full object-cover transition duration-300"
+                        onerror="this.src='{{ $fallbackImg }}'"
+                    >
+                    @if(count($uploadedUrls) > 1)
+                        <span class="absolute bottom-2.5 right-2.5 rounded-lg bg-slate-900/70 backdrop-blur-xs px-2.5 py-1 text-[10px] font-bold text-white">
+                            {{ count($uploadedUrls) }} Foto Produk
+                        </span>
+                    @endif
+                </div>
+
+                {{-- Hanya tampilkan deretan thumbnail jika foto yang diupload lebih dari 1 foto --}}
+                @if(count($uploadedUrls) > 1)
+                    <div class="grid grid-cols-5 gap-2">
+                        @foreach($uploadedUrls as $i => $tImg)
+                            <button type="button"
+                                    onclick="selectGalleryThumbnail(this, '{{ $tImg }}')"
+                                    class="product-thumb-btn aspect-square rounded-xl overflow-hidden border-2 {{ $i === 0 ? 'border-[#0B6E4F] ring-2 ring-[#0B6E4F]/20' : 'border-slate-200 hover:border-slate-300 opacity-80 hover:opacity-100' }} bg-slate-100 transition">
+                                <img src="{{ $tImg }}" alt="Foto {{ $i + 1 }}" class="w-full h-full object-cover" onerror="this.src='{{ $fallbackImg }}'">
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+
+                <div class="flex items-center justify-between text-[11px] text-slate-500 px-1 pt-0.5">
+                    <span class="flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Foto asli karya terkurasi</span>
+                    </span>
+                    <span class="font-semibold text-[#0B6E4F]">Kode: HK-{{ str_pad((string) $product->id, 3, '0', STR_PAD_LEFT) }}</span>
+                </div>
             </div>
 
-            <div class="grid grid-cols-4 gap-3">
-                @foreach($thumbImages as $i => $tImg)
-                    <button type="button"
-                            onclick="document.getElementById('main-product-image').src = this.querySelector('img').src"
-                            class="aspect-[4/3] rounded-xl overflow-hidden border-2 {{ $i === 0 ? 'border-[#0B6E4F]' : 'border-transparent hover:border-slate-300' }} bg-slate-100 transition">
-                        <img src="{{ $tImg }}" alt="Preview {{ $i + 1 }}" class="w-full h-full object-cover" onerror="this.src='{{ $fallbackImg }}'">
-                    </button>
-                @endforeach
-            </div>
+            <!-- Kartu "Kenali Pembuatnya & Identitas Toko" (Ditempatkan langsung di bawah foto agar tidak ada ruang kosong) -->
+            <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-4 shadow-2xs">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-xs sm:text-sm font-extrabold text-[#0F291E] flex items-center gap-2">
+                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        <span>Kenali Pembuat Karya</span>
+                    </h3>
+                    <a href="{{ route('stores.show', $product->store->slug) }}" class="text-[11px] font-bold text-[#0B6E4F] hover:underline">
+                        Kunjungi Toko →
+                    </a>
+                </div>
 
-            <p class="text-[11px] text-slate-400 flex items-center gap-1.5 pt-1">
-                <span>✥</span>
-                <span>Detail kecil yang membuat setiap karya istimewa.</span>
-            </p>
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl bg-[#EBF9F2] border border-[#CDEFE0] text-[#0B6E4F] font-extrabold text-sm flex items-center justify-center shrink-0">
+                        {{ strtoupper(substr($product->store->owner->name, 0, 2)) }}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="text-sm font-extrabold text-[#0F291E] truncate">{{ $product->store->owner->name }}</h4>
+                        <p class="text-xs text-slate-500 truncate">{{ $product->store->store_name }} • {{ $product->store->student_class ?: 'SMK Plus Al Hilal' }}</p>
+                        <p class="text-[11px] font-bold text-[#0B6E4F] mt-0.5 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>Identitas sivitas terverifikasi</span>
+                        </p>
+                    </div>
+                </div>
+
+                <p class="text-xs text-slate-500 italic leading-relaxed bg-[#F8FAFC] rounded-xl p-3 border border-slate-100">
+                    "{{ $product->store->description ?: 'Karya wirausaha muda SMK Plus Al Hilal yang dibuat dengan ketelitian dan semangat berkarya.' }}"
+                </p>
+
+                <div class="grid grid-cols-3 gap-2 text-center bg-slate-50/80 rounded-xl p-2.5 border border-slate-100 text-xs">
+                    <div>
+                        <p class="font-extrabold text-[#0F291E]">± 15 mnt</p>
+                        <p class="text-[10px] text-slate-400">Respon Chat</p>
+                    </div>
+                    <div class="border-x border-slate-200/70">
+                        <p class="font-extrabold text-[#0B6E4F]">{{ number_format($product->average_rating, 1, ',', '.') }} / 5</p>
+                        <p class="text-[10px] text-slate-400">Penilaian</p>
+                    </div>
+                    <div>
+                        <p class="font-extrabold text-[#0F291E]">{{ $product->stock }} unit</p>
+                        <p class="text-[10px] text-slate-400">Stok Karya</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="{{ route('stores.show', $product->store->slug) }}"
+                       class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:border-[#0B6E4F] py-2.5 px-3 text-xs font-bold text-[#0F291E] transition">
+                        <svg class="w-3.5 h-3.5 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>Lihat Profil Toko</span>
+                    </a>
+                    <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
+                       target="_blank"
+                       rel="noopener"
+                       class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] py-2.5 px-3 text-xs font-bold text-white transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        <span>Chat Penjual</span>
+                    </a>
+                </div>
+            </div>
         </div>
 
-        <!-- Kolom Kanan: Detail Produk -->
-        <div class="lg:col-span-6 space-y-5">
+        <!-- KOLOM KANAN (7 Kolom): Detail Produk, Skema Diskon & Tombol Transaksi -->
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 space-y-5 shadow-2xs">
 
-            <div class="flex items-center justify-between gap-3">
-                <span class="inline-flex items-center rounded-full bg-[#EBF9F2] px-3 py-1 text-[11px] font-bold text-[#0B6E4F]">
-                    {{ $product->category }} • Buatan tangan
+            <!-- Baris Atas: Badge Kategori & Statistik Interaksi -->
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-[#EBF9F2] px-3 py-1 text-[11px] font-bold text-[#0B6E4F]">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    <span>{{ $product->category }} • Karya Kreatif</span>
                 </span>
 
                 <div class="flex items-center gap-1.5 sm:gap-2">
                     <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600" title="Jumlah dilihat">
-                        👁️ {{ number_format($product->views_count ?? 0) }}
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        <span>{{ number_format($product->views_count ?? 0) }}</span>
                     </span>
+
                     <button type="button" onclick="switchProductTab('ulasan'); document.getElementById('section-tabs').scrollIntoView({behavior:'smooth'});" class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition" title="Lihat komentar">
-                        💬 {{ $product->comments->count() }}
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                        </svg>
+                        <span>{{ $product->comments->count() }}</span>
                     </button>
+
                     <form action="{{ route('products.like', $product->slug) }}" method="POST" class="inline">
                         @csrf
-                        <button type="submit" class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-rose-500 hover:bg-rose-50 transition" title="Sukai karya ini">
-                            ❤️ {{ number_format($product->likes_count ?? 0) }}
+                        <button type="submit" class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition" title="Sukai karya ini">
+                            <svg class="w-3.5 h-3.5 fill-rose-500 text-rose-500" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                            <span>{{ number_format($product->likes_count ?? 0) }}</span>
                         </button>
                     </form>
-                    <!-- Tombol Menu Bagikan Produk -->
+
                     <button type="button"
                             onclick="openShareModal()"
-                            class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-[#EBF9F2] px-3 py-1 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition shadow-2xs"
+                            class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-[#EBF9F2] px-3 py-1 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition"
                             title="Bagikan link produk">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                         </svg>
                         <span>Bagikan</span>
                     </button>
                 </div>
             </div>
 
+            <!-- Judul Produk & Ringkasan Statistik -->
             <div class="space-y-1.5">
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0F291E] tracking-tight">
                     {{ $product->product_name }}
                 </h1>
-                <p class="text-xs text-slate-500 flex flex-wrap items-center gap-2">
-                    <span class="text-amber-600 font-bold">★ {{ number_format($product->average_rating, 1, ',', '.') }} ({{ $product->comments->count() }} ulasan)</span>
+                <div class="text-xs text-slate-500 flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-1 text-amber-600 font-bold">
+                        <svg class="w-3.5 h-3.5 fill-amber-400 text-amber-400" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                        <span>{{ number_format($product->average_rating, 1, ',', '.') }} ({{ $product->comments->count() }} ulasan)</span>
+                    </span>
                     <span>•</span>
-                    <span>👁️ {{ number_format($product->views_count ?? 0) }} dilihat</span>
+                    <span>{{ number_format($product->views_count ?? 0) }} dilihat</span>
                     <span>•</span>
-                    <span>❤️ {{ number_format($product->likes_count ?? 0) }} disukai</span>
+                    <span>{{ number_format($product->likes_count ?? 0) }} disukai</span>
                     <span>•</span>
-                    <span>Dibuat oleh {{ $product->store->seller_type === 'guru' ? 'guru' : 'siswa' }}</span>
-                </p>
+                    <span>Karya {{ $product->store->seller_type === 'guru' ? 'Guru' : 'Siswa' }} SMK PAL</span>
+                </div>
             </div>
 
-            <div class="space-y-2">
-                <div class="text-2xl sm:text-3xl font-extrabold text-[#0B6E4F]">
-                    {{ $product->formatted_price }}
+            <!-- Harga, Stok & Deretan Diskon -->
+            <div class="rounded-2xl bg-[#F8FAFC] border border-slate-200/70 p-4 space-y-2.5">
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <div class="text-2xl sm:text-3xl font-extrabold text-[#0B6E4F]">
+                        {{ $product->formatted_price }}
+                    </div>
+                    <span class="inline-flex items-center gap-1 rounded-full {{ $product->stock > 0 ? 'bg-[#EBF9F2] text-[#0B6E4F]' : 'bg-rose-50 text-rose-700' }} px-3 py-1 text-xs font-bold">
+                        {{ $product->stock > 0 ? 'Stok Tersedia: ' . $product->stock . ' unit' : 'Stok Sedang Habis' }}
+                    </span>
                 </div>
-                <p class="text-xs font-medium text-[#0B6E4F]">
-                    {{ $product->stock > 0 ? 'Stok tersedia: ' . $product->stock . ' produk' : 'Stok sedang habis' }}
-                </p>
 
-                <!-- Info Skema Diskon Jenis Pembeli & Bazar SMK -->
+                <!-- Badge Skema Diskon Pembeli & Bazar -->
                 <div class="flex flex-wrap gap-1.5 pt-1">
                     @if(($product->store->discount_pelajar ?? 0) > 0)
-                        <span class="rounded-full bg-[#EBF9F2] border border-[#CDEFE0] px-2.5 py-0.5 text-[11px] font-bold text-[#0B6E4F]">
-                            🎓 Diskon Pelajar {{ $product->store->discount_pelajar }}%
+                        <span class="inline-flex items-center gap-1 rounded-lg bg-white border border-[#CDEFE0] px-2.5 py-1 text-[11px] font-bold text-[#0B6E4F]">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                            <span>Diskon Pelajar {{ $product->store->discount_pelajar }}%</span>
                         </span>
                     @endif
                     @if(($product->store->discount_keluarga ?? 0) > 0)
-                        <span class="rounded-full bg-[#EBF9F2] border border-[#CDEFE0] px-2.5 py-0.5 text-[11px] font-bold text-[#0B6E4F]">
-                            🏫 Diskon Keluarga SMK {{ $product->store->discount_keluarga }}%
+                        <span class="inline-flex items-center gap-1 rounded-lg bg-white border border-[#CDEFE0] px-2.5 py-1 text-[11px] font-bold text-[#0B6E4F]">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                            <span>Diskon Keluarga SMK {{ $product->store->discount_keluarga }}%</span>
                         </span>
                     @endif
                     @if(($product->store->discount_alumni ?? 0) > 0)
-                        <span class="rounded-full bg-[#EBF9F2] border border-[#CDEFE0] px-2.5 py-0.5 text-[11px] font-bold text-[#0B6E4F]">
-                            🤝 Diskon Alumni {{ $product->store->discount_alumni }}%
+                        <span class="inline-flex items-center gap-1 rounded-lg bg-white border border-[#CDEFE0] px-2.5 py-1 text-[11px] font-bold text-[#0B6E4F]">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                            <span>Diskon Alumni {{ $product->store->discount_alumni }}%</span>
                         </span>
                     @endif
                     @if(isset($activeBazaarEvents) && $activeBazaarEvents->first())
-                        <span class="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[11px] font-extrabold text-amber-800">
-                            🎪 Diskon Bazar SMK {{ $activeBazaarEvents->first()->discount_percent + ($product->store->discount_bazar_extra ?? 0) }}% (Kode: {{ $activeBazaarEvents->first()->voucher_code }})
+                        <span class="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-[11px] font-extrabold text-amber-800">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+                            <span>Promo Bazar {{ $activeBazaarEvents->first()->discount_percent + ($product->store->discount_bazar_extra ?? 0) }}% ({{ $activeBazaarEvents->first()->voucher_code }})</span>
                         </span>
                     @endif
                 </div>
 
-                <!-- Opsi Metode Transaksi yang Didukung Produk -->
-                <div class="pt-1">
-                    <span class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/20 bg-[#EBF9F2] px-3 py-1.5 text-xs font-semibold text-[#0B6E4F]">
-                        <span>🚚 Opsi Transaksi:</span>
-                        <strong class="font-extrabold text-[#0F291E]">{{ $product->allowed_delivery_label }}</strong>
-                    </span>
+                <!-- Metode Pengiriman yang Diizinkan -->
+                <div class="pt-1 flex items-center gap-2 text-xs text-slate-600">
+                    <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+                    </svg>
+                    <span>Opsi Transaksi: <strong class="font-extrabold text-[#0F291E]">{{ $product->allowed_delivery_label }}</strong></span>
                 </div>
             </div>
 
-            <!-- Kotak Toko Soft Mint -->
-            <a href="{{ route('stores.show', $product->store->slug) }}" class="flex items-center gap-2.5 rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] px-4 py-3 text-xs font-semibold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
-                <span class="w-4 h-4 rounded-full bg-[#0B6E4F] text-white text-[10px] flex items-center justify-center shrink-0">✓</span>
-                <span class="truncate">
-                    Toko: {{ $product->store->store_name }}
-                    @if($product->store->student_class)
-                        – {{ $product->store->student_class }}
-                    @else
-                        – {{ $product->store->owner->name }}
-                    @endif
-                </span>
-            </a>
-
-            <!-- Ringkasan Deskripsi -->
-            <div class="pt-4 border-t border-slate-100 space-y-2">
-                <h2 class="text-xs sm:text-sm font-bold text-[#0F291E]">Hangatkan sudut favoritmu.</h2>
-                <div class="text-xs sm:text-sm text-slate-500 leading-relaxed line-clamp-3">
+            <!-- Ringkasan Deskripsi & Spesifikasi Cepat -->
+            <div class="space-y-2">
+                <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Tentang Karya Ini</h2>
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
                     {{ $product->description }}
-                </div>
+                </p>
             </div>
 
-            <!-- Jumlah & Tombol Aksi -->
-            <div class="pt-2 space-y-4">
+            <!-- Pengaturan Jumlah & Tombol Aksi Utama -->
+            <div class="pt-2 border-t border-slate-100 space-y-4">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-[#0F291E]">Jumlah</span>
-                    <div class="inline-flex items-center rounded-xl border border-slate-200 bg-white">
-                        <button type="button" onclick="changeQty(-1)" class="px-3 py-1.5 text-sm font-bold text-slate-500 hover:text-[#0B6E4F]">−</button>
-                        <input type="number" id="qty-display" value="1" min="1" max="{{ max(1, $product->stock) }}" readonly class="w-10 text-center text-xs font-bold text-[#0F291E] focus:outline-none">
-                        <button type="button" onclick="changeQty(1)" class="px-3 py-1.5 text-sm font-bold text-[#0B6E4F] hover:opacity-80">+</button>
+                    <span class="text-xs font-bold text-[#0F291E]">Jumlah Pembelian</span>
+                    <div class="inline-flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden">
+                        <button type="button" onclick="changeQty(-1)" class="px-3.5 py-1.5 text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-[#0B6E4F] transition">−</button>
+                        <input type="number" id="qty-display" value="1" min="1" max="{{ max(1, $product->stock) }}" readonly class="w-12 text-center text-xs font-extrabold text-[#0F291E] border-x border-slate-200 py-1.5 focus:outline-none">
+                        <button type="button" onclick="changeQty(1)" class="px-3.5 py-1.5 text-sm font-bold text-[#0B6E4F] hover:bg-emerald-50 transition">+</button>
                     </div>
                 </div>
 
-                <!-- 1. TOMBOL PEMESANAN UTAMA RESMI VIA APLIKASI (HIERARKI TERTINGGI, AMAN & TERLACAK) -->
+                <!-- 1. TOMBOL UTAMA: BELI / PESAN SEKARANG (MENuju HALAMAN TRANSAKSI) -->
                 @auth
-                    <button type="button"
-                            onclick="openDirectOrderModal()"
-                            class="w-full inline-flex items-center justify-center gap-2.5 rounded-xl sm:rounded-2xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-[0.98] text-white px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all duration-200">
-                        <span class="text-base sm:text-lg">🚚</span>
-                        <span>Pesan via Aplikasi (Aman & Terlacak)</span>
-                    </button>
+                    <form action="{{ route('buyer.checkout.index') }}" method="GET">
+                        <input type="hidden" name="direct_product_id" value="{{ $product->id }}">
+                        <input type="hidden" name="quantity" id="direct-checkout-qty-input" value="1">
+                        <input type="hidden" name="is_bazaar_offline" id="direct-bazaar-input" value="0">
+                        <button type="submit"
+                                class="w-full inline-flex items-center justify-center gap-2.5 rounded-xl sm:rounded-2xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-[0.99] text-white px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-extrabold shadow-md hover:shadow-lg transition-all duration-200">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                            <span>Beli / Pesan Sekarang (Lanjut ke Halaman Transaksi)</span>
+                        </button>
+                    </form>
                 @else
                     <a href="{{ route('login', ['redirect' => request()->fullUrl()]) }}"
-                       class="w-full inline-flex items-center justify-center gap-2.5 rounded-xl sm:rounded-2xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-[0.98] text-white px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all duration-200">
-                        <span class="text-base sm:text-lg">🚚</span>
+                       class="w-full inline-flex items-center justify-center gap-2.5 rounded-xl sm:rounded-2xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-[0.99] text-white px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-extrabold shadow-md hover:shadow-lg transition-all duration-200">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
                         <span>Pesan via Aplikasi (Masuk / Daftar Akun)</span>
                     </a>
                 @endauth
 
-                <!-- 2. OPSI KERANJANG & TANYA/KONSULTASI VIA WHATSAPP -->
+                <!-- 2. OPSI TAMBAH KE KERANJANG & KONSULTASI VIA WHATSAPP -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     @auth
                         <form action="{{ route('buyer.cart.add', $product) }}" method="POST">
                             @csrf
                             <input type="hidden" name="quantity" id="cart-qty-input" value="1">
-                            <button type="submit" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:border-[#0B6E4F] hover:text-[#0B6E4F] px-4 py-2.5 text-xs font-bold text-[#0F291E] transition">
-                                <span>🛍️</span>
-                                <span>Tambah ke Keranjang</span>
+                            <button type="submit" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#0B6E4F] bg-[#EBF9F2]/50 hover:bg-[#EBF9F2] px-4 py-2.5 text-xs font-extrabold text-[#0B6E4F] transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <span>+ Masukkan Keranjang</span>
                             </button>
                         </form>
                     @else
-                        <a href="{{ route('login', ['redirect' => request()->fullUrl()]) }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:border-[#0B6E4F] hover:text-[#0B6E4F] px-4 py-2.5 text-xs font-bold text-[#0F291E] transition">
-                            <span>🛍️</span>
-                            <span>Tambah ke Keranjang</span>
+                        <a href="{{ route('login', ['redirect' => request()->fullUrl()]) }}" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#0B6E4F] bg-[#EBF9F2]/50 hover:bg-[#EBF9F2] px-4 py-2.5 text-xs font-extrabold text-[#0B6E4F] transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <span>+ Masukkan Keranjang</span>
                         </a>
                     @endauth
 
-                    <!-- Tombol Tanya / Konsultasi WhatsApp (Hanya untuk Tanya Jawab Produk) -->
                     <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
                        target="_blank"
                        rel="noopener"
@@ -265,210 +362,154 @@ Algoritma:
                         <svg class="w-4 h-4 fill-[#25D366] group-hover:fill-white shrink-0 transition-colors" viewBox="0 0 24 24">
                             <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.073.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.112.551 4.148 1.6 5.952l-1.6 5.848 6.002-1.574c1.735 1.002 3.731 1.574 5.998 1.574 6.627 0 12-5.373 12-12s-5.373-12-12-12zm.001 22.083c-1.899 0-3.69-.536-5.231-1.465l-.375-.224-3.568.937.953-3.479-.247-.393c-1.026-1.633-1.568-3.528-1.568-5.459 0-5.556 4.519-10.075 10.076-10.075 5.556 0 10.075 4.519 10.075 10.075 0 5.557-4.519 10.076-10.075 10.076z"/>
                         </svg>
-                        <span>💬 Tanya / Konsultasi WA</span>
+                        <span>Tanya / Konsultasi WA</span>
                     </a>
                 </div>
 
                 <!-- Info Panduan Transaksi Aman -->
-                <div class="rounded-xl bg-slate-50 border border-slate-200/80 p-2.5 text-[11px] text-slate-500 leading-relaxed flex items-start gap-2">
-                    <span class="text-emerald-700 font-bold shrink-0">🛡️</span>
-                    <span><strong>Transaksi Aman:</strong> WhatsApp digunakan untuk tanya jawab detail karya. Pemesanan transaksi tetap wajib lewat aplikasi agar terlindungi sistem (Dipesan ➔ Dikemas ➔ Dikirim ➔ Diterima).</span>
+                <div class="rounded-xl bg-slate-50 border border-slate-200/80 p-3 text-[11px] text-slate-600 leading-relaxed flex items-start gap-2.5">
+                    <svg class="w-4 h-4 text-[#0B6E4F] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    <span><strong>Transaksi Aman:</strong> WhatsApp digunakan untuk tanya jawab detail karya. Pemesanan transaksi dilakukan melalui aplikasi agar terlindungi sistem (Dipesan → Dikemas → Dikirim → Diterima).</span>
                 </div>
 
                 <!-- Deretan Micro-Badges Visual Nilai Tambah Produk -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                    <div class="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-2xs">
-                        <span class="text-base shrink-0">🌱</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2 text-xs font-semibold text-slate-700">
+                        <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
                         <span class="truncate">100% Original Karya Siswa</span>
                     </div>
-                    <div class="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-2xs">
-                        <span class="text-base shrink-0">📦</span>
+                    <div class="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2 text-xs font-semibold text-slate-700">
+                        <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
                         <span class="truncate">Gratis Ongkir (Ambil di Sekolah)</span>
                     </div>
                 </div>
 
                 @auth
-                    <!-- Pilihan Klaim Diskon Bazar SMK & Tombol WA Langsung -->
+                    <!-- Pilihan Klaim Diskon Bazar SMK -->
                     <div class="rounded-xl bg-amber-50/70 border border-amber-200 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
                         <label class="flex items-center gap-2 cursor-pointer text-amber-950 font-semibold">
                             <input type="checkbox" onchange="document.getElementById('direct-bazaar-input').value = this.checked ? '1' : '0'" class="rounded border-amber-400 text-[#0B6E4F] focus:ring-[#0B6E4F]">
-                            <span>🎪 Beli di Acara Bazar SMK (Klaim Diskon Bazar + Diskon {{ auth()->user()->subtype_label }})</span>
+                            <span>Beli di Acara Bazar SMK (Klaim Diskon Bazar + Diskon {{ auth()->user()->subtype_label }})</span>
                         </label>
-                        <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
-                           target="_blank"
-                           rel="noopener"
-                           class="font-extrabold text-[#0B6E4F] hover:underline">
-                            💬 Chat WA Langsung ↗
-                        </a>
                     </div>
                 @endauth
-
-                <!-- Tombol Menu Bagikan Produk Langsung -->
-                <button type="button"
-                        onclick="openShareModal()"
-                        class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-[#EBF9F2]/60 hover:bg-[#EBF9F2] px-4 py-2.5 text-xs font-bold text-[#0B6E4F] transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                    </svg>
-                    <span>Bagikan Link Produk ke Teman / Media Sosial</span>
-                </button>
-
-                <p class="text-[11px] text-slate-500 flex items-center gap-1.5">
-                    <span class="text-[#0B6E4F] font-bold">✓</span>
-                    <span>Karya asli siswa • Kualitas diperiksa sebelum dikirim</span>
-                </p>
             </div>
         </div>
     </div>
 
-    <!-- Bagian Tengah: 2 Kolom (Tab Deskripsi/Ulasan di Kiri & Kartu "Kenali pembuatnya" di Kanan) -->
-    <div id="section-tabs" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-4">
+    <!-- Bagian Bawah: Tab Deskripsi Produk & Ulasan/Komentar (Full Width & Rapi) -->
+    <div id="section-tabs" class="rounded-2xl bg-white border border-slate-200/80 p-6 sm:p-8 space-y-6 shadow-2xs">
+        <div class="flex items-center gap-6 border-b border-slate-200/80 text-xs sm:text-sm font-bold">
+            <button type="button" id="tab-btn-deskripsi" onclick="switchProductTab('deskripsi')" class="pb-3 border-b-2 border-[#0B6E4F] text-[#0B6E4F] transition">
+                Deskripsi & Spesifikasi Karya
+            </button>
+            <button type="button" id="tab-btn-ulasan" onclick="switchProductTab('ulasan')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-700 transition">
+                Ulasan & Komentar ({{ $product->comments->count() }})
+            </button>
+        </div>
 
-        <!-- Kiri: Kartu Tab Deskripsi Produk & Ulasan/Komentar -->
-        <div class="lg:col-span-7 rounded-2xl bg-[#F8FAFC] border border-slate-100 p-6 sm:p-8 space-y-6">
-            <div class="flex items-center gap-6 border-b border-slate-200/80 text-xs sm:text-sm font-bold">
-                <button type="button" id="tab-btn-deskripsi" onclick="switchProductTab('deskripsi')" class="pb-3 border-b-2 border-[#0B6E4F] text-[#0B6E4F] transition">
-                    Deskripsi Produk
-                </button>
-                <button type="button" id="tab-btn-ulasan" onclick="switchProductTab('ulasan')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-700 transition">
-                    Ulasan & Komentar ({{ $product->comments->count() }})
-                </button>
-            </div>
-
-            <!-- Konten Tab 1: Deskripsi & Spesifikasi -->
-            <div id="tab-panel-deskripsi" class="space-y-5">
+        <!-- Konten Tab 1: Deskripsi & Spesifikasi -->
+        <div id="tab-panel-deskripsi" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div class="lg:col-span-7 space-y-3">
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Penjelasan Lengkap</h3>
                 <p class="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-line">
                     {{ $product->description }}
                 </p>
-
-                <div class="space-y-2.5 pt-2 border-t border-slate-200/60 text-xs">
-                    <div class="grid grid-cols-3 py-1">
-                        <span class="text-slate-400">Kategori</span>
-                        <span class="col-span-2 font-semibold text-[#0F291E]">{{ $product->category }}</span>
-                    </div>
-                    <div class="grid grid-cols-3 py-1">
-                        <span class="text-slate-400">Unit / Kelas</span>
-                        <span class="col-span-2 font-semibold text-[#0F291E]">{{ $product->store->student_class ?: 'SMK Plus Al Hilal' }}</span>
-                    </div>
-                    <div class="grid grid-cols-3 py-1">
-                        <span class="text-slate-400">Stok Tersedia</span>
-                        <span class="col-span-2 font-semibold text-[#0F291E]">{{ $product->stock }} unit</span>
-                    </div>
-                    <div class="grid grid-cols-3 py-1">
-                        <span class="text-slate-400">Interaksi</span>
-                        <span class="col-span-2 font-semibold text-[#0F291E]">
-                            👁️ {{ number_format($product->views_count ?? 0) }} dilihat • ❤️ {{ number_format($product->likes_count ?? 0) }} suka • 💬 {{ $product->comments->count() }} komentar
-                        </span>
-                    </div>
-                </div>
-
-                <p class="text-[11px] text-slate-400 pt-1">
+                <p class="text-[11px] text-slate-400 pt-2">
                     Catatan: Setiap karya dibuat dengan ketelitian tinggi oleh sivitas SMK Plus Al Hilal.
                 </p>
             </div>
 
-            <!-- Konten Tab 2: Komentar & Ulasan Pengunjung Berakun -->
-            <div id="tab-panel-ulasan" class="hidden space-y-5">
-                @auth
-                    <form action="{{ route('products.comment', $product->slug) }}" method="POST" class="rounded-xl bg-white p-4 border border-slate-200/80 space-y-3">
-                        @csrf
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="text-xs font-bold text-[#0F291E]">{{ auth()->user()->name }} ({{ auth()->user()->subtype_label }})</span>
-                            <select name="rating" class="rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1 text-xs font-semibold text-slate-700">
-                                <option value="5">★ 5 - Sangat Bagus</option>
-                                <option value="4">★ 4 - Bagus</option>
-                                <option value="3">★ 3 - Cukup</option>
-                                <option value="2">★ 2 - Kurang</option>
-                                <option value="1">★ 1 - Perlu Perbaikan</option>
-                            </select>
-                        </div>
-                        <textarea name="comment" rows="3" required placeholder="Tulis komentar atau apresiasi Anda..." class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3.5 py-2 text-xs focus:bg-white focus:border-[#0B6E4F] focus:outline-none"></textarea>
-                        <div class="flex justify-end">
-                            <button type="submit" class="rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-semibold text-white hover:bg-[#08583F] transition">
-                                Kirim Komentar
-                            </button>
-                        </div>
-                    </form>
-                @else
-                    <div class="rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] p-4 flex items-center justify-between gap-3">
-                        <p class="text-xs text-[#0F291E]">Silakan masuk untuk memberikan komentar pada karya ini.</p>
-                        <a href="{{ route('login') }}" class="rounded-lg bg-[#0B6E4F] px-3 py-1.5 text-xs font-semibold text-white shrink-0">Masuk</a>
-                    </div>
-                @endauth
-
-                <div class="space-y-3">
-                    @forelse($product->comments as $c)
-                        <div class="rounded-xl bg-white border border-slate-200/60 p-4 space-y-1">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="font-bold text-[#0F291E]">{{ $c->user->name ?? 'Pengunjung' }}</span>
-                                <span class="text-[11px] text-slate-400">{{ $c->created_at->diffForHumans() }}</span>
-                            </div>
-                            <p class="text-xs text-slate-600 leading-relaxed">{{ $c->comment }}</p>
-                        </div>
-                    @empty
-                        <p class="text-xs text-slate-400 py-3">Belum ada komentar. Jadilah yang pertama memberikan apresiasi!</p>
-                    @endforelse
+            <div class="lg:col-span-5 rounded-xl bg-[#F8FAFC] border border-slate-200/70 p-4 space-y-2.5 text-xs">
+                <h3 class="font-extrabold text-[#0F291E] pb-1 border-b border-slate-200/60">Spesifikasi Karya</h3>
+                <div class="grid grid-cols-3 py-1">
+                    <span class="text-slate-400">Kategori</span>
+                    <span class="col-span-2 font-semibold text-[#0F291E]">{{ $product->category }}</span>
+                </div>
+                <div class="grid grid-cols-3 py-1">
+                    <span class="text-slate-400">Unit / Kelas</span>
+                    <span class="col-span-2 font-semibold text-[#0F291E]">{{ $product->store->student_class ?: 'SMK Plus Al Hilal' }}</span>
+                </div>
+                <div class="grid grid-cols-3 py-1">
+                    <span class="text-slate-400">Stok Tersedia</span>
+                    <span class="col-span-2 font-semibold text-[#0F291E]">{{ $product->stock }} unit</span>
+                </div>
+                <div class="grid grid-cols-3 py-1">
+                    <span class="text-slate-400">Statistik</span>
+                    <span class="col-span-2 font-semibold text-[#0F291E]">
+                        {{ number_format($product->views_count ?? 0) }} dilihat • {{ number_format($product->likes_count ?? 0) }} suka • {{ $product->comments->count() }} komentar
+                    </span>
                 </div>
             </div>
         </div>
 
-        <!-- Kanan: Kartu "Kenali pembuatnya" -->
-        <div class="lg:col-span-5 rounded-2xl bg-white border border-slate-200/80 p-6 sm:p-7 space-y-5 shadow-sm">
-            <h3 class="text-sm font-bold text-[#0F291E]">Kenali pembuatnya</h3>
+        <!-- Konten Tab 2: Komentar & Ulasan Pengunjung Berakun -->
+        <div id="tab-panel-ulasan" class="hidden space-y-5">
+            @auth
+                <form action="{{ route('products.comment', $product->slug) }}" method="POST" class="rounded-xl bg-[#F8FAFC] p-4 border border-slate-200/80 space-y-3">
+                    @csrf
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-bold text-[#0F291E]">{{ auth()->user()->name }} ({{ auth()->user()->subtype_label }})</span>
+                        <select name="rating" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700">
+                            <option value="5">5 / 5 - Sangat Bagus</option>
+                            <option value="4">4 / 5 - Bagus</option>
+                            <option value="3">3 / 5 - Cukup</option>
+                            <option value="2">2 / 5 - Kurang</option>
+                            <option value="1">1 / 5 - Perlu Perbaikan</option>
+                        </select>
+                    </div>
+                    <textarea name="comment" rows="3" required placeholder="Tulis komentar atau apresiasi Anda..." class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs focus:border-[#0B6E4F] focus:outline-none"></textarea>
+                    <div class="flex justify-end">
+                        <button type="submit" class="rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-semibold text-white hover:bg-[#08583F] transition">
+                            Kirim Komentar
+                        </button>
+                    </div>
+                </form>
+            @else
+                <div class="rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] p-4 flex items-center justify-between gap-3">
+                    <p class="text-xs text-[#0F291E]">Silakan masuk untuk memberikan komentar pada karya ini.</p>
+                    <a href="{{ route('login') }}" class="rounded-lg bg-[#0B6E4F] px-3 py-1.5 text-xs font-semibold text-white shrink-0">Masuk</a>
+                </div>
+            @endauth
 
-            <div class="flex items-center gap-3.5">
-                <div class="w-12 h-12 rounded-full bg-[#D5F5E6] text-[#0B6E4F] font-extrabold text-sm flex items-center justify-center shrink-0">
-                    {{ strtoupper(substr($product->store->owner->name, 0, 2)) }}
-                </div>
-                <div>
-                    <h4 class="text-sm font-extrabold text-[#0F291E]">{{ $product->store->owner->name }}</h4>
-                    <p class="text-xs text-slate-500">{{ $product->store->student_class ?: $product->store->store_name }}</p>
-                    <p class="text-[11px] font-semibold text-[#0B6E4F] mt-0.5">✓ Identitas sivitas terverifikasi</p>
-                </div>
+            <div class="space-y-3">
+                @forelse($product->comments as $c)
+                    <div class="rounded-xl bg-[#F8FAFC] border border-slate-200/60 p-4 space-y-1">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-bold text-[#0F291E]">{{ $c->user->name ?? 'Pengunjung' }}</span>
+                            <span class="text-[11px] text-slate-400">{{ $c->created_at->diffForHumans() }}</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">{{ $c->comment }}</p>
+                    </div>
+                @empty
+                    <p class="text-xs text-slate-400 py-3">Belum ada komentar. Jadilah yang pertama memberikan apresiasi!</p>
+                @endforelse
             </div>
-
-            <p class="text-xs text-slate-500 italic leading-relaxed border-b border-slate-100 pb-4">
-                "{{ $product->store->description ?: 'Saya percaya teknologi dan kerajinan bisa bertemu untuk membuat hal sederhana jadi lebih berarti.' }}"
-            </p>
-
-            <div class="grid grid-cols-2 gap-4 text-xs">
-                <div>
-                    <p class="font-extrabold text-[#0F291E]">± 15 menit</p>
-                    <p class="text-[11px] text-slate-400">Rata-rata balasan</p>
-                </div>
-                <div>
-                    <p class="font-extrabold text-[#0F291E]">4,9 / 5</p>
-                    <p class="text-[11px] text-slate-400">Penilaian pembeli</p>
-                </div>
-            </div>
-
-            <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
-               target="_blank"
-               rel="noopener"
-               class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B6E4F] py-3 text-xs sm:text-sm font-semibold text-white hover:bg-[#08583F] transition">
-                <span>💬</span>
-                <span>Hubungi Penjual via WhatsApp</span>
-            </a>
-
-            <p class="text-[11px] text-center text-slate-400">
-                Tanyakan detail, kustomisasi, atau pengiriman.
-            </p>
         </div>
     </div>
 
-    <!-- Bagian Bawah: Karya lain untukmu -->
+    <!-- Karya Lain Untukmu -->
     @if($relatedProducts->count() > 0)
-        <div class="pt-6 space-y-5">
+        <div class="pt-4 space-y-5">
             <div class="flex items-center justify-between">
-                <h2 class="text-lg sm:text-xl font-extrabold text-[#0F291E]">Karya lain untukmu</h2>
+                <h2 class="text-lg sm:text-xl font-extrabold text-[#0F291E]">Karya Lain Untukmu</h2>
                 <a href="{{ route('home') }}" class="text-xs font-bold text-[#0B6E4F] hover:underline">Jelajahi semua →</a>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-5">
                 @foreach($relatedProducts as $rel)
+                    @php
+                        $relImg = \App\Models\Product::resolveImageUrl($rel->image);
+                    @endphp
                     <article class="group rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 overflow-hidden hover:shadow-md transition flex flex-col">
                         <a href="{{ route('products.show', $rel->slug) }}" class="relative aspect-square w-full bg-slate-100 overflow-hidden block" style="aspect-ratio: 1 / 1;">
-                            <img src="{{ Str::startsWith($rel->image, 'http') ? $rel->image : asset('storage/' . $rel->image) }}"
+                            <img src="{{ $relImg }}"
                                  alt="{{ $rel->product_name }}"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                  style="aspect-ratio: 1 / 1; object-fit: cover;"
@@ -493,12 +534,18 @@ Algoritma:
                                         <span>Detail</span>
                                     </a>
                                     <a href="{{ route('products.show', $rel->slug) }}" class="inline-flex items-center justify-center rounded-lg bg-[#0B6E4F] hover:bg-[#08583F] text-white py-1.5 px-2 text-[10px] sm:text-xs font-extrabold transition text-center active:scale-95 shadow-2xs">
-                                        <span>💬 Pesan</span>
+                                        <span>Pesan</span>
                                     </a>
                                 </div>
                                 <div class="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-400 font-medium px-0.5">
-                                    <span>👁️ {{ $rel->views_count ?? 0 }}</span>
-                                    <span>❤️ {{ $rel->likes_count ?? 0 }}</span>
+                                    <span class="inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        <span>{{ $rel->views_count ?? 0 }}</span>
+                                    </span>
+                                    <span class="inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-rose-500 fill-rose-500" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                        <span>{{ $rel->likes_count ?? 0 }}</span>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -508,16 +555,15 @@ Algoritma:
         </div>
     @endif
 
-    <!-- ========================================================================
-         MODAL / DRAWER MENU BAGIKAN PRODUK (SEBAGAIMANA MARKETPLACE LAIN)
-         ======================================================================== -->
+    <!-- Modal Bagikan Produk -->
     <div id="share-product-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 transition-all">
-        <div class="relative w-full max-w-md rounded-2xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200/80 space-y-4 animate-scale-up">
-            <!-- Header Modal -->
+        <div class="relative w-full max-w-md rounded-2xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200/80 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-2">
-                    <span class="w-7 h-7 rounded-full bg-[#EBF9F2] text-[#0B6E4F] flex items-center justify-center font-bold text-sm">
-                        ↗
+                    <span class="w-8 h-8 rounded-full bg-[#EBF9F2] text-[#0B6E4F] flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                        </svg>
                     </span>
                     <div>
                         <h3 class="text-sm font-extrabold text-[#0F291E]">Bagikan Produk</h3>
@@ -529,7 +575,6 @@ Algoritma:
                 </button>
             </div>
 
-            <!-- Kartu Cuplikan Produk -->
             <div class="flex items-center gap-3 rounded-xl bg-[#F8FAFC] border border-slate-200/80 p-3">
                 <img src="{{ $mainImg }}" alt="{{ $product->product_name }}" class="w-14 h-14 rounded-lg object-cover bg-white shrink-0 border border-slate-200" onerror="this.src='{{ $fallbackImg }}'">
                 <div class="min-w-0 flex-1">
@@ -539,7 +584,6 @@ Algoritma:
                 </div>
             </div>
 
-            <!-- Input Salin Link Langsung -->
             <div class="space-y-1.5">
                 <label class="block text-[11px] font-bold text-slate-600">Salin Tautan / Link Produk</label>
                 <div class="flex items-center gap-2">
@@ -551,350 +595,51 @@ Algoritma:
                     <button type="button"
                             id="btn-copy-share-link"
                             onclick="copyShareLink()"
-                            class="rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shrink-0 shadow-xs">
+                            class="rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shrink-0">
                         Salin
                     </button>
                 </div>
-                <p id="share-copy-feedback" class="text-[11px] font-semibold text-[#0B6E4F] hidden">✓ Link berhasil disalin ke clipboard!</p>
-            </div>
-
-            <!-- Pilihan Cepat Bagikan ke Platform Lain -->
-            <div class="space-y-2 pt-2 border-t border-slate-100">
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Bagikan Ke</p>
-                <div class="grid grid-cols-4 gap-2 text-center text-xs">
-                    <!-- WhatsApp -->
-                    @php
-                        $waShareText = urlencode("Yuk lihat karya siswa SMK Plus Al Hilal:\n*{$product->product_name}*\nHarga: {$product->formatted_price}\n\nKunjungi produk di hilalkraft:\n" . url()->current());
-                    @endphp
-                    <a href="https://api.whatsapp.com/send?text={{ $waShareText }}"
-                       target="_blank"
-                       rel="noopener"
-                       class="flex flex-col items-center gap-1 p-2 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition group">
-                        <span class="w-10 h-10 rounded-full bg-[#25D366]/15 text-[#25D366] group-hover:scale-110 flex items-center justify-center font-bold text-lg transition">
-                            💬
-                        </span>
-                        <span class="text-[10px] font-bold text-slate-700">WhatsApp</span>
-                    </a>
-
-                    <!-- Telegram -->
-                    <a href="https://t.me/share/url?url={{ urlencode(url()->current()) }}&text={{ urlencode("Karya Siswa SMK Plus Al Hilal: {$product->product_name} ({$product->formatted_price})") }}"
-                       target="_blank"
-                       rel="noopener"
-                       class="flex flex-col items-center gap-1 p-2 rounded-xl border border-slate-200 hover:border-sky-500 hover:bg-sky-50/50 transition group">
-                        <span class="w-10 h-10 rounded-full bg-[#0088cc]/15 text-[#0088cc] group-hover:scale-110 flex items-center justify-center font-bold text-lg transition">
-                            ✈️
-                        </span>
-                        <span class="text-[10px] font-bold text-slate-700">Telegram</span>
-                    </a>
-
-                    <!-- Facebook -->
-                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}"
-                       target="_blank"
-                       rel="noopener"
-                       class="flex flex-col items-center gap-1 p-2 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition group">
-                        <span class="w-10 h-10 rounded-full bg-[#1877F2]/15 text-[#1877F2] group-hover:scale-110 flex items-center justify-center font-bold text-lg transition">
-                            f
-                        </span>
-                        <span class="text-[10px] font-bold text-slate-700">Facebook</span>
-                    </a>
-
-                    <!-- Twitter / X -->
-                    <a href="https://twitter.com/intent/tweet?text={{ urlencode("Karya Siswa SMK Plus Al Hilal: {$product->product_name}") }}&url={{ urlencode(url()->current()) }}"
-                       target="_blank"
-                       rel="noopener"
-                       class="flex flex-col items-center gap-1 p-2 rounded-xl border border-slate-200 hover:border-slate-800 hover:bg-slate-50 transition group">
-                        <span class="w-10 h-10 rounded-full bg-slate-900/10 text-slate-900 group-hover:scale-110 flex items-center justify-center font-bold text-base transition">
-                            𝕏
-                        </span>
-                        <span class="text-[10px] font-bold text-slate-700">Twitter / X</span>
-                    </a>
-                </div>
-
-                <!-- Tombol Web Share Native untuk Smartphone -->
-                <button type="button"
-                        id="btn-native-share"
-                        onclick="triggerNativeShare()"
-                        class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 py-2 text-xs font-bold text-slate-700 transition">
-                    <span>📱</span>
-                    <span>Bagikan ke Aplikasi Lain di Ponsel</span>
-                </button>
+                <p id="share-copy-feedback" class="text-[11px] font-semibold text-[#0B6E4F] hidden">Link berhasil disalin ke clipboard!</p>
             </div>
         </div>
     </div>
-
-    @auth
-    <!-- Modal Pemesanan Langsung & Pilihan Metode Pengiriman (3 Skema Transaksi) -->
-    <div id="direct-order-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-        <div class="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-8">
-            <div class="bg-gradient-to-r from-[#0B6E4F] to-[#0F291E] p-5 text-white flex items-center justify-between">
-                <div>
-                    <h3 class="text-base font-extrabold flex items-center gap-2">
-                        <span>🚚</span>
-                        <span>Pesan Langsung: {{ $product->product_name }}</span>
-                    </h3>
-                    <p class="text-xs text-emerald-200 mt-0.5">Toko: {{ $product->store->store_name }} • Pilih skema penyerahan barang</p>
-                </div>
-                <button type="button" onclick="closeDirectOrderModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold transition">
-                    ✕
-                </button>
-            </div>
-
-            <form action="{{ route('buyer.direct-order', $product) }}" method="POST" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-                @csrf
-                <input type="hidden" name="quantity" id="modal-direct-qty" value="1">
-
-                <!-- Info Jumlah Item -->
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                    <div>
-                        <div class="text-xs font-bold text-[#0F291E]">Jumlah Pesanan</div>
-                        <div class="text-[11px] text-slate-500">Harga Satuan: {{ $product->formatted_price }}</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button type="button" onclick="changeModalQty(-1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-xs font-bold hover:bg-slate-100">-</button>
-                        <span id="modal-qty-display" class="w-8 text-center text-xs font-extrabold">1</span>
-                        <button type="button" onclick="changeModalQty(1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-xs font-bold hover:bg-slate-100">+</button>
-                    </div>
-                </div>
-
-                <!-- 3 Opsi Skema Transaksi Sesuai Izin Produk Toko -->
-                @php
-                    $canPickup = $product->canPickup();
-                    $canDelivery = $product->canDeliveryLokal();
-                    $canTransfer = $product->canShippingTransfer();
-                    $defaultMethod = $canPickup ? 'pickup' : ($canDelivery ? 'delivery_lokal' : 'shipping_transfer');
-                @endphp
-                <div class="space-y-2.5">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-extrabold text-[#0F291E]">Pilih Metode Transaksi & Pengiriman *</span>
-                        <span class="text-[10px] text-slate-500">Disesuaikan izin toko</span>
-                    </div>
-
-                    <!-- 1. Datang ke Sekolah -->
-                    <label class="modal-delivery-card block rounded-2xl border-2 p-3 transition {{ $canPickup ? 'cursor-pointer border-[#0B6E4F] bg-[#EBF9F2]/30' : 'cursor-not-allowed opacity-50 border-slate-200 bg-slate-50' }}" data-method="pickup">
-                        <div class="flex items-start gap-3">
-                            <input type="radio" name="delivery_method" value="pickup" @checked($defaultMethod === 'pickup') @disabled(!$canPickup) class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateModalDeliveryUI('pickup')">
-                            <div class="flex-1 space-y-0.5">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-[#0F291E]">🏫 1. Datang ke Sekolah (Transaksi Langsung)</span>
-                                    <span class="text-[10px] font-extrabold text-[#0B6E4F] bg-[#EBF9F2] px-2 py-0.5 rounded-full">Rp 0 (Gratis)</span>
-                                </div>
-                                <p class="text-[11px] text-slate-600">Ambil/serah terima langsung di SMK Plus Al Hilal / Stand Bazar.</p>
-                                <div class="flex items-center justify-between text-[10px]">
-                                    <span class="font-bold text-slate-500">Alur: Dipesan → Dikemas → Diterima (3 Tahap)</span>
-                                    @if(!$canPickup)
-                                        <span class="font-extrabold text-rose-600">(Produk ini tidak melayani Datang Langsung)</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </label>
-
-                    <!-- 2. Delivery / Antar Langsung (Arjawinangun, Susukan, Kaliwedi) -->
-                    <label class="modal-delivery-card block rounded-2xl border-2 p-3 transition {{ $canDelivery ? 'cursor-pointer border-slate-200 hover:border-slate-300 bg-white' : 'cursor-not-allowed opacity-50 border-slate-200 bg-slate-50' }}" data-method="delivery_lokal">
-                        <div class="flex items-start gap-3">
-                            <input type="radio" name="delivery_method" value="delivery_lokal" @checked($defaultMethod === 'delivery_lokal') @disabled(!$canDelivery) class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateModalDeliveryUI('delivery_lokal')">
-                            <div class="flex-1 space-y-0.5">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-[#0F291E]">🛵 2. Delivery / Antar Langsung</span>
-                                    <span class="text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">Rp 5.000</span>
-                                </div>
-                                <p class="text-[11px] text-slate-600">Kurir sekolah khusus: <strong class="text-slate-900">Kec. Arjawinangun, Susukan, & Kaliwedi</strong>.</p>
-                                <div class="flex items-center justify-between text-[10px]">
-                                    <span class="font-bold text-slate-500">Alur: Dipesan → Dikemas → Dikirim → Diterima (4 Tahap)</span>
-                                    @if(!$canDelivery)
-                                        <span class="font-extrabold text-rose-600">(Produk ini tidak melayani Delivery Lokal)</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </label>
-
-                    <!-- 3. Transfer Antar -->
-                    <label class="modal-delivery-card block rounded-2xl border-2 p-3 transition {{ $canTransfer ? 'cursor-pointer border-slate-200 hover:border-slate-300 bg-white' : 'cursor-not-allowed opacity-50 border-slate-200 bg-slate-50' }}" data-method="shipping_transfer">
-                        <div class="flex items-start gap-3">
-                            <input type="radio" name="delivery_method" value="shipping_transfer" @checked($defaultMethod === 'shipping_transfer') @disabled(!$canTransfer) class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateModalDeliveryUI('shipping_transfer')">
-                            <div class="flex-1 space-y-0.5">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-[#0F291E]">📦 3. Transfer Antar (Luar Wilayah / Ekspedisi)</span>
-                                    <span id="modal-transfer-badge" class="text-[10px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">Ongkir Kurir Langsung</span>
-                                </div>
-                                <p class="text-[11px] text-amber-950 font-medium leading-snug">Biaya ongkir ditanggung pembeli, pembayaran langsung dibayarkan kepada kurir. Pembeli hanya mentransfer biaya karya ke rekening/e-wallet toko.</p>
-                                <div class="flex items-center justify-between text-[10px]">
-                                    <span class="font-bold text-slate-500">Alur: Dipesan → Dikemas → Dikirim → Diterima (4 Tahap)</span>
-                                    @if(!$canTransfer)
-                                        <span class="font-extrabold text-rose-600">(Produk ini tidak melayani Transfer / Ekspedisi)</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-
-                <!-- Kotak Informasi Rekening Bank & E-Wallet Toko (Ditampilkan Saat Transfer Antar Dipilih) -->
-                <div id="modal-transfer-bank-box" class="hidden rounded-2xl bg-amber-50/80 border border-amber-200 p-4 space-y-2.5 text-xs text-amber-950">
-                    <div class="flex items-center justify-between">
-                        <span class="font-extrabold text-amber-900 flex items-center gap-1.5">
-                            <span>💳</span>
-                            <span>Rekening & E-Wallet Toko {{ $product->store->store_name }}</span>
-                        </span>
-                        <span class="text-[10px] text-amber-800 font-bold bg-amber-200/70 px-2 py-0.5 rounded-full">Transfer Pembayaran</span>
-                    </div>
-
-                    @if($product->store->has_bank_account)
-                        <div class="flex items-center justify-between bg-white rounded-xl p-2.5 border border-amber-200 shadow-2xs">
-                            <div>
-                                <span class="text-[10px] uppercase font-bold text-slate-400 block">Bank {{ $product->store->bank_name }}</span>
-                                <span class="font-mono font-extrabold text-xs sm:text-sm text-[#0F291E]" id="copy-bank-acc">{{ $product->store->bank_account_number }}</span>
-                                <span class="text-[11px] text-slate-500 block">a.n. {{ $product->store->bank_account_name }}</span>
-                            </div>
-                            <button type="button" onclick="navigator.clipboard.writeText('{{ $product->store->bank_account_number }}'); alert('Nomor Rekening {{ $product->store->bank_name }} berhasil disalin!');" class="rounded-lg bg-amber-100 hover:bg-amber-200 px-3 py-1.5 text-[10px] font-extrabold text-amber-900 transition">
-                                Salin Rekening
-                            </button>
-                        </div>
-                    @endif
-
-                    @if($product->store->has_ewallet_account)
-                        <div class="flex items-center justify-between bg-white rounded-xl p-2.5 border border-amber-200 shadow-2xs">
-                            <div>
-                                <span class="text-[10px] uppercase font-bold text-slate-400 block">E-Wallet {{ $product->store->ewallet_name }}</span>
-                                <span class="font-mono font-extrabold text-xs sm:text-sm text-[#0F291E]" id="copy-ewallet-acc">{{ $product->store->ewallet_account_number }}</span>
-                                <span class="text-[11px] text-slate-500 block">a.n. {{ $product->store->ewallet_account_name }}</span>
-                            </div>
-                            <button type="button" onclick="navigator.clipboard.writeText('{{ $product->store->ewallet_account_number }}'); alert('Nomor HP E-Wallet {{ $product->store->ewallet_name }} berhasil disalin!');" class="rounded-lg bg-amber-100 hover:bg-amber-200 px-3 py-1.5 text-[10px] font-extrabold text-amber-900 transition">
-                                Salin E-Wallet
-                            </button>
-                        </div>
-                    @endif
-
-                    @if(!$product->store->has_payment_account)
-                        <p class="text-[11px] text-amber-800 bg-white/70 p-2.5 rounded-xl border border-amber-200">
-                            💬 Penjual belum memasukkan nomor rekening di profil toko. Anda dapat meminta rekening langsung via chat WhatsApp saat pesanan dibuat.
-                        </p>
-                    @endif
-
-                    @if($product->store->payment_instructions)
-                        <p class="text-[11px] text-amber-900 bg-amber-100/60 p-2 rounded-xl italic">
-                            <strong>Petunjuk Pembayaran Toko:</strong> "{{ $product->store->payment_instructions }}"
-                        </p>
-                    @endif
-                </div>
-
-                <!-- Input Alamat & Lokasi -->
-                <div class="rounded-2xl bg-slate-50 border border-slate-200 p-3.5 space-y-2.5">
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Kabupaten / Kota</label>
-                            <input type="text" name="destination_kabupaten" id="modal-dest-kabupaten" value="{{ old('destination_kabupaten', auth()->user()->kabupaten ?: 'Cirebon') }}" placeholder="Cirebon" oninput="calculateModalOngkir()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-700 mb-0.5">Kecamatan</label>
-                            <input type="text" name="destination_kecamatan" id="modal-dest-kecamatan" value="{{ old('destination_kecamatan', auth()->user()->kecamatan ?: 'Arjawinangun') }}" placeholder="Arjawinangun / Susukan / Kaliwedi" oninput="calculateModalOngkir()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
-                        </div>
-                    </div>
-
-                    <!-- Shortcut 3 kecamatan untuk delivery lokal -->
-                    <div id="modal-local-shortcuts" class="hidden text-[10px] text-slate-600 space-y-1">
-                        <span class="font-bold text-blue-900">Pilih cepat:</span>
-                        <div class="flex gap-1.5">
-                            <button type="button" onclick="setModalKecamatan('Arjawinangun')" class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px] font-bold hover:bg-blue-200">Arjawinangun</button>
-                            <button type="button" onclick="setModalKecamatan('Susukan')" class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px] font-bold hover:bg-blue-200">Susukan</button>
-                            <button type="button" onclick="setModalKecamatan('Kaliwedi')" class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px] font-bold hover:bg-blue-200">Kaliwedi</button>
-                        </div>
-                    </div>
-
-                    <div id="modal-local-warning" class="hidden rounded-xl bg-rose-50 border border-rose-200 p-2 text-[10px] text-rose-800">
-                        ⚠️ Delivery Antar Langsung hanya untuk Kec. Arjawinangun, Susukan, dan Kaliwedi (Kab. Cirebon).
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-700 mb-0.5" id="modal-lbl-address">Alamat Pengiriman / Stand Penyerahan *</label>
-                        <input type="text" name="shipping_address" id="modal-shipping-address" value="{{ old('shipping_address', auth()->user()->full_address !== 'Wilayah belum dilengkapi' ? auth()->user()->full_address : 'Stand Bazar / Kampus SMK Plus Al Hilal') }}" required placeholder="Contoh: Stand Bazar SMK Plus Al Hilal / Jl. Nyi Mas Gandasari No..." class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
-                    </div>
-                </div>
-
-                <!-- Diskon Bazar & Catatan -->
-                <div class="space-y-2">
-                    <label class="flex items-center gap-2 cursor-pointer text-xs text-amber-950 font-semibold bg-amber-50/70 p-2.5 rounded-xl border border-amber-200">
-                        <input type="checkbox" name="is_bazaar_offline" value="1" class="rounded border-amber-400 text-[#0B6E4F] focus:ring-[#0B6E4F]">
-                        <span>🎪 Beli langsung di Acara Bazar SMK (Klaim Promo Stand)</span>
-                    </label>
-                    <textarea name="notes" rows="1" placeholder="Catatan untuk penjual (opsional)..." class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-1.5 text-xs focus:bg-white focus:border-[#0B6E4F] focus:outline-none"></textarea>
-                </div>
-
-                <!-- Total Biaya -->
-                <div class="pt-3 border-t border-slate-100 space-y-1 text-xs">
-                    <div class="flex justify-between text-slate-500">
-                        <span>Ongkos Kirim:</span>
-                        <span id="modal-ongkir-text" class="font-bold text-[#0B6E4F]">Rp 0 (Gratis)</span>
-                    </div>
-                    <div class="flex justify-between text-sm font-extrabold text-[#0F291E]">
-                        <span>Estimasi Total:</span>
-                        <span id="modal-total-text" class="text-base text-[#0B6E4F]">{{ $product->formatted_price }}</span>
-                    </div>
-                </div>
-
-                <div class="pt-2 flex gap-2">
-                    <button type="button" onclick="closeDirectOrderModal()" class="flex-1 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
-                        Batal
-                    </button>
-                    <button type="submit" id="modal-submit-btn" class="flex-2 rounded-xl bg-[#0B6E4F] py-2.5 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-sm">
-                        ✓ Buat Pesanan Sekarang
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    @endauth
-
 </div>
 
-<!-- ========================================================================
-     STICKY MOBILE CTA BAR (KHUSUS BREAKPOINT MOBILE / HP)
-     ======================================================================== -->
+<!-- Sticky Mobile CTA Bar (Khusus HP) -->
 <aside class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] px-4 py-3 lg:hidden"
        style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
     <div class="max-w-md mx-auto flex items-center justify-between gap-3">
-        <!-- Kiri: Label & Nilai Harga -->
         <div class="min-w-0">
             <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Harga</span>
             <div class="flex items-baseline gap-1.5">
                 <span id="mobile-sticky-price" class="text-base sm:text-lg font-black text-[#0B6E4F] tracking-tight">
                     {{ $product->formatted_price }}
                 </span>
-                @if($product->stock > 0 && $product->stock <= 5)
-                    <span class="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200">
-                        Sisa {{ $product->stock }}
-                    </span>
-                @endif
             </div>
         </div>
 
-        <!-- Kanan: Tombol Pesan via Aplikasi (Utama) & Tanya WA (Konsultasi) -->
         <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
             @auth
-                <button type="button"
-                        onclick="openDirectOrderModal()"
-                        class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-95 text-white px-3.5 sm:px-4 py-2.5 text-xs font-black shadow-md transition"
-                        title="Pesan resmi lewat aplikasi">
-                    <span>🚚</span>
-                    <span>Pesan (Aplikasi)</span>
-                </button>
+                <a href="{{ route('buyer.checkout.index', ['direct_product_id' => $product->id, 'quantity' => 1]) }}"
+                   id="btn-sticky-order"
+                   class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-95 text-white px-3.5 sm:px-4 py-2.5 text-xs font-black shadow-md transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                    <span>Beli Sekarang</span>
+                </a>
             @else
                 <a href="{{ route('login', ['redirect' => request()->fullUrl()]) }}"
-                   class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-95 text-white px-3.5 sm:px-4 py-2.5 text-xs font-black shadow-md transition"
-                   title="Pesan resmi lewat aplikasi">
-                    <span>🚚</span>
-                    <span>Pesan (Aplikasi)</span>
+                   class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-95 text-white px-3.5 sm:px-4 py-2.5 text-xs font-black shadow-md transition">
+                    <span>Beli Sekarang</span>
                 </a>
             @endauth
 
-            <!-- Tombol Konsultasi WhatsApp -->
             <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
                target="_blank"
                rel="noopener"
                id="btn-sticky-whatsapp"
-               class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white px-3 sm:px-3.5 py-2.5 text-xs font-bold shadow-sm transition"
-               title="Tanya & konsultasi produk via WhatsApp">
+               class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white px-3 sm:px-3.5 py-2.5 text-xs font-bold shadow-sm transition">
                 <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
                     <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.073.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.112.551 4.148 1.6 5.952l-1.6 5.848 6.002-1.574c1.735 1.002 3.731 1.574 5.998 1.574 6.627 0 12-5.373 12-12s-5.373-12-12-12zm.001 22.083c-1.899 0-3.69-.536-5.231-1.465l-.375-.224-3.568.937.953-3.479-.247-.393c-1.026-1.633-1.568-3.528-1.568-5.459 0-5.556 4.519-10.075 10.076-10.075 5.556 0 10.075 4.519 10.075 10.075 0 5.557-4.519 10.076-10.075 10.076z"/>
                 </svg>
@@ -910,11 +655,26 @@ Algoritma:
     const sellerOwnerName = @json($product->store->owner->name ?? $product->store->store_name);
     const storeTitleName = @json($product->store->store_name);
     const productItemName = @json($product->product_name);
+    const baseDirectCheckoutUrl = @json(route('buyer.checkout.index', ['direct_product_id' => $product->id]));
+
+    function selectGalleryThumbnail(btn, imgUrl) {
+        const mainImg = document.getElementById('main-product-image');
+        if (mainImg) {
+            mainImg.src = imgUrl;
+        }
+        document.querySelectorAll('.product-thumb-btn').forEach(el => {
+            el.classList.remove('border-[#0B6E4F]', 'ring-2', 'ring-[#0B6E4F]/20', 'opacity-100');
+            el.classList.add('border-slate-200', 'opacity-80');
+        });
+        btn.classList.remove('border-slate-200', 'opacity-80');
+        btn.classList.add('border-[#0B6E4F]', 'ring-2', 'ring-[#0B6E4F]/20', 'opacity-100');
+    }
 
     function changeQty(delta) {
         const display = document.getElementById('qty-display');
         const hiddenInput = document.getElementById('cart-qty-input');
-        const directInput = document.getElementById('direct-qty-input');
+        const directCheckoutQty = document.getElementById('direct-checkout-qty-input');
+        const stickyOrderBtn = document.getElementById('btn-sticky-order');
         if (!display) return;
         const max = parseInt(display.getAttribute('max') || '99', 10);
         let next = parseInt(display.value || '1', 10) + delta;
@@ -922,16 +682,17 @@ Algoritma:
         if (next > max) next = max;
         display.value = next;
         if (hiddenInput) hiddenInput.value = next;
-        if (directInput) directInput.value = next;
+        if (directCheckoutQty) directCheckoutQty.value = next;
+        if (stickyOrderBtn) {
+            stickyOrderBtn.href = baseDirectCheckoutUrl + '&quantity=' + next;
+        }
 
-        // Update Total Harga di Sticky Mobile Bar
         const stickyPrice = document.getElementById('mobile-sticky-price');
         if (stickyPrice) {
             const totalCalc = unitPriceProduct * next;
             stickyPrice.textContent = 'Rp ' + totalCalc.toLocaleString('id-ID');
         }
 
-        // Update Link WhatsApp dengan kuantitas yang dipilih untuk KONSULTASI
         const dynamicWaMsg = encodeURIComponent("Assalamu'alaikum " + sellerOwnerName + " (" + storeTitleName + "), saya ingin berkonsultasi seputar produk *" + productItemName + "* (" + next + " item) di Hilalkraf SMK Plus Al Hilal. Mohon infonya kak.\n\n(Catatan: Pemesanan resmi akan saya lakukan via aplikasi Hilalkraf agar aman & tercatat status transaksinya).");
         const mainWa = document.getElementById('btn-main-whatsapp');
         const stickyWa = document.getElementById('btn-sticky-whatsapp');
@@ -954,17 +715,11 @@ Algoritma:
             : 'pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-700 transition';
     }
 
-    // Fungsi Menu Bagikan Produk
     function openShareModal() {
         const modal = document.getElementById('share-product-modal');
         if (modal) {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            // Cek apakah browser mendukung Web Share API
-            const nativeBtn = document.getElementById('btn-native-share');
-            if (nativeBtn && !navigator.share) {
-                nativeBtn.style.display = 'none';
-            }
         }
     }
 
@@ -976,16 +731,14 @@ Algoritma:
         }
     }
 
-    // Salin link produk ke clipboard
     function copyShareLink() {
         const input = document.getElementById('share-product-url-input');
         const btn = document.getElementById('btn-copy-share-link');
         const feedback = document.getElementById('share-copy-feedback');
-
         if (!input) return;
 
         input.select();
-        input.setSelectionRange(0, 99999); // Untuk perangkat mobile
+        input.setSelectionRange(0, 99999);
 
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(input.value).then(onCopySuccess).catch(() => {
@@ -999,14 +752,8 @@ Algoritma:
 
         function onCopySuccess() {
             if (btn) {
-                btn.textContent = '✓ Tersalin!';
-                btn.classList.remove('bg-[#0B6E4F]');
-                btn.classList.add('bg-emerald-700');
-                setTimeout(() => {
-                    btn.textContent = 'Salin';
-                    btn.classList.remove('bg-emerald-700');
-                    btn.classList.add('bg-[#0B6E4F]');
-                }, 2500);
+                btn.textContent = 'Tersalin!';
+                setTimeout(() => { btn.textContent = 'Salin'; }, 2500);
             }
             if (feedback) {
                 feedback.classList.remove('hidden');
@@ -1015,180 +762,11 @@ Algoritma:
         }
     }
 
-    // Native Web Share API untuk HP/browser pendukung
-    function triggerNativeShare() {
-        if (navigator.share) {
-            navigator.share({
-                title: '{{ addslashes($product->product_name) }}',
-                text: 'Yuk lihat karya siswa SMK Plus Al Hilal: {{ addslashes($product->product_name) }} ({{ $product->formatted_price }}) di hilalkraft!',
-                url: window.location.href,
-            }).catch(() => {});
-        } else {
-            copyShareLink();
-        }
-    }
-
-    // Tutup modal jika klik di luar box
     document.addEventListener('click', (e) => {
         const shareModal = document.getElementById('share-product-modal');
         if (shareModal && e.target === shareModal) {
             closeShareModal();
         }
-        const directModal = document.getElementById('direct-order-modal');
-        if (directModal && e.target === directModal) {
-            closeDirectOrderModal();
-        }
     });
-
-    // Modal Direct Order
-    const productBasePrice = {{ (float) $product->price }};
-    const localDistricts = ['arjawinangun', 'susukan', 'kaliwedi'];
-
-    function openDirectOrderModal() {
-        const modal = document.getElementById('direct-order-modal');
-        if (!modal) return;
-        // Ambil quantity dari input utama
-        const mainQty = document.getElementById('qty-display');
-        const q = mainQty ? parseInt(mainQty.value || '1', 10) : 1;
-        setModalQtyVal(q);
-        updateModalDeliveryUI('{{ $defaultMethod ?? 'pickup' }}');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-
-    function closeDirectOrderModal() {
-        const modal = document.getElementById('direct-order-modal');
-        if (modal) {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-    }
-
-    function setModalQtyVal(val) {
-        val = Math.max(1, val);
-        const qtyDisplay = document.getElementById('modal-qty-display');
-        const hiddenQty = document.getElementById('modal-direct-qty');
-        if (qtyDisplay) qtyDisplay.textContent = val;
-        if (hiddenQty) hiddenQty.value = val;
-        calculateModalOngkir();
-    }
-
-    function changeModalQty(delta) {
-        const hiddenQty = document.getElementById('modal-direct-qty');
-        let current = hiddenQty ? parseInt(hiddenQty.value || '1', 10) : 1;
-        setModalQtyVal(current + delta);
-    }
-
-    function setModalKecamatan(name) {
-        const kecInput = document.getElementById('modal-dest-kecamatan');
-        const kabInput = document.getElementById('modal-dest-kabupaten');
-        if (kecInput) kecInput.value = name;
-        if (kabInput && !kabInput.value) kabInput.value = 'Cirebon';
-        calculateModalOngkir();
-    }
-
-    function getModalSelectedMethod() {
-        const radios = document.getElementsByName('delivery_method');
-        for (let r of radios) {
-            if (r.checked) return r.value;
-        }
-        return 'pickup';
-    }
-
-    function updateModalDeliveryUI(method) {
-        document.querySelectorAll('.modal-delivery-card').forEach(el => {
-            if (el.getAttribute('data-method') === method) {
-                el.classList.add('border-[#0B6E4F]', 'bg-[#EBF9F2]/30');
-                el.classList.remove('border-slate-200', 'bg-white');
-            } else {
-                el.classList.remove('border-[#0B6E4F]', 'bg-[#EBF9F2]/30');
-                el.classList.add('border-slate-200', 'bg-white');
-            }
-        });
-
-        const addressLabel = document.getElementById('modal-lbl-address');
-        const addressInput = document.getElementById('modal-shipping-address');
-        const shortcuts = document.getElementById('modal-local-shortcuts');
-        const warning = document.getElementById('modal-local-warning');
-        const submitBtn = document.getElementById('modal-submit-btn');
-        const bankBox = document.getElementById('modal-transfer-bank-box');
-
-        if (method === 'pickup') {
-            if (addressLabel) addressLabel.textContent = 'Stand / Ruang Penyerahan di Sekolah *';
-            if (addressInput && (!addressInput.value || addressInput.value.includes('Jl.'))) {
-                addressInput.value = 'Stand Bazar / Kampus SMK Plus Al Hilal';
-            }
-            if (shortcuts) shortcuts.classList.add('hidden');
-            if (warning) warning.classList.add('hidden');
-            if (bankBox) bankBox.classList.add('hidden');
-            if (submitBtn) submitBtn.disabled = false;
-        } else if (method === 'delivery_lokal') {
-            if (addressLabel) addressLabel.textContent = 'Alamat Pengantaran (Arjawinangun/Susukan/Kaliwedi) *';
-            if (shortcuts) shortcuts.classList.remove('hidden');
-            if (bankBox) bankBox.classList.add('hidden');
-        } else {
-            if (addressLabel) addressLabel.textContent = 'Alamat Lengkap Pengiriman Ekspedisi *';
-            if (shortcuts) shortcuts.classList.add('hidden');
-            if (warning) warning.classList.add('hidden');
-            if (bankBox) bankBox.classList.remove('hidden');
-            if (submitBtn) submitBtn.disabled = false;
-        }
-
-        calculateModalOngkir();
-    }
-
-    function calculateModalOngkir() {
-        const method = getModalSelectedMethod();
-        const kabInput = document.getElementById('modal-dest-kabupaten');
-        const kecInput = document.getElementById('modal-dest-kecamatan');
-        const hiddenQty = document.getElementById('modal-direct-qty');
-        const warning = document.getElementById('modal-local-warning');
-        const submitBtn = document.getElementById('modal-submit-btn');
-        const ongkirText = document.getElementById('modal-ongkir-text');
-        const totalText = document.getElementById('modal-total-text');
-
-        const qty = hiddenQty ? parseInt(hiddenQty.value || '1', 10) : 1;
-        const subtotal = productBasePrice * qty;
-        let ongkir = 0;
-
-        if (method === 'pickup') {
-            ongkir = 0;
-            if (ongkirText) {
-                ongkirText.textContent = 'Rp 0 (Gratis)';
-                ongkirText.className = 'font-bold text-[#0B6E4F]';
-            }
-        } else if (method === 'delivery_lokal') {
-            ongkir = 5000;
-            if (ongkirText) {
-                ongkirText.textContent = 'Rp 5.000';
-                ongkirText.className = 'font-bold text-blue-700';
-            }
-            const cleanKec = (kecInput ? kecInput.value : '').toLowerCase().trim();
-            const isMatch = localDistricts.some(d => cleanKec.includes(d));
-            if (!isMatch && cleanKec.length > 0) {
-                if (warning) warning.classList.remove('hidden');
-                if (submitBtn) submitBtn.disabled = true;
-            } else {
-                if (warning) warning.classList.add('hidden');
-                if (submitBtn) submitBtn.disabled = false;
-            }
-        } else {
-            // shipping_transfer (Luar Wilayah)
-            ongkir = 0; // Biaya ongkir tidak ditambahkan ke tagihan toko
-            if (ongkirText) {
-                ongkirText.innerHTML = '<span class="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md inline-block text-right">Biaya ongkir ditanggung pembeli, pembayaran langsung dibayarkan kepada kurir.</span>';
-                ongkirText.className = '';
-            }
-            const badge = document.getElementById('modal-transfer-badge');
-            if (badge) badge.textContent = 'Ongkir Langsung ke Kurir';
-            if (warning) warning.classList.add('hidden');
-            if (submitBtn) submitBtn.disabled = false;
-        }
-
-        const grand = subtotal + ongkir;
-        if (totalText) {
-            totalText.textContent = 'Rp ' + Number(grand).toLocaleString('id-ID');
-        }
-    }
 </script>
 @endsection

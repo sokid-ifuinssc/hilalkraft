@@ -48,6 +48,9 @@ class AdminDashboardController extends Controller
         $isSimulatingAdmin = $request->session()->get('view_as_role') === 'admin';
         $isEffectiveAdmin = ($currentUser && $currentUser->role === 'admin') || $isSimulatingAdmin;
 
+        // Selaraskan data pengguna dengan master database Kelas & Jurusan yang diinputkan Super Admin terlebih dahulu
+        ClassMajor::syncUsersWithMaster();
+
         $usersQuery = User::with('store')->latest('updated_at');
         if ($isEffectiveAdmin && $currentUser && $currentUser->role === 'admin') {
             $usersQuery->whereIn('role', ['seller', 'buyer']);
@@ -106,7 +109,13 @@ class AdminDashboardController extends Controller
             $matchedMajor = ClassMajor::findMatchingMasterMajor($filterMajor);
             [$baseMajor, $acronym] = ClassMajor::cleanMajorName($filterMajor);
 
-            $usersQuery->where(function ($q) use ($filterMajor, $matchedMajor, $baseMajor, $acronym) {
+            // Ekstrak kata kunci penting (misal: komputer, jaringan, telekomunikasi, akuntansi, keuangan, otomotif)
+            $tokens = array_filter(
+                preg_split('/[\s,\-\(\)\/]+/', strtolower($filterMajor)),
+                fn ($w) => strlen($w) >= 3 && ! in_array($w, ['dan', 'yang', 'atau', 'smk', 'plus', 'alhilal', 'hilal', 'kejuruan', 'sekolah', 'menengah', 'kompetensi', 'keahlian'])
+            );
+
+            $usersQuery->where(function ($q) use ($filterMajor, $matchedMajor, $baseMajor, $acronym, $tokens) {
                 $q->where('major_name', $filterMajor);
                 if ($matchedMajor && $matchedMajor !== $filterMajor) {
                     $q->orWhere('major_name', $matchedMajor);
@@ -117,8 +126,11 @@ class AdminDashboardController extends Controller
                 if (! empty($acronym)) {
                     $q->orWhere('major_name', 'like', "%{$acronym}%");
                 }
+                foreach ($tokens as $tk) {
+                    $q->orWhere('major_name', 'like', "%{$tk}%");
+                }
                 // Selaraskan juga dengan data toko siswa jika tersimpan di store.student_class
-                $q->orWhereHas('store', function ($sq) use ($filterMajor, $matchedMajor, $baseMajor, $acronym) {
+                $q->orWhereHas('store', function ($sq) use ($filterMajor, $matchedMajor, $baseMajor, $acronym, $tokens) {
                     $sq->where('student_class', 'like', "%{$filterMajor}%");
                     if ($matchedMajor) {
                         $sq->orWhere('student_class', 'like', "%{$matchedMajor}%");
@@ -128,6 +140,9 @@ class AdminDashboardController extends Controller
                     }
                     if (! empty($acronym)) {
                         $sq->orWhere('student_class', 'like', "%{$acronym}%");
+                    }
+                    foreach ($tokens as $tk) {
+                        $sq->orWhere('student_class', 'like', "%{$tk}%");
                     }
                 });
             });
@@ -199,11 +214,19 @@ class AdminDashboardController extends Controller
         // Deduplikasi cerdas agar tidak muncul varian ganda (misal: "Teknik Otomotif" vs "Teknik Otomotif (TO)")
         $dedupedMajors = collect();
         $seenBases = [];
-        $sortedMajors = $availableMajors->sortByDesc(fn ($m) => str_contains($m, '(') ? 1 : 0);
+        $sortedMajors = $availableMajors->sortByDesc(fn ($m) => (str_contains($m, '(') ? 100 : 0) + strlen($m));
         foreach ($sortedMajors as $majorItem) {
             [$base] = ClassMajor::cleanMajorName($majorItem);
             $key = $base ?: strtolower(trim($majorItem));
-            if (! isset($seenBases[$key])) {
+
+            $alreadyCovered = false;
+            foreach (array_keys($seenBases) as $existingKey) {
+                if ($existingKey === $key || (strlen($key) > 6 && (str_contains($existingKey, $key) || str_contains($key, $existingKey)))) {
+                    $alreadyCovered = true;
+                    break;
+                }
+            }
+            if (! $alreadyCovered) {
                 $seenBases[$key] = true;
                 $dedupedMajors->push($majorItem);
             }
@@ -488,23 +511,38 @@ class AdminDashboardController extends Controller
     public function storeProduct(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'store_id'     => ['required', 'exists:stores,id'],
-            'product_name' => ['required', 'string', 'max:150'],
-            'category'     => ['required', 'string', 'max:100'],
-            'price'        => ['required', 'numeric', 'min:1000'],
-            'stock'        => ['required', 'integer', 'min:0'],
-            'description'  => ['required', 'string'],
-            'image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'image_url'    => ['nullable', 'string', 'max:500'],
+            'store_id'       => ['required', 'exists:stores,id'],
+            'product_name'   => ['required', 'string', 'max:150'],
+            'category'       => ['required', 'string', 'max:100'],
+            'price'          => ['required', 'numeric', 'min:1000'],
+            'stock'          => ['required', 'integer', 'min:0'],
+            'description'    => ['required', 'string'],
+            'image_file'     => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'image_files'    => ['nullable', 'array', 'max:5'],
+            'image_files.*'  => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'image_url'      => ['nullable', 'string', 'max:500'],
             'allowed_delivery_methods' => ['nullable', 'array'],
         ], [
-            'image_file.max' => 'Ukuran file foto produk maksimal 2 MB.',
+            'image_file.max'    => 'Ukuran file foto produk maksimal 2 MB.',
+            'image_files.*.max' => 'Ukuran setiap foto produk maksimal 2 MB.',
         ]);
 
-        $imagePath = $validated['image_url'] ?? '/images/product-karya-1.jpg';
+        $storedPaths = [];
         if ($request->hasFile('image_file')) {
-            $imagePath = $this->compressAndStoreProductImage($request->file('image_file'));
+            $storedPaths[] = $this->compressAndStoreProductImage($request->file('image_file'));
         }
+        if ($request->hasFile('image_files')) {
+            foreach ($request->file('image_files') as $file) {
+                if ($file && $file->isValid() && count($storedPaths) < 5) {
+                    $storedPaths[] = $this->compressAndStoreProductImage($file);
+                }
+            }
+        }
+
+        $imagePath = ! empty($storedPaths)
+            ? $storedPaths[0]
+            : (($validated['image_url'] ?? null) ?: '/images/product-karya-1.jpg');
+        $galleryImages = array_values(array_slice($storedPaths, 1, 4));
 
         $allowedMethods = $request->input('allowed_delivery_methods');
         if (empty($allowedMethods)) {
@@ -514,18 +552,24 @@ class AdminDashboardController extends Controller
         $capitalName = mb_convert_case(trim($validated['product_name']), MB_CASE_TITLE, 'UTF-8');
         $cleanDesc   = strip_tags(trim($validated['description']));
 
-        Product::create([
-            'store_id'     => $validated['store_id'],
-            'product_name' => $capitalName,
-            'slug'         => Str::slug($capitalName) . '-' . Str::lower(Str::random(4)),
-            'category'     => $validated['category'],
-            'price'        => $validated['price'],
-            'stock'        => $validated['stock'],
-            'description'  => $cleanDesc,
-            'image'        => $imagePath,
+        $createData = [
+            'store_id'                 => $validated['store_id'],
+            'product_name'             => $capitalName,
+            'slug'                     => Str::slug($capitalName) . '-' . Str::lower(Str::random(4)),
+            'category'                 => $validated['category'],
+            'price'                    => $validated['price'],
+            'stock'                    => $validated['stock'],
+            'description'              => $cleanDesc,
+            'image'                    => $imagePath,
             'allowed_delivery_methods' => array_values($allowedMethods),
-            'is_active'    => true,
-        ]);
+            'is_active'                => true,
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'gallery_images')) {
+            $createData['gallery_images'] = $galleryImages;
+        }
+
+        Product::create($createData);
 
         return redirect()->to(route('admin.dashboard') . '#sec-cms-produk')->with('success', "Karya produk '{$capitalName}' berhasil ditambahkan dan disimpan melalui CMS.");
     }
@@ -536,20 +580,25 @@ class AdminDashboardController extends Controller
     public function updateProduct(Request $request, Product $product): RedirectResponse
     {
         $validated = $request->validate([
-            'store_id'     => ['required', 'exists:stores,id'],
-            'product_name' => ['required', 'string', 'max:150'],
-            'category'     => ['required', 'string', 'max:100'],
-            'price'        => ['required', 'numeric', 'min:1000'],
-            'stock'        => ['required', 'integer', 'min:0'],
-            'description'  => ['required', 'string'],
-            'image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'image_url'    => ['nullable', 'string', 'max:500'],
+            'store_id'       => ['required', 'exists:stores,id'],
+            'product_name'   => ['required', 'string', 'max:150'],
+            'category'       => ['required', 'string', 'max:100'],
+            'price'          => ['required', 'numeric', 'min:1000'],
+            'stock'          => ['required', 'integer', 'min:0'],
+            'description'    => ['required', 'string'],
+            'image_file'     => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'image_files'    => ['nullable', 'array', 'max:5'],
+            'image_files.*'  => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'image_url'      => ['nullable', 'string', 'max:500'],
             'allowed_delivery_methods' => ['nullable', 'array'],
         ], [
-            'image_file.max' => 'Ukuran file foto produk maksimal 2 MB.',
+            'image_file.max'    => 'Ukuran file foto produk maksimal 2 MB.',
+            'image_files.*.max' => 'Ukuran setiap foto produk maksimal 2 MB.',
         ]);
 
         $imagePath = $product->image;
+        $galleryImages = is_array($product->gallery_images) ? $product->gallery_images : [];
+
         if ($request->filled('image_url')) {
             $imagePath = $validated['image_url'];
         }
@@ -558,6 +607,22 @@ class AdminDashboardController extends Controller
                 Storage::disk('public')->delete($product->image);
             }
             $imagePath = $this->compressAndStoreProductImage($request->file('image_file'));
+        }
+        if ($request->hasFile('image_files')) {
+            $newFiles = [];
+            foreach ($request->file('image_files') as $file) {
+                if ($file && $file->isValid() && count($newFiles) < 5) {
+                    $newFiles[] = $this->compressAndStoreProductImage($file);
+                }
+            }
+            if (! empty($newFiles)) {
+                if (! $request->hasFile('image_file')) {
+                    $imagePath = $newFiles[0];
+                    $galleryImages = array_values(array_slice($newFiles, 1, 4));
+                } else {
+                    $galleryImages = array_slice(array_merge($galleryImages, $newFiles), 0, 4);
+                }
+            }
         }
 
         $allowedMethods = $request->input('allowed_delivery_methods');
@@ -568,16 +633,22 @@ class AdminDashboardController extends Controller
         $capitalName = mb_convert_case(trim($validated['product_name']), MB_CASE_TITLE, 'UTF-8');
         $cleanDesc   = strip_tags(trim($validated['description']));
 
-        $product->update([
-            'store_id'     => $validated['store_id'],
-            'product_name' => $capitalName,
-            'category'     => $validated['category'],
-            'price'        => $validated['price'],
-            'stock'        => $validated['stock'],
-            'description'  => $cleanDesc,
-            'image'        => $imagePath,
+        $updateData = [
+            'store_id'                 => $validated['store_id'],
+            'product_name'             => $capitalName,
+            'category'                 => $validated['category'],
+            'price'                    => $validated['price'],
+            'stock'                    => $validated['stock'],
+            'description'              => $cleanDesc,
+            'image'                    => $imagePath,
             'allowed_delivery_methods' => array_values($allowedMethods),
-        ]);
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'gallery_images')) {
+            $updateData['gallery_images'] = $galleryImages;
+        }
+
+        $product->update($updateData);
 
         return redirect()->to(route('admin.dashboard') . '#sec-cms-produk')->with('success', "Karya produk '{$capitalName}' berhasil diperbarui.");
     }

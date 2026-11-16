@@ -6,7 +6,9 @@ use App\Models\BazaarEvent;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductComment;
+use App\Models\Regency;
 use App\Models\Store;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,19 +17,22 @@ use Illuminate\View\View;
 
 /**
  * ============================================================================
- * CONTROLLER: BUYER ORDER CONTROLLER (KERANJANG, DISKON BAZAR/PEMBELI,
- *             PROGRES BARANG 4 TAHAP & RATING BINTANG SETELAH TRANSAKSI)
+ * CONTROLLER: BUYER ORDER CONTROLLER (KERANJANG TERPISAH, HALAMAN TRANSAKSI,
+ *             DISKON BAZAR/PEMBELI, PROGRES BARANG & RATING SETELAH TRANSAKSI)
  * ============================================================================
  * Fungsi:
  *   Mengelola seluruh siklus transaksi Pembeli (`buyer`):
- *   1. Keranjang & Checkout Multi-Toko (`addToCart`, `viewCart`, `checkout`).
- *   2. Pesan Langsung dari Halaman Produk (`directOrder`) agar transaksi yang
- *      dilanjutkan ke WhatsApp penjual tetap tercatat progres barangnya
- *      (`Pesan` -> `Kemas` -> `Kirim / Dalam Perjalanan` -> `Sampai`).
- *   3. Kalkulasi Otomatis Skema Diskon Jenis Pembeli (`Pelajar`, `Keluarga SMK`,
+ *   1. Halaman Keranjang Belanja (`addToCart`, `viewCart`, `updateCartQuantity`,
+ *      `removeFromCart`, `removeSelectedFromCart`) yang menampilkan daftar
+ *      barang yang dipilih (seperti Shopee).
+ *   2. Halaman Transaksi / Checkout Terpisah (`showCheckout`, `checkout`)
+ *      untuk memilih metode pengiriman, lokasi, voucher bazar, dan konfirmasi.
+ *   3. Pesan Langsung dari Halaman Produk (`directOrder`) agar transaksi tetap
+ *      tercatat progres barangnya (`Pesan` -> `Kemas` -> `Kirim` -> `Sampai`).
+ *   4. Kalkulasi Otomatis Skema Diskon Jenis Pembeli (`Pelajar`, `Keluarga SMK`,
  *      `Alumni`, `Umum`) & Diskon Acara Bazar / Event SMK (`BazaarEvent`).
- *   4. Konfirmasi Barang Sampai (`markDelivered`) & Pemberian Rating Bintang
- *      (`rateOrder`, ★ 1 s/d 5) setelah transaksi.
+ *   5. Konfirmasi Barang Sampai (`markDelivered`) & Pemberian Rating Bintang
+ *      (`rateOrder`, 1 s/d 5) setelah transaksi.
  * ============================================================================
  */
 class BuyerOrderController extends Controller
@@ -54,15 +59,19 @@ class BuyerOrderController extends Controller
         }
 
         $cart = session()->get('hilalkraft_cart', []);
+        $newQty = min((int) $product->stock, ($cart[$product->id]['quantity'] ?? 0) + $quantity);
 
         $cart[$product->id] = [
             'product_id'   => $product->id,
+            'slug'         => $product->slug,
             'store_id'     => $product->store_id,
-            'store_name'   => $product->store->store_name,
+            'store_name'   => $product->store->store_name ?? 'Toko Karya Siswa',
             'product_name' => $product->product_name,
+            'category'     => $product->category,
             'price'        => (float) $product->price,
+            'stock'        => (int) $product->stock,
             'image'        => $product->image,
-            'quantity'     => ($cart[$product->id]['quantity'] ?? 0) + $quantity,
+            'quantity'     => max(1, $newQty),
         ];
 
         session()->put('hilalkraft_cart', $cart);
@@ -71,14 +80,75 @@ class BuyerOrderController extends Controller
             ->with('success', 'Produk berhasil ditambahkan ke keranjang belanja.');
     }
 
+    /**
+     * Halaman Keranjang Belanja (Hanya menampilkan daftar barang yang dipilih seperti Shopee).
+     */
     public function viewCart(): View
     {
         $cart = session()->get('hilalkraft_cart', []);
+
+        // Sinkronisasi data produk terbaru (stok, harga, gambar, slug)
+        if (! empty($cart)) {
+            $productsById = Product::with('store')->whereIn('id', array_keys($cart))->get()->keyBy('id');
+            foreach ($cart as $pid => &$item) {
+                if (isset($productsById[$pid])) {
+                    $p = $productsById[$pid];
+                    $item['slug']         = $p->slug;
+                    $item['product_name'] = $p->product_name;
+                    $item['category']     = $p->category;
+                    $item['price']        = (float) $p->price;
+                    $item['stock']        = (int) $p->stock;
+                    $item['image']        = $p->image;
+                    $item['store_id']     = $p->store_id;
+                    $item['store_name']   = $p->store->store_name ?? $item['store_name'];
+                }
+            }
+            unset($item);
+            session()->put('hilalkraft_cart', $cart);
+        }
+
         $storeIds = collect($cart)->pluck('store_id')->unique()->values()->all();
         $storesById = Store::whereIn('id', $storeIds)->get()->keyBy('id');
         $activeBazaarEvents = BazaarEvent::activeEvents();
 
         return view('buyer.cart', compact('cart', 'storesById', 'activeBazaarEvents'));
+    }
+
+    /**
+     * Memperbarui kuantitas item di keranjang belanja.
+     */
+    public function updateCartQuantity(Request $request, int $productId): RedirectResponse|JsonResponse
+    {
+        $cart = session()->get('hilalkraft_cart', []);
+        if (! isset($cart[$productId])) {
+            if ($request->expectsJson()) {
+                return response()->json(['ok' => false, 'message' => 'Item tidak ditemukan di keranjang.'], 404);
+            }
+            return back()->with('error', 'Item tidak ditemukan di keranjang.');
+        }
+
+        $product = Product::find($productId);
+        $maxStock = $product ? max(1, (int) $product->stock) : 99;
+        $qty = max(1, min($maxStock, (int) $request->input('quantity', 1)));
+
+        $cart[$productId]['quantity'] = $qty;
+        if ($product) {
+            $cart[$productId]['price'] = (float) $product->price;
+            $cart[$productId]['stock'] = (int) $product->stock;
+        }
+        session()->put('hilalkraft_cart', $cart);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok'            => true,
+                'product_id'    => $productId,
+                'quantity'      => $qty,
+                'unit_price'    => (float) $cart[$productId]['price'],
+                'item_subtotal' => (float) $cart[$productId]['price'] * $qty,
+            ]);
+        }
+
+        return back()->with('success', 'Jumlah barang di keranjang diperbarui.');
     }
 
     public function removeFromCart(int $productId): RedirectResponse
@@ -87,41 +157,205 @@ class BuyerOrderController extends Controller
         unset($cart[$productId]);
         session()->put('hilalkraft_cart', $cart);
 
-        return back()->with('success', 'Item dihapus dari keranjang.');
+        return back()->with('success', 'Produk dihapus dari keranjang.');
+    }
+
+    public function removeSelectedFromCart(Request $request): RedirectResponse
+    {
+        $selectedIds = array_map('intval', (array) $request->input('selected_items', []));
+        $cart = session()->get('hilalkraft_cart', []);
+
+        foreach ($selectedIds as $pid) {
+            unset($cart[$pid]);
+        }
+
+        session()->put('hilalkraft_cart', $cart);
+
+        return redirect()->route('buyer.cart.index')
+            ->with('success', 'Produk yang dipilih berhasil dihapus dari keranjang.');
     }
 
     /**
-     * Fungsi:
-     *   Mengeksekusi checkout keranjang menjadi transaksi resmi beserta
-     *   perhitungan diskon jenis pembeli & diskon acara Bazar SMK.
+     * Halaman Transaksi / Checkout Terpisah (Menampilkan rincian barang yang akan dibeli,
+     * pilihan metode pengiriman, alamat tujuan, promo bazar, dan konfirmasi pembayaran).
+     */
+    public function showCheckout(Request $request): View|RedirectResponse
+    {
+        $activeBazaarEvents = BazaarEvent::activeEvents();
+        $regenciesGrouped = Regency::getGroupedByProvince();
+
+        // Mode 1: Beli / Pesan Langsung dari Halaman Detail Produk
+        if ($request->filled('direct_product_id')) {
+            $productId = (int) $request->input('direct_product_id');
+            $product = Product::with('store')->find($productId);
+
+            if (! $product || ! $product->store) {
+                return redirect()->route('home')->with('error', 'Produk tidak ditemukan.');
+            }
+
+            $qty = max(1, min(max(1, (int) $product->stock), (int) $request->input('quantity', 1)));
+            $isBazaarClaim = $request->boolean('is_bazaar_offline');
+
+            $checkoutItems = [
+                $product->id => [
+                    'product_id'   => $product->id,
+                    'slug'         => $product->slug,
+                    'store_id'     => $product->store_id,
+                    'store_name'   => $product->store->store_name,
+                    'product_name' => $product->product_name,
+                    'category'     => $product->category,
+                    'price'        => (float) $product->price,
+                    'stock'        => (int) $product->stock,
+                    'image'        => $product->image,
+                    'quantity'     => $qty,
+                ],
+            ];
+
+            $storesById = collect([$product->store_id => $product->store]);
+            $isDirectBuy = true;
+
+            return view('buyer.checkout', compact(
+                'checkoutItems',
+                'storesById',
+                'activeBazaarEvents',
+                'regenciesGrouped',
+                'isDirectBuy',
+                'isBazaarClaim'
+            ));
+        }
+
+        // Mode 2: Checkout dari Halaman Keranjang Belanja
+        $cart = session()->get('hilalkraft_cart', []);
+        if (empty($cart)) {
+            return redirect()->route('buyer.cart.index')
+                ->with('error', 'Keranjang belanja Anda masih kosong.');
+        }
+
+        // Sinkronisasi kuantitas terbaru jika dikirim dari form keranjang
+        $inputQuantities = (array) $request->input('quantities', []);
+        if (! empty($inputQuantities)) {
+            foreach ($inputQuantities as $pid => $qVal) {
+                $pid = (int) $pid;
+                if (isset($cart[$pid])) {
+                    $cart[$pid]['quantity'] = max(1, (int) $qVal);
+                }
+            }
+            session()->put('hilalkraft_cart', $cart);
+        }
+
+        // Filter hanya produk yang dicentang / dipilih oleh pembeli
+        if ($request->has('selected_items')) {
+            $selectedIds = array_values(array_filter(array_map('intval', (array) $request->input('selected_items', []))));
+            session()->put('hilalkraft_checkout_selected', $selectedIds);
+        } else {
+            $selectedIds = session()->get('hilalkraft_checkout_selected', array_keys($cart));
+        }
+
+        $checkoutItems = [];
+        foreach ($selectedIds as $pid) {
+            if (isset($cart[$pid])) {
+                $checkoutItems[$pid] = $cart[$pid];
+            }
+        }
+
+        // Jika tidak ada yang cocok, fallback ke seluruh isi keranjang
+        if (empty($checkoutItems)) {
+            $checkoutItems = $cart;
+        }
+
+        $storeIds = collect($checkoutItems)->pluck('store_id')->unique()->values()->all();
+        $storesById = Store::whereIn('id', $storeIds)->get()->keyBy('id');
+        $isDirectBuy = false;
+        $isBazaarClaim = false;
+
+        return view('buyer.checkout', compact(
+            'checkoutItems',
+            'storesById',
+            'activeBazaarEvents',
+            'regenciesGrouped',
+            'isDirectBuy',
+            'isBazaarClaim'
+        ));
+    }
+
+    /**
+     * Mengeksekusi pembuatan pesanan dari Halaman Transaksi (`buyer/checkout.blade.php`)
+     * beserta perhitungan diskon jenis pembeli & diskon acara Bazar SMK.
      */
     public function checkout(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'delivery_method'       => ['nullable', 'string', 'in:pickup,delivery_lokal,shipping_transfer'],
-            'shipping_address'      => ['nullable', 'string', 'max:255'],
-            'destination_kabupaten' => ['nullable', 'string', 'max:100'],
-            'destination_kecamatan' => ['nullable', 'string', 'max:100'],
-            'destination_desa'      => ['nullable', 'string', 'max:100'],
-            'notes'                 => ['nullable', 'string', 'max:500'],
-            'bazaar_voucher_code'   => ['nullable', 'string', 'max:50'],
-            'is_bazaar_offline'     => ['nullable', 'boolean'],
+            'delivery_method'        => ['nullable', 'string', 'in:pickup,delivery_lokal,shipping_transfer'],
+            'shipping_address'       => ['nullable', 'string', 'max:255'],
+            'destination_kabupaten'  => ['nullable', 'string', 'max:100'],
+            'destination_kecamatan'  => ['nullable', 'string', 'max:100'],
+            'destination_desa'       => ['nullable', 'string', 'max:100'],
+            'notes'                  => ['nullable', 'string', 'max:500'],
+            'bazaar_voucher_code'    => ['nullable', 'string', 'max:50'],
+            'is_bazaar_offline'      => ['nullable', 'boolean'],
+            'direct_product_id'      => ['nullable', 'integer'],
+            'direct_quantity'        => ['nullable', 'integer', 'min:1'],
+            'checkout_product_ids'   => ['nullable', 'array'],
+            'checkout_product_ids.*' => ['integer'],
+            'checkout_quantities'    => ['nullable', 'array'],
         ]);
 
-        $cart = session()->get('hilalkraft_cart', []);
+        $buyer = $request->user();
+        $isDirectBuy = $request->filled('direct_product_id');
+        $itemsToProcess = [];
 
-        if (empty($cart)) {
-            return back()->with('error', 'Keranjang belanja Anda masih kosong.');
+        if ($isDirectBuy) {
+            $directProduct = Product::with('store')->find((int) $validated['direct_product_id']);
+            if (! $directProduct || ! $directProduct->store) {
+                return redirect()->route('home')->with('error', 'Produk yang dipesan tidak ditemukan.');
+            }
+            $directQty = max(1, (int) ($validated['direct_quantity'] ?? 1));
+            if ($directProduct->stock < $directQty) {
+                return back()->withInput()->with('error', 'Stok produk tidak mencukupi.');
+            }
+
+            $itemsToProcess[$directProduct->id] = [
+                'product_id'   => $directProduct->id,
+                'store_id'     => $directProduct->store_id,
+                'store_name'   => $directProduct->store->store_name,
+                'product_name' => $directProduct->product_name,
+                'price'        => (float) $directProduct->price,
+                'image'        => $directProduct->image,
+                'quantity'     => $directQty,
+            ];
+        } else {
+            $cart = session()->get('hilalkraft_cart', []);
+            if (empty($cart)) {
+                return redirect()->route('buyer.cart.index')->with('error', 'Keranjang belanja Anda masih kosong.');
+            }
+
+            $selectedIds = array_values(array_filter(array_map('intval', (array) ($validated['checkout_product_ids'] ?? []))));
+            $customQtys = (array) ($validated['checkout_quantities'] ?? []);
+
+            if (! empty($selectedIds)) {
+                foreach ($selectedIds as $pid) {
+                    if (isset($cart[$pid])) {
+                        $item = $cart[$pid];
+                        if (isset($customQtys[$pid])) {
+                            $item['quantity'] = max(1, (int) $customQtys[$pid]);
+                        }
+                        $itemsToProcess[$pid] = $item;
+                    }
+                }
+            }
+
+            if (empty($itemsToProcess)) {
+                $itemsToProcess = $cart;
+            }
         }
 
-        $buyer = $request->user();
-        $deliveryMethod = $validated['delivery_method'] ?? 'pickup';
-        $kabupaten = $validated['destination_kabupaten'] ?: ($buyer->kabupaten ?: 'Cirebon');
-        $kecamatan = $validated['destination_kecamatan'] ?: ($buyer->kecamatan ?: '');
-        $desa = $validated['destination_desa'] ?: ($buyer->desa ?: '');
+        $deliveryMethod = ($validated['delivery_method'] ?? null) ?: 'pickup';
+        $kabupaten = ($validated['destination_kabupaten'] ?? null) ?: ($buyer->kabupaten ?: 'Cirebon');
+        $kecamatan = ($validated['destination_kecamatan'] ?? null) ?: ($buyer->kecamatan ?: '');
+        $desa = ($validated['destination_desa'] ?? null) ?: ($buyer->desa ?: '');
 
-        // Validasi izin metode transaksi dari masing-masing produk di keranjang
-        $productModels = Product::findMany(array_keys($cart));
+        // Validasi izin metode transaksi dari masing-masing produk yang dipesan
+        $productModels = Product::findMany(array_keys($itemsToProcess));
         foreach ($productModels as $pModel) {
             if (! $pModel->isDeliveryMethodAllowed($deliveryMethod)) {
                 return back()->withInput()->with('error', "Karya produk '{$pModel->product_name}' hanya melayani opsi: {$pModel->allowed_delivery_label}. Pilihan pengiriman saat ini tidak didukung.");
@@ -138,9 +372,10 @@ class BuyerOrderController extends Controller
 
         $shippingCost = Order::calculateEstimatedShipping($deliveryMethod, $kabupaten, $kecamatan);
 
+        $rawShippingAddr = trim((string) ($validated['shipping_address'] ?? ''));
         $shippingAddress = match ($deliveryMethod) {
-            'pickup' => 'Ambil Langsung di SMK Plus Al Hilal Arjawinangun' . (! empty($validated['shipping_address']) ? ' (' . $validated['shipping_address'] . ')' : ''),
-            default  => $validated['shipping_address'] ?: ($buyer->full_address ?: "Desa {$desa}, Kec. {$kecamatan}, Kab. {$kabupaten}"),
+            'pickup' => 'Ambil Langsung di SMK Plus Al Hilal Arjawinangun' . ($rawShippingAddr !== '' ? ' (' . $rawShippingAddr . ')' : ''),
+            default  => $rawShippingAddr !== '' ? $rawShippingAddr : ($buyer->full_address ?: "Desa {$desa}, Kec. {$kecamatan}, Kab. {$kabupaten}"),
         };
 
         $isBazaarOffline = $request->boolean('is_bazaar_offline');
@@ -156,7 +391,7 @@ class BuyerOrderController extends Controller
             $bazaarEvent = BazaarEvent::activeEvents()->first();
         }
 
-        $groupedByStore = collect($cart)->groupBy('store_id');
+        $groupedByStore = collect($itemsToProcess)->groupBy('store_id');
 
         DB::transaction(function () use ($groupedByStore, $buyer, $validated, $bazaarEvent, $isBazaarOffline, $deliveryMethod, $shippingCost, $kabupaten, $kecamatan, $desa, $shippingAddress) {
             foreach ($groupedByStore as $storeId => $items) {
@@ -222,7 +457,15 @@ class BuyerOrderController extends Controller
             }
         });
 
-        session()->forget('hilalkraft_cart');
+        // Hapus hanya item yang telah di-checkout dari keranjang session
+        if (! $isDirectBuy) {
+            $cart = session()->get('hilalkraft_cart', []);
+            foreach (array_keys($itemsToProcess) as $checkedOutId) {
+                unset($cart[$checkedOutId]);
+            }
+            session()->put('hilalkraft_cart', $cart);
+            session()->forget('hilalkraft_checkout_selected');
+        }
 
         return redirect()
             ->route('buyer.dashboard')
@@ -230,9 +473,8 @@ class BuyerOrderController extends Controller
     }
 
     /**
-     * Fungsi:
-     *   Membuat pesanan langsung dari halaman detail produk (Pesan Sekarang /
-     *   Beli di Bazar SMK) sehingga progres pesanan & rating bintang tetap tercatat.
+     * Membuat pesanan langsung dari halaman detail produk (Pesan Sekarang /
+     * Beli di Bazar SMK) sehingga progres pesanan & rating bintang tetap tercatat.
      */
     public function directOrder(Request $request, Product $product): RedirectResponse
     {
@@ -245,6 +487,7 @@ class BuyerOrderController extends Controller
             'is_bazaar_offline'     => ['nullable', 'boolean'],
             'bazaar_voucher_code'   => ['nullable', 'string', 'max:50'],
             'shipping_address'      => ['nullable', 'string', 'max:255'],
+            'notes'                 => ['nullable', 'string', 'max:500'],
         ]);
 
         $qty = max(1, (int) ($validated['quantity'] ?? 1));
@@ -254,10 +497,10 @@ class BuyerOrderController extends Controller
 
         $buyer = $request->user();
         $store = $product->store;
-        $deliveryMethod = $validated['delivery_method'] ?? 'pickup';
-        $kabupaten = $validated['destination_kabupaten'] ?: ($buyer->kabupaten ?: 'Cirebon');
-        $kecamatan = $validated['destination_kecamatan'] ?: ($buyer->kecamatan ?: '');
-        $desa = $validated['destination_desa'] ?: ($buyer->desa ?: '');
+        $deliveryMethod = ($validated['delivery_method'] ?? null) ?: 'pickup';
+        $kabupaten = ($validated['destination_kabupaten'] ?? null) ?: ($buyer->kabupaten ?: 'Cirebon');
+        $kecamatan = ($validated['destination_kecamatan'] ?? null) ?: ($buyer->kecamatan ?: '');
+        $desa = ($validated['destination_desa'] ?? null) ?: ($buyer->desa ?: '');
 
         if (! $product->isDeliveryMethodAllowed($deliveryMethod)) {
             return back()->withInput()->with('error', "Karya produk '{$product->product_name}' hanya melayani opsi: {$product->allowed_delivery_label}. Pilihan metode transaksi saat ini tidak didukung.");
@@ -286,9 +529,10 @@ class BuyerOrderController extends Controller
         $pricing = $store->calculateOrderPricing($subtotal, $buyer, $bazaarEvent, $isBazaarOffline);
         $finalTotal = max(0, (float) $pricing['total_price'] + (float) $shippingCost);
 
+        $rawShippingAddr = trim((string) ($validated['shipping_address'] ?? ''));
         $shippingAddress = match ($deliveryMethod) {
-            'pickup' => 'Ambil Langsung di SMK Plus Al Hilal Arjawinangun' . (! empty($validated['shipping_address']) ? ' (' . $validated['shipping_address'] . ')' : ''),
-            default  => $validated['shipping_address'] ?: ($buyer->full_address ?: "Desa {$desa}, Kec. {$kecamatan}, Kab. {$kabupaten}"),
+            'pickup' => 'Ambil Langsung di SMK Plus Al Hilal Arjawinangun' . ($rawShippingAddr !== '' ? ' (' . $rawShippingAddr . ')' : ''),
+            default  => $rawShippingAddr !== '' ? $rawShippingAddr : ($buyer->full_address ?: "Desa {$desa}, Kec. {$kecamatan}, Kab. {$kabupaten}"),
         };
 
         $courierName = match ($deliveryMethod) {
@@ -305,7 +549,9 @@ class BuyerOrderController extends Controller
                 : 'Pesanan dibuat. Silakan datang ke SMK Plus Al Hilal untuk serah terima barang.',
         };
 
-        $order = DB::transaction(function () use ($product, $store, $buyer, $qty, $pricing, $finalTotal, $shippingCost, $deliveryMethod, $courierName, $kabupaten, $kecamatan, $desa, $progressNote, $bazaarEvent, $isBazaarOffline, $shippingAddress) {
+        $notes = $validated['notes'] ?? null;
+
+        $order = DB::transaction(function () use ($product, $store, $buyer, $qty, $pricing, $finalTotal, $shippingCost, $deliveryMethod, $courierName, $kabupaten, $kecamatan, $desa, $progressNote, $bazaarEvent, $isBazaarOffline, $shippingAddress, $notes) {
             $lockedProduct = Product::lockForUpdate()->findOrFail($product->id);
 
             $order = Order::create([
@@ -331,6 +577,7 @@ class BuyerOrderController extends Controller
                 'progress_status'             => 'pesan',
                 'progress_note'               => $progressNote,
                 'shipping_address'            => $shippingAddress,
+                'notes'                       => $notes,
             ]);
 
             $order->items()->create([
@@ -349,12 +596,11 @@ class BuyerOrderController extends Controller
 
         return redirect()
             ->route('buyer.dashboard')
-            ->with('success', "Pesanan '{$product->product_name}' berhasil dicatat! Anda dapat melacak progres ({$order->delivery_method_short_label}), menghubungi WA penjual, dan memberi rating bintang.");
+            ->with('success', "Pesanan '{$product->product_name}' berhasil dicatat! Anda dapat melacak progres ({$order->delivery_method_short_label}), menghubungi WA penjual, dan memberi penilaian.");
     }
 
     /**
-     * Fungsi:
-     *   Pembeli mengonfirmasi bahwa barang sudah diterima (`progress_status = 'sampai'`).
+     * Pembeli mengonfirmasi bahwa barang sudah diterima (`progress_status = 'sampai'`).
      */
     public function markDelivered(Request $request, Order $order): RedirectResponse
     {
@@ -367,19 +613,11 @@ class BuyerOrderController extends Controller
             'progress_note'   => 'Barang telah dikonfirmasi sampai dan diterima oleh pembeli.',
         ]);
 
-        return back()->with('success', 'Alhamdulillah, pesanan telah ditandai Sampai! Silakan berikan rating bintang (★) untuk karya siswa ini.');
+        return back()->with('success', 'Alhamdulillah, pesanan telah ditandai Sampai! Silakan berikan penilaian untuk karya siswa ini.');
     }
 
     /**
-     * Fungsi:
-     *   Pembeli membatalkan pesanan yang belum dikemas (tahap 'pesan').
-     *
-     * Algoritma:
-     *   1. Pastikan pesanan milik pembeli yang sedang login.
-     *   2. Validasi tahap: hanya boleh dibatalkan jika belum dikemas ($order->effective_progress === 'pesan').
-     *   3. Jika sudah 'kemas', 'kirim', atau 'sampai', tolak pembatalan.
-     *   4. Kembalikan kuantitas stok produk yang sebelumnya dikurangi.
-     *   5. Ubah status pesanan menjadi 'cancelled' & progress_status 'dibatalkan'.
+     * Pembeli membatalkan pesanan yang belum dikemas (tahap 'pesan').
      */
     public function cancelOrder(Request $request, Order $order): RedirectResponse
     {
@@ -407,16 +645,7 @@ class BuyerOrderController extends Controller
     }
 
     /**
-     * Fungsi:
-     *   Pembeli memberikan Rating Bintang (★ 1..5) & Ulasan setelah transaksi.
-     *
-     * Algoritma:
-     *   1. Memastikan pesanan milik pembeli yang sedang login.
-     *   2. Menyimpan `buyer_rating`, `buyer_review`, dan `rated_at` pada `orders`
-     *      (sekaligus menandai `progress_status = 'sampai'` jika belum).
-     *   3. Menyinkronkan rating & ulasan ke tabel `product_comments` untuk setiap
-     *      produk di dalam pesanan agar rata-rata rating produk & toko di
-     *      katalog serta Grafik Toko Admin langsung ter-update.
+     * Pembeli memberikan Rating (1..5) & Ulasan setelah transaksi.
      */
     public function rateOrder(Request $request, Order $order): RedirectResponse
     {
@@ -456,11 +685,11 @@ class BuyerOrderController extends Controller
             );
         }
 
-        return back()->with('success', "Terima kasih! Rating {$validated['rating']} Bintang (★) Anda telah berhasil disimpan.");
+        return back()->with('success', "Terima kasih! Penilaian {$validated['rating']}/5 Anda telah berhasil disimpan.");
     }
 
     /**
-     * Fungsi: Memperbarui data profil akun pembeli (Nama, WhatsApp, Jenis Pembeli, Alamat Pengiriman).
+     * Memperbarui data profil akun pembeli (Nama, WhatsApp, Jenis Pembeli, Alamat Pengiriman).
      */
     public function updateProfile(Request $request): RedirectResponse
     {

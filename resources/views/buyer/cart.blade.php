@@ -1,464 +1,502 @@
 {{--
 ============================================================================
-VIEW: KERANJANG & CHECKOUT DENGAN SKEMA DISKON JENIS PEMBELI & BAZAR SMK
-      (buyer/cart.blade.php)
+VIEW: HALAMAN KERANJANG BELANJA TERPISAH (SEPERTI SHOPEE) (buyer/cart.blade.php)
 ============================================================================
 Fungsi:
-  Menampilkan daftar item di keranjang session, menghitung diskon otomatis
-  berdasarkan Jenis Pembeli (Pelajar / Keluarga SMK / Alumni / Umum),
-  menyediakan opsi Diskon Acara Bazar SMK (hadir langsung di bazar atau
-  kode voucher bazar), serta membuat pesanan dengan skema progres 4 tahap.
+  Menampilkan khusus daftar produk yang dimasukkan ke keranjang belanja,
+  dikelompokkan per toko, lengkap dengan fitur centang pilih produk,
+  pengaturan kuantitas (+/-), hapus produk, serta bar Checkout di bawah
+  untuk melanjutkan ke Halaman Transaksi (/pembeli/transaksi).
 ============================================================================
 --}}
 @extends('layouts.app')
 
-@section('title', 'Keranjang Belanja & Promo Bazar — hilalkraf SMK PAL')
+@section('title', 'Keranjang Belanja Saya — hilalkraf SMK PAL')
 
 @section('content')
 @php
     $user = auth()->user();
     $buyerSubtype = $user->user_subtype ?? 'umum';
-    $grandSubtotal = collect($cart)->sum(fn($i) => $i['price'] * $i['quantity']);
-    $firstActiveBazaar = isset($activeBazaarEvents) ? $activeBazaarEvents->first() : null;
+    $groupedCart = collect($cart)->groupBy('store_id');
+    $totalItemsCount = count($cart);
+    $fallbackImg = asset('images/logo-hilalkraf.jpg');
 @endphp
 
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-extrabold text-[#0F291E]">Keranjang Belanja Anda</h1>
-            <p class="text-xs text-slate-500 mt-0.5">
-                Status Pembeli: <strong class="text-[#0B6E4F]">{{ $user->subtype_label }}</strong> • Otomatis memperoleh diskon jenis pembeli & diskon bazar SMK.
-            </p>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-32 space-y-5">
+
+    <!-- Header Halaman Keranjang & Stepper Alur -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs">
+        <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-[#EBF9F2] text-[#0B6E4F] flex items-center justify-center shrink-0 border border-[#CDEFE0]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-lg sm:text-xl font-extrabold text-[#0F291E]">Keranjang Saya</h1>
+                    <span class="rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[11px] font-extrabold text-[#0B6E4F]">
+                        {{ $totalItemsCount }} Produk
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Pilih karya yang ingin Anda beli, atur jumlahnya, lalu klik <strong class="text-[#0F291E]">Checkout</strong> untuk masuk ke halaman transaksi.
+                </p>
+            </div>
         </div>
-        <a href="{{ route('buyer.dashboard') }}" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-[#0F291E] hover:border-[#0B6E4F] transition">
-            🚚 Lihat Progres Pesanan Saya →
-        </a>
+
+        <div class="flex items-center gap-2 shrink-0">
+            <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:border-[#0B6E4F] hover:text-[#0B6E4F] transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span>Tambah Produk Lain</span>
+            </a>
+            <a href="{{ route('buyer.dashboard') }}" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-[#0F291E] hover:border-[#0B6E4F] hover:text-[#0B6E4F] transition">
+                <svg class="w-3.5 h-3.5 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span>Pesanan Saya</span>
+            </a>
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div class="lg:col-span-7 space-y-4">
-            @forelse($cart as $id => $item)
+    @if($totalItemsCount > 0)
+        <!-- Form Utama Keranjang menuju Halaman Transaksi (/pembeli/transaksi) -->
+        <form action="{{ route('buyer.checkout.index') }}" method="GET" id="cart-selection-form" class="space-y-4">
+
+            <!-- Baris Judul Kolom (Tampilan Desktop ala Shopee) -->
+            <div class="hidden md:grid md:grid-cols-12 items-center bg-white rounded-xl border border-slate-200/80 px-5 py-3 text-xs font-bold text-slate-500 shadow-2xs">
+                <div class="col-span-5 flex items-center gap-3">
+                    <input type="checkbox" id="check-all-top" checked onchange="toggleSelectAllCart(this.checked)" class="w-4 h-4 rounded border-slate-300 text-[#0B6E4F] focus:ring-[#0B6E4F] cursor-pointer">
+                    <label for="check-all-top" class="cursor-pointer text-[#0F291E]">Produk Karya Siswa</label>
+                </div>
+                <div class="col-span-2 text-center">Harga Satuan</div>
+                <div class="col-span-2 text-center">Kuantitas</div>
+                <div class="col-span-2 text-center">Total Harga</div>
+                <div class="col-span-1 text-right">Aksi</div>
+            </div>
+
+            <!-- Daftar Item Dikelompokkan per Toko -->
+            @foreach($groupedCart as $storeId => $storeItems)
                 @php
-                    $itemStore = \App\Models\Store::find($item['store_id'] ?? null);
+                    $itemStore = $storesById[$storeId] ?? \App\Models\Store::find($storeId);
+                    $storeTitle = $itemStore?->store_name ?? ($storeItems->first()['store_name'] ?? 'Toko Karya Siswa');
                     $buyerDiscPct = $itemStore ? $itemStore->getDiscountPercentForBuyer($buyerSubtype) : 0;
                     $bazarExtraPct = $itemStore ? (int) ($itemStore->discount_bazar_extra ?? 0) : 0;
                 @endphp
-                <div class="bg-white rounded-2xl border border-slate-200/80 p-4 flex items-center justify-between gap-4 shadow-sm">
-                    <div class="space-y-1">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-[11px] font-extrabold text-[#0B6E4F]">🏪 {{ $item['store_name'] }}</span>
+
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden" data-store-group="{{ $storeId }}">
+                    <!-- Header Toko -->
+                    <div class="px-4 sm:px-5 py-3 bg-slate-50/70 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox"
+                                   checked
+                                   class="store-group-checkbox w-4 h-4 rounded border-slate-300 text-[#0B6E4F] focus:ring-[#0B6E4F] cursor-pointer"
+                                   data-store-id="{{ $storeId }}"
+                                   onchange="toggleStoreItems({{ $storeId }}, this.checked)">
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center rounded bg-[#0B6E4F] px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-white">
+                                    Toko Resmi
+                                </span>
+                                @if($itemStore)
+                                    <a href="{{ route('stores.show', $itemStore->slug) }}" class="text-xs sm:text-sm font-extrabold text-[#0F291E] hover:text-[#0B6E4F] transition flex items-center gap-1">
+                                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                                        </svg>
+                                        <span>{{ $storeTitle }}</span>
+                                    </a>
+                                @else
+                                    <span class="text-xs sm:text-sm font-extrabold text-[#0F291E]">{{ $storeTitle }}</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Badge Diskon Toko -->
+                        <div class="flex flex-wrap items-center gap-1.5">
                             @if($buyerDiscPct > 0)
-                                <span class="rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0B6E4F]">
-                                    🏷️ Diskon {{ $user->subtype_label }} {{ $buyerDiscPct }}%
+                                <span class="inline-flex items-center gap-1 rounded-full bg-[#EBF9F2] border border-[#CDEFE0] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0B6E4F]">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                    </svg>
+                                    <span>Diskon {{ $user->subtype_label }} {{ $buyerDiscPct }}%</span>
                                 </span>
                             @endif
                             @if($bazarExtraPct > 0)
-                                <span class="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800">
-                                    🎪 +{{ $bazarExtraPct }}% Ekstra Toko saat Bazar
+                                <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+                                    </svg>
+                                    <span>+{{ $bazarExtraPct }}% Ekstra Saat Bazar</span>
                                 </span>
                             @endif
                         </div>
-                        <h3 class="font-extrabold text-[#0F291E] text-sm">{{ $item['product_name'] }}</h3>
-                        <p class="text-xs text-slate-500">
-                            {{ $item['quantity'] }} × Rp {{ number_format($item['price'], 0, ',', '.') }}
-                            = <strong class="text-[#0F291E]">Rp {{ number_format($item['price'] * $item['quantity'], 0, ',', '.') }}</strong>
-                        </p>
-                    </div>
-                    <form action="{{ route('buyer.cart.remove', $id) }}" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="text-xs font-bold text-rose-600 hover:underline">Hapus</button>
-                    </form>
-                </div>
-            @empty
-                <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-3">
-                    <p class="text-sm font-bold text-[#0F291E]">Keranjang Anda masih kosong.</p>
-                    <a href="{{ route('home') }}" class="inline-block rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-bold text-white">
-                        Jelajahi Katalog Karya →
-                    </a>
-                </div>
-            @endforelse
-        </div>
-
-        <div class="lg:col-span-5">
-            @php
-                $cartProductIds = array_keys($cart);
-                $cartProducts = \App\Models\Product::with('store')->findMany($cartProductIds);
-                $canCartPickup = $cartProducts->every(fn($p) => $p->canPickup());
-                $canCartDelivery = $cartProducts->every(fn($p) => $p->canDeliveryLokal());
-                $canCartTransfer = $cartProducts->every(fn($p) => $p->canShippingTransfer());
-                $defaultCartMethod = $canCartPickup ? 'pickup' : ($canCartDelivery ? 'delivery_lokal' : 'shipping_transfer');
-                $cartStores = $cartProducts->pluck('store')->unique('id')->filter();
-            @endphp
-            <form action="{{ route('buyer.checkout') }}" method="POST" id="checkout-form" class="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-5 shadow-sm">
-                @csrf
-                <div class="flex items-center justify-between">
-                    <h2 class="text-base font-extrabold text-[#0F291E]">Metode Transaksi & Pengiriman</h2>
-                    <span class="text-[10px] text-slate-500">Sesuai ketentuan produk</span>
-                </div>
-
-                <!-- 3 Pilihan Skema Transaksi Sesuai Ketentuan -->
-                <div class="space-y-3">
-                    <!-- Opsi 1: Datang ke Sekolah -->
-                    <label class="delivery-option block rounded-2xl border-2 p-3.5 transition {{ $canCartPickup ? 'cursor-pointer border-[#0B6E4F] bg-[#EBF9F2]/30' : 'cursor-not-allowed opacity-50 border-slate-200 bg-slate-50' }}" data-method="pickup">
-                        <div class="flex items-start gap-3">
-                            <input type="radio" name="delivery_method" value="pickup" @checked($defaultCartMethod === 'pickup') @disabled(!$canCartPickup) class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('pickup')">
-                            <div class="flex-1 space-y-1">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-[#0F291E]">🏫 1. Datang ke Sekolah (Transaksi Langsung)</span>
-                                    <span class="text-[11px] font-extrabold text-[#0B6E4F] bg-[#EBF9F2] px-2 py-0.5 rounded-full">Rp 0 (Gratis)</span>
-                                </div>
-                                <p class="text-[11px] text-slate-600 leading-snug">
-                                    Transaksi & serah terima barang langsung di lingkungan SMK Plus Al Hilal / Stand Bazar.
-                                </p>
-                                <div class="flex items-center justify-between text-[10px]">
-                                    <div class="inline-flex items-center gap-1.5 font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
-                                        <span>Alur 3 Tahap:</span>
-                                        <span class="text-[#0B6E4F]">1. Dipesan</span> →
-                                        <span class="text-[#0B6E4F]">2. Dikemas</span> →
-                                        <span class="text-[#0B6E4F]">3. Diterima / Diambil</span>
-                                    </div>
-                                    @if(!$canCartPickup)
-                                        <span class="text-rose-600 font-bold">(Ada produk yang tidak melayani Datang Langsung)</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </label>
-
-                    <!-- Opsi 2: Delivery / Antar Langsung (Khusus Arjawinangun, Susukan, Kaliwedi) -->
-                    <label class="delivery-option block rounded-2xl border-2 p-3.5 transition {{ $canCartDelivery ? 'cursor-pointer border-slate-200 hover:border-slate-300 bg-white' : 'cursor-not-allowed opacity-50 border-slate-200 bg-slate-50' }}" data-method="delivery_lokal">
-                        <div class="flex items-start gap-3">
-                            <input type="radio" name="delivery_method" value="delivery_lokal" @checked($defaultCartMethod === 'delivery_lokal') @disabled(!$canCartDelivery) class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('delivery_lokal')">
-                            <div class="flex-1 space-y-1">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-[#0F291E]">🛵 2. Delivery / Antar Langsung</span>
-                                    <span class="text-[11px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">Rp 5.000</span>
-                                </div>
-                                <p class="text-[11px] text-slate-600 leading-snug">
-                                    Pengantaran langsung oleh kurir sekolah khusus wilayah <strong class="text-slate-900">Kec. Arjawinangun, Susukan, & Kaliwedi</strong> (Kab. Cirebon).
-                                </p>
-                                <div class="flex items-center justify-between text-[10px]">
-                                    <div class="inline-flex items-center gap-1.5 font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
-                                        <span>Alur 4 Tahap:</span>
-                                        <span class="text-blue-700">1. Dipesan</span> →
-                                        <span class="text-blue-700">2. Dikemas</span> →
-                                        <span class="text-blue-700">3. Dikirim</span> →
-                                        <span class="text-blue-700">4. Diterima</span>
-                                    </div>
-                                    @if(!$canCartDelivery)
-                                        <span class="text-rose-600 font-bold">(Ada produk yang hanya melayani Datang Langsung)</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </label>
-
-                    <!-- Opsi 3: Transfer Antar (Ekspedisi Luar Wilayah / Luar Kota) -->
-                    <label class="delivery-option block rounded-2xl border-2 p-3.5 transition {{ $canCartTransfer ? 'cursor-pointer border-slate-200 hover:border-slate-300 bg-white' : 'cursor-not-allowed opacity-50 border-slate-200 bg-slate-50' }}" data-method="shipping_transfer">
-                        <div class="flex items-start gap-3">
-                            <input type="radio" name="delivery_method" value="shipping_transfer" @checked($defaultCartMethod === 'shipping_transfer') @disabled(!$canCartTransfer) class="mt-1 text-[#0B6E4F] focus:ring-[#0B6E4F]" onchange="updateDeliveryUI('shipping_transfer')">
-                            <div class="flex-1 space-y-1">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-[#0F291E]">📦 3. Transfer Antar (Luar Wilayah / Ekspedisi)</span>
-                                    <span id="transfer-badge-cost" class="text-[11px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">Ongkir Kurir Langsung</span>
-                                </div>
-                                <p class="text-[11px] text-amber-950 font-medium leading-snug">
-                                    Biaya ongkir ditanggung pembeli, pembayaran langsung dibayarkan kepada kurir. Pembeli hanya mentransfer biaya karya ke rekening / e-wallet toko.
-                                </p>
-                                <div class="flex items-center justify-between text-[10px]">
-                                    <div class="inline-flex items-center gap-1.5 font-bold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md mt-0.5">
-                                        <span>Alur 4 Tahap:</span>
-                                        <span class="text-amber-800">1. Dipesan</span> →
-                                        <span class="text-amber-800">2. Dikemas</span> →
-                                        <span class="text-amber-800">3. Dikirim</span> →
-                                        <span class="text-amber-800">4. Diterima</span>
-                                    </div>
-                                    @if(!$canCartTransfer)
-                                        <span class="text-rose-600 font-bold">(Ada produk yang hanya melayani Datang Langsung)</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-
-                <!-- Kotak Rekening & E-Wallet Toko (Ditampilkan saat Transfer Antar dipilih) -->
-                <div id="cart-transfer-bank-box" class="hidden rounded-2xl bg-amber-50/80 border border-amber-200 p-4 space-y-3 text-xs text-amber-950">
-                    <div class="flex items-center justify-between">
-                        <span class="font-extrabold text-amber-900 flex items-center gap-1.5">
-                            <span>💳</span>
-                            <span>Informasi Rekening & E-Wallet Pembayaran Toko</span>
-                        </span>
-                        <span class="text-[10px] text-amber-800 font-bold bg-amber-200/60 px-2 py-0.5 rounded-full">Transfer Antar</span>
                     </div>
 
-                    @foreach($cartStores as $cStore)
-                        <div class="bg-white rounded-xl p-3 border border-amber-200 space-y-2">
-                            <span class="text-xs font-extrabold text-[#0F291E] block">🏪 Toko: {{ $cStore->store_name }}</span>
-                            @if($cStore->has_bank_account)
-                                <div class="flex items-center justify-between text-slate-700 bg-slate-50 rounded-lg p-2">
-                                    <div>
-                                        <span class="text-[10px] text-slate-400 block font-bold uppercase">Bank {{ $cStore->bank_name }}</span>
-                                        <span class="font-mono font-bold text-xs text-[#0F291E]">{{ $cStore->bank_account_number }}</span>
-                                        <span class="text-[10px] text-slate-500 block">a.n. {{ $cStore->bank_account_name }}</span>
+                    <!-- Daftar Produk di Toko Ini -->
+                    <div class="divide-y divide-slate-100">
+                        @foreach($storeItems as $item)
+                            @php
+                                $pid = (int) $item['product_id'];
+                                $imgUrl = \App\Models\Product::resolveImageUrl($item['image'] ?? '');
+                                $unitPrice = (float) $item['price'];
+                                $qty = max(1, (int) $item['quantity']);
+                                $maxStock = max(1, (int) ($item['stock'] ?? 99));
+                                $lineTotal = $unitPrice * $qty;
+                                $discAmountPerUnit = $buyerDiscPct > 0 ? round($unitPrice * ($buyerDiscPct / 100)) : 0;
+                                $afterDiscUnit = max(0, $unitPrice - $discAmountPerUnit);
+                            @endphp
+
+                            <div class="p-4 sm:px-5 sm:py-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center hover:bg-slate-50/40 transition cart-item-row"
+                                 data-product-id="{{ $pid }}"
+                                 data-store-id="{{ $storeId }}"
+                                 data-unit-price="{{ $unitPrice }}"
+                                 data-disc-pct="{{ $buyerDiscPct }}"
+                                 data-max-stock="{{ $maxStock }}">
+
+                                <!-- Kolom 1: Checkbox + Foto + Nama Produk -->
+                                <div class="md:col-span-5 flex items-start sm:items-center gap-3">
+                                    <input type="checkbox"
+                                           name="selected_items[]"
+                                           value="{{ $pid }}"
+                                           checked
+                                           data-store-id="{{ $storeId }}"
+                                           onchange="onItemCheckboxChange()"
+                                           class="cart-item-checkbox mt-2 sm:mt-0 w-4 h-4 rounded border-slate-300 text-[#0B6E4F] focus:ring-[#0B6E4F] cursor-pointer shrink-0">
+
+                                    <a href="{{ !empty($item['slug']) ? route('products.show', $item['slug']) : '#' }}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 block">
+                                        <img src="{{ $imgUrl }}"
+                                             alt="{{ $item['product_name'] }}"
+                                             class="w-full h-full object-cover"
+                                             onerror="this.src='{{ $fallbackImg }}'">
+                                    </a>
+
+                                    <div class="min-w-0 flex-1 space-y-1">
+                                        <a href="{{ !empty($item['slug']) ? route('products.show', $item['slug']) : '#' }}" class="text-xs sm:text-sm font-extrabold text-[#0F291E] hover:text-[#0B6E4F] line-clamp-2 transition">
+                                            {{ $item['product_name'] }}
+                                        </a>
+                                        @if(!empty($item['category']))
+                                            <span class="inline-block rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                                                Kategori: {{ $item['category'] }}
+                                            </span>
+                                        @endif
+                                        <p class="text-[10px] text-slate-400">Stok tersedia: {{ $maxStock }} unit</p>
                                     </div>
-                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $cStore->bank_account_number }}'); alert('Nomor Rekening disalin!');" class="rounded bg-amber-100 hover:bg-amber-200 px-2 py-1 text-[10px] font-bold text-amber-900 transition">
-                                        Salin
+                                </div>
+
+                                <!-- Kolom 2: Harga Satuan -->
+                                <div class="md:col-span-2 flex md:flex-col items-center justify-between md:justify-center text-xs">
+                                    <span class="text-slate-400 md:hidden">Harga Satuan:</span>
+                                    <div class="text-right md:text-center">
+                                        @if($buyerDiscPct > 0)
+                                            <span class="text-[11px] text-slate-400 line-through block">Rp {{ number_format($unitPrice, 0, ',', '.') }}</span>
+                                            <span class="font-bold text-[#0F291E]">Rp {{ number_format($afterDiscUnit, 0, ',', '.') }}</span>
+                                        @else
+                                            <span class="font-bold text-[#0F291E]">Rp {{ number_format($unitPrice, 0, ',', '.') }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Kolom 3: Pengaturan Kuantitas (+/-) -->
+                                <div class="md:col-span-2 flex items-center justify-between md:justify-center">
+                                    <span class="text-xs text-slate-400 md:hidden">Kuantitas:</span>
+                                    <div class="inline-flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
+                                        <button type="button"
+                                                onclick="changeCartItemQty({{ $pid }}, -1)"
+                                                class="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold text-sm transition">
+                                            −
+                                        </button>
+                                        <input type="number"
+                                               name="quantities[{{ $pid }}]"
+                                               id="cart-qty-{{ $pid }}"
+                                               value="{{ $qty }}"
+                                               min="1"
+                                               max="{{ $maxStock }}"
+                                               onchange="onCartQtyInputChange({{ $pid }}, this.value)"
+                                               class="w-11 h-8 text-center text-xs font-extrabold text-[#0F291E] border-x border-slate-200 focus:outline-none">
+                                        <button type="button"
+                                                onclick="changeCartItemQty({{ $pid }}, 1)"
+                                                class="w-8 h-8 flex items-center justify-center text-[#0B6E4F] hover:bg-emerald-50 font-bold text-sm transition">
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Kolom 4: Total Harga per Item -->
+                                <div class="md:col-span-2 flex items-center justify-between md:justify-center">
+                                    <span class="text-xs text-slate-400 md:hidden">Total Harga:</span>
+                                    <span id="item-subtotal-{{ $pid }}" class="text-xs sm:text-sm font-extrabold text-[#0B6E4F]">
+                                        Rp {{ number_format($lineTotal, 0, ',', '.') }}
+                                    </span>
+                                </div>
+
+                                <!-- Kolom 5: Tombol Hapus -->
+                                <div class="md:col-span-1 flex items-center justify-end border-t md:border-t-0 pt-2 md:pt-0 border-slate-100">
+                                    <button type="button"
+                                            onclick="removeSingleCartItem({{ $pid }})"
+                                            class="inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline transition">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                        <span>Hapus</span>
                                     </button>
                                 </div>
-                            @endif
-                            @if($cStore->has_ewallet_account)
-                                <div class="flex items-center justify-between text-slate-700 bg-slate-50 rounded-lg p-2">
-                                    <div>
-                                        <span class="text-[10px] text-slate-400 block font-bold uppercase">E-Wallet {{ $cStore->ewallet_name }}</span>
-                                        <span class="font-mono font-bold text-xs text-[#0F291E]">{{ $cStore->ewallet_account_number }}</span>
-                                        <span class="text-[10px] text-slate-500 block">a.n. {{ $cStore->ewallet_account_name }}</span>
-                                    </div>
-                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $cStore->ewallet_account_number }}'); alert('Nomor E-Wallet disalin!');" class="rounded bg-amber-100 hover:bg-amber-200 px-2 py-1 text-[10px] font-bold text-amber-900 transition">
-                                        Salin
-                                    </button>
-                                </div>
-                            @endif
-                            @if(!$cStore->has_payment_account)
-                                <p class="text-[10px] text-slate-500 italic">
-                                    Nomor rekening toko akan diberikan melalui konfirmasi WhatsApp penjual.
-                                </p>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-
-                <!-- Formulir Alamat & Lokasi Tujuan -->
-                <div id="address-container" class="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-extrabold text-[#0F291E]" id="address-section-title">📍 Lokasi Penyerahan / Tujuan</span>
-                        <span class="text-[10px] text-slate-500" id="address-hint">Sekolah SMK Plus Al Hilal</span>
+                            </div>
+                        @endforeach
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2" id="geo-district-container">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 mb-0.5">Kabupaten / Kota</label>
-                            <input type="text" name="destination_kabupaten" id="dest-kabupaten" value="{{ old('destination_kabupaten', $user->kabupaten ?: 'Cirebon') }}" placeholder="Cirebon" oninput="calculateLiveOngkir()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 mb-0.5">Kecamatan</label>
-                            <input type="text" name="destination_kecamatan" id="dest-kecamatan" value="{{ old('destination_kecamatan', $user->kecamatan ?: 'Arjawinangun') }}" placeholder="Arjawinangun / Susukan / Kaliwedi" oninput="calculateLiveOngkir()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
-                        </div>
-                    </div>
-
-                    <!-- Shortcut cepat 3 kecamatan delivery lokal -->
-                    <div id="local-district-shortcuts" class="hidden text-[11px] text-slate-600 space-y-1">
-                        <div class="text-[10px] font-bold text-blue-900">Pilih cepat kecamatan terlayani:</div>
-                        <div class="flex flex-wrap gap-1.5">
-                            <button type="button" onclick="setKecamatan('Arjawinangun')" class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-[10px] font-extrabold hover:bg-blue-200 transition">Kec. Arjawinangun</button>
-                            <button type="button" onclick="setKecamatan('Susukan')" class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-[10px] font-extrabold hover:bg-blue-200 transition">Kec. Susukan</button>
-                            <button type="button" onclick="setKecamatan('Kaliwedi')" class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-[10px] font-extrabold hover:bg-blue-200 transition">Kec. Kaliwedi</button>
-                        </div>
-                    </div>
-
-                    <!-- Peringatan Wilayah jika Delivery Lokal tidak cocok -->
-                    <div id="local-delivery-warning" class="hidden rounded-xl bg-rose-50 border border-rose-200 p-2.5 text-[11px] text-rose-800">
-                        ⚠️ <strong>Perhatian:</strong> Delivery Antar Langsung hanya melayani 3 kecamatan di Kab. Cirebon: <strong>Arjawinangun, Susukan, dan Kaliwedi</strong>. Untuk kecamatan lain, silakan pilih <em>Transfer Antar</em> atau <em>Datang ke Sekolah</em>.
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-700 mb-0.5" id="lbl-shipping-address">Alamat Detail / Ruang Penyerahan *</label>
-                        <input type="text" name="shipping_address" id="input-shipping-address" value="{{ old('shipping_address', $user->full_address !== 'Wilayah belum dilengkapi' ? $user->full_address : 'Stand Bazar / Kampus SMK Plus Al Hilal') }}" required placeholder="Contoh: Stand Bazar SMK Plus Al Hilal / Ruang Kelas XI TKJ / Jl. Nyi Mas Gandasari No..." class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium focus:border-[#0B6E4F] focus:outline-none">
-                    </div>
-                </div>
-
-                <!-- Skema Diskon Bazar / Event SMK -->
-                <div class="rounded-2xl bg-amber-50/70 border border-amber-200 p-4 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-extrabold text-amber-900">🎪 Skema Promo Bazar & Event SMK</span>
-                        @if($firstActiveBazaar)
-                            <span class="rounded-full bg-amber-200/80 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
-                                Diskon Event {{ $firstActiveBazaar->discount_percent }}%
-                            </span>
-                        @endif
-                    </div>
-
-                    <label class="flex items-start gap-2.5 cursor-pointer">
-                        <input type="checkbox" name="is_bazaar_offline" value="1" class="mt-0.5 rounded border-amber-400 text-[#0B6E4F] focus:ring-[#0B6E4F]">
-                        <span class="text-xs text-amber-950 leading-snug">
-                            <strong>Saya membeli & hadir langsung pada Acara Bazar SMK</strong>
-                            <span class="block text-[11px] text-amber-800/90">Otomatis mendapatkan potongan Diskon Acara Bazar SMK & Diskon Ekstra Stand Toko!</span>
-                        </span>
-                    </label>
-
-                    <div>
-                        <label class="block text-[11px] font-bold text-amber-900 mb-1">Kode Voucher Bazar / Event SMK (Opsional)</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="bazaar-code-input" name="bazaar_voucher_code" value="{{ old('bazaar_voucher_code', $firstActiveBazaar?->voucher_code) }}" placeholder="Contoh: BAZARSMKPAL" class="flex-1 rounded-xl border border-amber-300 bg-white px-3 py-1.5 text-xs font-mono font-bold uppercase text-amber-900 focus:outline-none">
-                            @if($firstActiveBazaar)
-                                <button type="button" onclick="document.getElementById('bazaar-code-input').value='{{ $firstActiveBazaar->voucher_code }}'" class="rounded-xl bg-amber-500/20 border border-amber-400 px-3 py-1.5 text-[11px] font-extrabold text-amber-900 hover:bg-amber-500/30 transition">
-                                    Pakai {{ $firstActiveBazaar->voucher_code }}
-                                </button>
-                            @endif
+                    <!-- Footer Voucher / Info Diskon Toko -->
+                    <div class="px-4 sm:px-5 py-2.5 bg-[#F8FAFC] border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                            </svg>
+                            <span>Status Anda: <strong class="text-[#0B6E4F]">{{ $user->subtype_label }}</strong> — Voucher Bazar & metode pengiriman dipilih pada halaman transaksi berikutnya.</span>
                         </div>
                     </div>
                 </div>
+            @endforeach
 
-                <div>
-                    <label class="block text-xs font-bold text-[#0F291E] mb-1">Catatan Tambahan untuk Penjual</label>
-                    <textarea name="notes" rows="2" placeholder="Contoh: Titipkan di pos satpam / hubungi WA saat berangkat..." class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3.5 py-2 text-xs focus:bg-white focus:border-[#0B6E4F] focus:outline-none"></textarea>
+            <!-- Sticky Bottom Bar Checkout (Gaya Shopee) -->
+            <div class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_24px_rgba(0,0,0,0.07)]">
+                <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+                    <!-- Kiri: Pilih Semua & Hapus -->
+                    <div class="flex items-center gap-4">
+                        <label class="inline-flex items-center gap-2.5 cursor-pointer text-xs sm:text-sm font-bold text-[#0F291E]">
+                            <input type="checkbox" id="check-all-bottom" checked onchange="toggleSelectAllCart(this.checked)" class="w-4 h-4 rounded border-slate-300 text-[#0B6E4F] focus:ring-[#0B6E4F] cursor-pointer">
+                            <span>Pilih Semua (<span id="selected-count-label">{{ $totalItemsCount }}</span>)</span>
+                        </label>
+                        <button type="button" onclick="deleteSelectedCartItems()" class="text-xs font-bold text-rose-600 hover:underline hidden sm:inline-block">
+                            Hapus Produk Terpilih
+                        </button>
+                    </div>
+
+                    <!-- Kanan: Total Harga & Tombol Checkout -->
+                    <div class="flex items-center gap-4 sm:gap-6 ml-auto">
+                        <div class="text-right">
+                            <div class="flex items-baseline justify-end gap-1.5">
+                                <span class="text-xs text-slate-500 font-semibold">Total (<span id="checkout-qty-count">{{ $totalItemsCount }}</span> produk):</span>
+                                <span id="cart-selected-total" class="text-lg sm:text-xl font-black text-[#0B6E4F]">Rp 0</span>
+                            </div>
+                            <p id="cart-saved-info" class="text-[11px] font-bold text-amber-700 hidden">
+                                Estimasi hemat diskon pembeli: <span id="cart-saved-amount">Rp 0</span>
+                            </p>
+                        </div>
+
+                        <button type="submit"
+                                id="btn-proceed-checkout"
+                                class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-95 text-white px-6 sm:px-8 py-3 text-xs sm:text-sm font-extrabold shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span>Checkout</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
+            </div>
+        </form>
 
-                <div class="pt-3 border-t border-slate-100 space-y-1.5 text-xs">
-                    <div class="flex items-center justify-between text-slate-500">
-                        <span>Subtotal Produk</span>
-                        <span class="font-bold text-[#0F291E]">Rp {{ number_format($grandSubtotal, 0, ',', '.') }}</span>
-                    </div>
-                    <div class="flex items-center justify-between text-slate-500">
-                        <span id="ongkir-label-text">Ongkos Kirim (Datang ke Sekolah)</span>
-                        <span class="font-bold text-[#0B6E4F]" id="ongkir-display-text">Rp 0 (Gratis)</span>
-                    </div>
-                    <div class="flex items-center justify-between text-sm font-extrabold text-[#0F291E] pt-1 border-t border-dashed border-slate-200">
-                        <span>Total Pembayaran</span>
-                        <span class="text-base text-[#0B6E4F]" id="grand-total-text">Rp {{ number_format($grandSubtotal, 0, ',', '.') }}</span>
-                    </div>
-                    <p class="text-[11px] text-slate-500 font-semibold pt-1">
-                        ✓ Diskon Jenis Pembeli ({{ $user->subtype_label }}) & Diskon Bazar SMK otomatis dihitung saat konfirmasi.
-                    </p>
-                </div>
+        <!-- Form Tersembunyi untuk Hapus Item Tunggal -->
+        <form id="single-remove-form" method="POST" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
 
-                <button type="submit" id="btn-submit-order" @disabled(empty($cart)) class="w-full rounded-xl bg-[#0B6E4F] py-3 text-xs sm:text-sm font-bold text-white hover:bg-[#08583F] transition shadow-sm disabled:opacity-50">
-                    ✓ Konfirmasi Pesanan & Pantau Progres
-                </button>
-            </form>
+        <!-- Form Tersembunyi untuk Hapus Item Terpilih -->
+        <form id="bulk-remove-form" action="{{ route('buyer.cart.remove-selected') }}" method="POST" class="hidden">
+            @csrf
+            <div id="bulk-remove-inputs"></div>
+        </form>
+    @else
+        <!-- Tampilan Jika Keranjang Kosong -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 p-10 sm:p-14 text-center max-w-lg mx-auto my-6 space-y-4 shadow-2xs">
+            <div class="w-16 h-16 rounded-2xl bg-[#EBF9F2] text-[#0B6E4F] flex items-center justify-center mx-auto">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                </svg>
+            </div>
+            <div class="space-y-1">
+                <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Keranjang Belanja Anda Masih Kosong</h2>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Yuk, jelajahi berbagai karya kreatif buatan siswa & guru SMK Plus Al Hilal dan masukkan produk favoritmu ke keranjang.
+                </p>
+            </div>
+            <div class="pt-2">
+                <a href="{{ route('home') }}" class="inline-flex items-center gap-2 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] px-6 py-3 text-xs sm:text-sm font-extrabold text-white shadow-sm transition">
+                    <span>Jelajahi Katalog Karya</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </a>
+            </div>
         </div>
-    </div>
+    @endif
 </div>
 
 <script>
-    const subtotalBase = {{ (float) $grandSubtotal }};
-    const validLocalDistricts = ['arjawinangun', 'susukan', 'kaliwedi'];
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-    function formatRupiah(amount) {
-        return 'Rp ' + Number(amount).toLocaleString('id-ID');
+    function formatRupiah(num) {
+        return 'Rp ' + Math.round(Number(num || 0)).toLocaleString('id-ID');
     }
 
-    function getSelectedDeliveryMethod() {
-        const radios = document.getElementsByName('delivery_method');
-        for (let r of radios) {
-            if (r.checked) return r.value;
-        }
-        return 'pickup';
-    }
+    function recalculateCartSelection() {
+        const rows = document.querySelectorAll('.cart-item-row');
+        let selectedProductsCount = 0;
+        let grossSubtotal = 0;
+        let estimatedSavings = 0;
 
-    function setKecamatan(name) {
-        const kecInput = document.getElementById('dest-kecamatan');
-        const kabInput = document.getElementById('dest-kabupaten');
-        if (kecInput) kecInput.value = name;
-        if (kabInput && !kabInput.value) kabInput.value = 'Cirebon';
-        calculateLiveOngkir();
-    }
+        rows.forEach(row => {
+            const pid = row.getAttribute('data-product-id');
+            const unitPrice = parseFloat(row.getAttribute('data-unit-price') || '0');
+            const discPct = parseFloat(row.getAttribute('data-disc-pct') || '0');
+            const checkbox = row.querySelector('.cart-item-checkbox');
+            const qtyInput = document.getElementById('cart-qty-' + pid);
+            const qty = qtyInput ? Math.max(1, parseInt(qtyInput.value || '1', 10)) : 1;
 
-    function updateDeliveryUI(method) {
-        // Highlight active card
-        document.querySelectorAll('.delivery-option').forEach(el => {
-            if (el.getAttribute('data-method') === method) {
-                el.classList.add('border-[#0B6E4F]', 'bg-[#EBF9F2]/30');
-                el.classList.remove('border-slate-200', 'bg-white');
-            } else {
-                el.classList.remove('border-[#0B6E4F]', 'bg-[#EBF9F2]/30');
-                el.classList.add('border-slate-200', 'bg-white');
+            const itemLineTotal = unitPrice * qty;
+            const subtotalEl = document.getElementById('item-subtotal-' + pid);
+            if (subtotalEl) {
+                subtotalEl.textContent = formatRupiah(itemLineTotal);
+            }
+
+            if (checkbox && checkbox.checked) {
+                selectedProductsCount++;
+                grossSubtotal += itemLineTotal;
+                if (discPct > 0) {
+                    estimatedSavings += Math.round(itemLineTotal * (discPct / 100));
+                }
             }
         });
 
-        const addressTitle = document.getElementById('address-section-title');
-        const addressHint = document.getElementById('address-hint');
-        const addressLabel = document.getElementById('lbl-shipping-address');
-        const addressInput = document.getElementById('input-shipping-address');
-        const shortcuts = document.getElementById('local-district-shortcuts');
-        const warning = document.getElementById('local-delivery-warning');
-        const submitBtn = document.getElementById('btn-submit-order');
-        const bankBox = document.getElementById('cart-transfer-bank-box');
+        // Sinkronisasi checkbox per toko
+        document.querySelectorAll('.store-group-checkbox').forEach(storeCb => {
+            const storeId = storeCb.getAttribute('data-store-id');
+            const storeItemCbs = document.querySelectorAll(`.cart-item-checkbox[data-store-id="${storeId}"]`);
+            const allStoreChecked = Array.from(storeItemCbs).every(cb => cb.checked);
+            storeCb.checked = storeItemCbs.length > 0 && allStoreChecked;
+        });
 
-        if (method === 'pickup') {
-            addressTitle.textContent = '📍 Lokasi Pengambilan di Sekolah';
-            addressHint.textContent = 'Kampus SMK Plus Al Hilal / Bazar';
-            addressLabel.textContent = 'Stand / Ruang Penyerahan di Sekolah *';
-            if (addressInput && (!addressInput.value || addressInput.value.includes('Jl.'))) {
-                addressInput.value = 'Stand Bazar / Kampus SMK Plus Al Hilal';
-            }
-            if (shortcuts) shortcuts.classList.add('hidden');
-            if (warning) warning.classList.add('hidden');
-            if (bankBox) bankBox.classList.add('hidden');
-            if (submitBtn) submitBtn.disabled = false;
-        } else if (method === 'delivery_lokal') {
-            addressTitle.textContent = '📍 Alamat Delivery (Khusus Cirebon Barat)';
-            addressHint.textContent = 'Kec. Arjawinangun, Susukan, Kaliwedi';
-            addressLabel.textContent = 'Alamat Lengkap Pengantaran *';
-            if (shortcuts) shortcuts.classList.remove('hidden');
-            if (bankBox) bankBox.classList.add('hidden');
-        } else {
-            // shipping_transfer
-            addressTitle.textContent = '📍 Alamat Ekspedisi (Transfer Antar)';
-            addressHint.textContent = 'Seluruh Indonesia';
-            addressLabel.textContent = 'Alamat Lengkap Pengiriman Ekspedisi *';
-            if (shortcuts) shortcuts.classList.add('hidden');
-            if (warning) warning.classList.add('hidden');
-            if (bankBox) bankBox.classList.remove('hidden');
-            if (submitBtn) submitBtn.disabled = false;
-        }
+        // Sinkronisasi checkbox Pilih Semua
+        const allItemCbs = document.querySelectorAll('.cart-item-checkbox');
+        const allChecked = allItemCbs.length > 0 && Array.from(allItemCbs).every(cb => cb.checked);
+        const topAll = document.getElementById('check-all-top');
+        const bottomAll = document.getElementById('check-all-bottom');
+        if (topAll) topAll.checked = allChecked;
+        if (bottomAll) bottomAll.checked = allChecked;
 
-        calculateLiveOngkir();
-    }
+        // Update UI Bar Bawah
+        const countLabel = document.getElementById('selected-count-label');
+        const checkoutCount = document.getElementById('checkout-qty-count');
+        const totalEl = document.getElementById('cart-selected-total');
+        const savedInfo = document.getElementById('cart-saved-info');
+        const savedAmount = document.getElementById('cart-saved-amount');
+        const checkoutBtn = document.getElementById('btn-proceed-checkout');
 
-    function calculateLiveOngkir() {
-        const method = getSelectedDeliveryMethod();
-        const kabInput = document.getElementById('dest-kabupaten');
-        const kecInput = document.getElementById('dest-kecamatan');
-        const warning = document.getElementById('local-delivery-warning');
-        const submitBtn = document.getElementById('btn-submit-order');
-        const ongkirLabel = document.getElementById('ongkir-label-text');
-        const ongkirDisplay = document.getElementById('ongkir-display-text');
-        const grandTotalDisplay = document.getElementById('grand-total-text');
+        if (countLabel) countLabel.textContent = selectedProductsCount;
+        if (checkoutCount) checkoutCount.textContent = selectedProductsCount;
+        if (totalEl) totalEl.textContent = formatRupiah(Math.max(0, grossSubtotal - estimatedSavings));
 
-        let ongkir = 0;
-
-        if (method === 'pickup') {
-            ongkir = 0;
-            ongkirLabel.textContent = 'Ongkos Kirim (Datang ke Sekolah)';
-            ongkirDisplay.textContent = 'Rp 0 (Gratis)';
-            ongkirDisplay.className = 'font-bold text-[#0B6E4F]';
-        } else if (method === 'delivery_lokal') {
-            ongkir = 5000;
-            ongkirLabel.textContent = 'Ongkos Kirim (Delivery Lokal)';
-            ongkirDisplay.textContent = formatRupiah(ongkir);
-            ongkirDisplay.className = 'font-bold text-blue-700';
-
-            const cleanKec = (kecInput ? kecInput.value : '').toLowerCase().trim();
-            const isMatch = validLocalDistricts.some(d => cleanKec.includes(d));
-
-            if (!isMatch && cleanKec.length > 0) {
-                warning.classList.remove('hidden');
-                if (submitBtn) submitBtn.disabled = true;
+        if (savedInfo && savedAmount) {
+            if (estimatedSavings > 0) {
+                savedAmount.textContent = formatRupiah(estimatedSavings);
+                savedInfo.classList.remove('hidden');
             } else {
-                warning.classList.add('hidden');
-                if (submitBtn) submitBtn.disabled = false;
+                savedInfo.classList.add('hidden');
             }
-        } else {
-            // shipping_transfer (Luar Wilayah)
-            ongkir = 0; // Biaya ongkir tidak ditambahkan ke tagihan toko
-            ongkirLabel.textContent = 'Ongkos Kirim (Transfer Antar / Luar Wilayah)';
-            ongkirDisplay.innerHTML = '<span class="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md inline-block text-right">Biaya ongkir ditanggung pembeli, pembayaran langsung dibayarkan kepada kurir.</span>';
-            ongkirDisplay.className = '';
-            const badgeCost = document.getElementById('transfer-badge-cost');
-            if (badgeCost) badgeCost.textContent = 'Ongkir Langsung ke Kurir';
-            if (warning) warning.classList.add('hidden');
-            if (submitBtn) submitBtn.disabled = false;
         }
 
-        const grandTotal = Math.max(0, subtotalBase + ongkir);
-        grandTotalDisplay.textContent = formatRupiah(grandTotal);
+        if (checkoutBtn) {
+            checkoutBtn.disabled = selectedProductsCount === 0;
+        }
     }
 
-    // Inisialisasi awal saat halaman dibuka
+    function toggleSelectAllCart(checked) {
+        document.querySelectorAll('.cart-item-checkbox').forEach(cb => {
+            cb.checked = checked;
+        });
+        document.querySelectorAll('.store-group-checkbox').forEach(cb => {
+            cb.checked = checked;
+        });
+        recalculateCartSelection();
+    }
+
+    function toggleStoreItems(storeId, checked) {
+        document.querySelectorAll(`.cart-item-checkbox[data-store-id="${storeId}"]`).forEach(cb => {
+            cb.checked = checked;
+        });
+        recalculateCartSelection();
+    }
+
+    function onItemCheckboxChange() {
+        recalculateCartSelection();
+    }
+
+    function changeCartItemQty(pid, delta) {
+        const input = document.getElementById('cart-qty-' + pid);
+        if (!input) return;
+        const max = parseInt(input.getAttribute('max') || '99', 10);
+        let next = parseInt(input.value || '1', 10) + delta;
+        if (next < 1) next = 1;
+        if (next > max) next = max;
+        input.value = next;
+        syncCartQtyToServer(pid, next);
+        recalculateCartSelection();
+    }
+
+    function onCartQtyInputChange(pid, val) {
+        const input = document.getElementById('cart-qty-' + pid);
+        if (!input) return;
+        const max = parseInt(input.getAttribute('max') || '99', 10);
+        let next = parseInt(val || '1', 10);
+        if (isNaN(next) || next < 1) next = 1;
+        if (next > max) next = max;
+        input.value = next;
+        syncCartQtyToServer(pid, next);
+        recalculateCartSelection();
+    }
+
+    function syncCartQtyToServer(pid, qty) {
+        fetch(`/pembeli/keranjang/${pid}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({ quantity: qty })
+        }).catch(() => {});
+    }
+
+    function removeSingleCartItem(pid) {
+        const form = document.getElementById('single-remove-form');
+        if (!form) return;
+        form.action = `/pembeli/keranjang/${pid}`;
+        form.submit();
+    }
+
+    function deleteSelectedCartItems() {
+        const checked = Array.from(document.querySelectorAll('.cart-item-checkbox:checked')).map(cb => cb.value);
+        if (checked.length === 0) {
+            alert('Pilih minimal 1 produk yang ingin dihapus.');
+            return;
+        }
+        const container = document.getElementById('bulk-remove-inputs');
+        const form = document.getElementById('bulk-remove-form');
+        if (!container || !form) return;
+        container.innerHTML = '';
+        checked.forEach(id => {
+            const inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = 'selected_items[]';
+            inp.value = id;
+            container.appendChild(inp);
+        });
+        form.submit();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        updateDeliveryUI('pickup');
+        recalculateCartSelection();
     });
 </script>
 @endsection

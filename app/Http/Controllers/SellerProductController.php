@@ -229,20 +229,54 @@ class SellerProductController extends Controller
         $store = $request->user()->store;
 
         $validated = $request->validate([
-            'product_name'             => ['required', 'string', 'max:150'],
-            'category'                 => ['required', 'string', 'max:100'],
-            'price'                    => ['required', 'numeric', 'min:1000'],
-            'stock'                    => ['required', 'integer', 'min:0'],
-            'description'              => ['required', 'string'],
-            'image'                    => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'allowed_delivery_methods' => ['nullable', 'array'],
+            'product_name'               => ['required', 'string', 'max:150'],
+            'category'                   => ['required', 'string', 'max:100'],
+            'price'                      => ['required', 'numeric', 'min:1000'],
+            'stock'                      => ['required', 'integer', 'min:0'],
+            'description'                => ['required', 'string'],
+            'image'                      => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'images'                     => ['nullable', 'array', 'max:5'],
+            'images.*'                   => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'photo_slots'                => ['nullable', 'array', 'max:5'],
+            'photo_slots.*'              => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'allowed_delivery_methods'   => ['nullable', 'array'],
             'allowed_delivery_methods.*' => ['string', 'in:pickup,delivery_lokal,shipping_transfer'],
         ], [
-            'image.max' => 'Ukuran file foto produk maksimal 2 MB.',
-            'image.uploaded' => 'Ukuran file foto produk melebihi batas maksimal 2 MB.',
+            'image.max'            => 'Ukuran file foto produk maksimal 2 MB.',
+            'image.uploaded'       => 'Ukuran file foto produk melebihi batas maksimal 2 MB.',
+            'images.*.max'         => 'Ukuran setiap foto produk maksimal 2 MB.',
+            'images.*.uploaded'    => 'Ada file foto produk yang melebihi batas maksimal 2 MB.',
+            'photo_slots.*.max'    => 'Ukuran setiap foto produk maksimal 2 MB.',
         ]);
 
-        $imagePath = $this->compressAndStoreProductImage($request->file('image'));
+        $storedPaths = [];
+
+        if ($request->hasFile('image')) {
+            $storedPaths[] = $this->compressAndStoreProductImage($request->file('image'));
+        }
+
+        if ($request->hasFile('photo_slots')) {
+            foreach ($request->file('photo_slots') as $slotFile) {
+                if ($slotFile && $slotFile->isValid() && count($storedPaths) < 5) {
+                    $storedPaths[] = $this->compressAndStoreProductImage($slotFile);
+                }
+            }
+        }
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $imgFile) {
+                if ($imgFile && $imgFile->isValid() && count($storedPaths) < 5) {
+                    $storedPaths[] = $this->compressAndStoreProductImage($imgFile);
+                }
+            }
+        }
+
+        if (empty($storedPaths)) {
+            return back()->withInput()->withErrors(['image' => 'Wajib mengunggah minimal 1 foto produk karya Anda.']);
+        }
+
+        $mainImage = $storedPaths[0];
+        $galleryImages = array_values(array_slice($storedPaths, 1, 4));
 
         $allowedMethods = $request->input('allowed_delivery_methods');
         if (empty($allowedMethods)) {
@@ -253,21 +287,27 @@ class SellerProductController extends Controller
         $capitalName = mb_convert_case(trim($validated['product_name']), MB_CASE_TITLE, 'UTF-8');
         $cleanDesc = strip_tags(trim($validated['description']));
 
-        $store->products()->create([
+        $createData = [
             'product_name'             => $capitalName,
             'slug'                     => Str::slug($capitalName) . '-' . Str::lower(Str::random(5)),
             'category'                 => $validated['category'],
             'price'                    => $validated['price'],
             'stock'                    => $validated['stock'],
             'description'              => $cleanDesc,
-            'image'                    => $imagePath,
+            'image'                    => $mainImage,
             'allowed_delivery_methods' => array_values($allowedMethods),
             'is_active'                => true,
-        ]);
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'gallery_images')) {
+            $createData['gallery_images'] = $galleryImages;
+        }
+
+        $store->products()->create($createData);
 
         return redirect()
             ->route('seller.dashboard')
-            ->with('success', 'Karya produk baru berhasil ditambahkan ke katalog toko Anda!');
+            ->with('success', 'Karya produk baru beserta ' . count($storedPaths) . ' foto berhasil ditambahkan ke katalog toko Anda!');
     }
 
     public function edit(Request $request, Product $product): View
@@ -287,49 +327,125 @@ class SellerProductController extends Controller
         $this->authorizeProductOwner($request, $product);
 
         $validated = $request->validate([
-            'product_name'             => ['required', 'string', 'max:150'],
-            'category'                 => ['required', 'string', 'max:100'],
-            'price'                    => ['required', 'numeric', 'min:1000'],
-            'stock'                    => ['required', 'integer', 'min:0'],
-            'description'              => ['required', 'string'],
-            'image'                    => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'allowed_delivery_methods' => ['nullable', 'array'],
+            'product_name'               => ['required', 'string', 'max:150'],
+            'category'                   => ['required', 'string', 'max:100'],
+            'price'                      => ['required', 'numeric', 'min:1000'],
+            'stock'                      => ['required', 'integer', 'min:0'],
+            'description'                => ['required', 'string'],
+            'image'                      => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'images'                     => ['nullable', 'array', 'max:5'],
+            'images.*'                   => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'photo_slots'                => ['nullable', 'array', 'max:5'],
+            'photo_slots.*'              => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_images'              => ['nullable', 'array'],
+            'remove_images.*'            => ['nullable', 'string'],
+            'allowed_delivery_methods'   => ['nullable', 'array'],
             'allowed_delivery_methods.*' => ['string', 'in:pickup,delivery_lokal,shipping_transfer'],
         ], [
-            'image.max' => 'Ukuran file foto produk maksimal 2 MB.',
-            'image.uploaded' => 'Ukuran file foto produk melebihi batas maksimal 2 MB.',
+            'image.max'            => 'Ukuran file foto produk maksimal 2 MB.',
+            'image.uploaded'       => 'Ukuran file foto produk melebihi batas maksimal 2 MB.',
+            'images.*.max'         => 'Ukuran setiap foto produk maksimal 2 MB.',
+            'images.*.uploaded'    => 'Ada file foto produk yang melebihi batas maksimal 2 MB.',
+            'photo_slots.*.max'    => 'Ukuran setiap foto produk maksimal 2 MB.',
         ]);
 
-        if ($request->hasFile('image')) {
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
+        $currentImages = $product->all_images;
+
+        // Hapus foto yang ditandai untuk dihapus oleh penjual
+        $toRemove = array_filter((array) $request->input('remove_images', []));
+        if (! empty($toRemove)) {
+            foreach ($toRemove as $remPath) {
+                $remPath = trim((string) $remPath);
+                if (in_array($remPath, $currentImages, true)) {
+                    if (! Str::startsWith($remPath, ['http://', 'https://', 'images/', '/images/'])) {
+                        Storage::disk('public')->delete($remPath);
+                    }
+                    $currentImages = array_values(array_diff($currentImages, [$remPath]));
+                }
             }
-            $validated['image'] = $this->compressAndStoreProductImage($request->file('image'));
+        }
+
+        // Jika slot foto tertentu diganti/diisi
+        if ($request->hasFile('photo_slots')) {
+            foreach ($request->file('photo_slots') as $slotIdx => $slotFile) {
+                if ($slotFile && $slotFile->isValid()) {
+                    $newPath = $this->compressAndStoreProductImage($slotFile);
+                    $idx = (int) $slotIdx;
+                    if (isset($currentImages[$idx])) {
+                        $oldPath = $currentImages[$idx];
+                        if (! Str::startsWith($oldPath, ['http://', 'https://', 'images/', '/images/'])) {
+                            Storage::disk('public')->delete($oldPath);
+                        }
+                        $currentImages[$idx] = $newPath;
+                    } else {
+                        $currentImages[] = $newPath;
+                    }
+                }
+            }
+        }
+
+        // Jika input 'image' utama diisi
+        if ($request->hasFile('image')) {
+            $newMain = $this->compressAndStoreProductImage($request->file('image'));
+            if (isset($currentImages[0])) {
+                $oldMain = $currentImages[0];
+                if (! Str::startsWith($oldMain, ['http://', 'https://', 'images/', '/images/'])) {
+                    Storage::disk('public')->delete($oldMain);
+                }
+                $currentImages[0] = $newMain;
+            } else {
+                array_unshift($currentImages, $newMain);
+            }
+        }
+
+        // Jika upload multi-file baru lewat dropzone 'images[]'
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $imgFile) {
+                if ($imgFile && $imgFile->isValid() && count($currentImages) < 5) {
+                    $currentImages[] = $this->compressAndStoreProductImage($imgFile);
+                }
+            }
+        }
+
+        $currentImages = array_slice(array_values(array_unique(array_filter($currentImages))), 0, 5);
+        if (empty($currentImages)) {
+            $currentImages = [$product->image];
         }
 
         $allowedMethods = $request->input('allowed_delivery_methods');
         if (empty($allowedMethods)) {
             $allowedMethods = Product::ALL_DELIVERY_METHODS;
         }
-        $validated['allowed_delivery_methods'] = array_values($allowedMethods);
 
-        // Format Judul Produk Otomatis Menjadi Capital Case & Sanitasi Deskripsi
-        $validated['product_name'] = mb_convert_case(trim($validated['product_name']), MB_CASE_TITLE, 'UTF-8');
-        $validated['description']  = strip_tags(trim($validated['description']));
+        $updateData = [
+            'product_name'             => mb_convert_case(trim($validated['product_name']), MB_CASE_TITLE, 'UTF-8'),
+            'category'                 => $validated['category'],
+            'price'                    => $validated['price'],
+            'stock'                    => $validated['stock'],
+            'description'              => strip_tags(trim($validated['description'])),
+            'image'                    => $currentImages[0],
+            'allowed_delivery_methods' => array_values($allowedMethods),
+        ];
 
-        $product->update($validated);
+        if (\Illuminate\Support\Facades\Schema::hasColumn('products', 'gallery_images')) {
+            $updateData['gallery_images'] = array_values(array_slice($currentImages, 1, 4));
+        }
+
+        $product->update($updateData);
 
         return redirect()
             ->route('seller.dashboard')
-            ->with('success', 'Data produk berhasil diperbarui.');
+            ->with('success', 'Data produk dan galeri foto (' . count($currentImages) . ' foto) berhasil diperbarui.');
     }
 
     public function destroy(Request $request, Product $product): RedirectResponse
     {
         $this->authorizeProductOwner($request, $product);
 
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
+        foreach ($product->all_images as $imgPath) {
+            if ($imgPath && ! Str::startsWith($imgPath, ['http://', 'https://', 'images/', '/images/'])) {
+                Storage::disk('public')->delete($imgPath);
+            }
         }
 
         $product->delete();

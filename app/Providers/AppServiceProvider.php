@@ -139,6 +139,9 @@ class AppServiceProvider extends ServiceProvider
                     if (! Schema::hasColumn('products', 'allowed_delivery_methods')) {
                         $table->json('allowed_delivery_methods')->nullable();
                     }
+                    if (! Schema::hasColumn('products', 'gallery_images')) {
+                        $table->json('gallery_images')->nullable();
+                    }
                 });
             }
         } catch (Throwable $e) {

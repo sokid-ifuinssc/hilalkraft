@@ -31,6 +31,7 @@ class Product extends Model
         'price',
         'stock',
         'image',
+        'gallery_images',
         'category',
         'is_active',
         'views_count',
@@ -46,8 +47,69 @@ class Product extends Model
             'is_active'                => 'boolean',
             'views_count'              => 'integer',
             'likes_count'              => 'integer',
+            'gallery_images'           => 'array',
             'allowed_delivery_methods' => 'array',
         ];
+    }
+
+    /**
+     * Mengubah path gambar produk menjadi URL penuh yang siap ditampilkan.
+     */
+    public static function resolveImageUrl(?string $path): string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return asset('images/logo-hilalkraf.jpg');
+        }
+        if (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+        if (\Illuminate\Support\Str::startsWith($path, ['images/', '/images/'])) {
+            return asset(ltrim($path, '/'));
+        }
+        return asset('storage/' . ltrim($path, '/'));
+    }
+
+    /**
+     * Mengembalikan daftar seluruh path foto yang benar-benar diupload untuk produk ini
+     * (Foto utama + foto tambahan di gallery_images), tanpa duplikasi dan tanpa foto dummy.
+     */
+    public function getAllImagesAttribute(): array
+    {
+        $list = [];
+        if (! empty($this->image)) {
+            $list[] = trim((string) $this->image);
+        }
+
+        $gallery = $this->gallery_images;
+        if (is_string($gallery)) {
+            $decoded = json_decode($gallery, true);
+            $gallery = is_array($decoded) ? $decoded : [];
+        }
+
+        if (is_array($gallery)) {
+            foreach ($gallery as $imgPath) {
+                $clean = trim((string) $imgPath);
+                if ($clean !== '' && ! in_array($clean, $list, true)) {
+                    $list[] = $clean;
+                }
+            }
+        }
+
+        return array_slice($list, 0, 5);
+    }
+
+    /**
+     * Mengembalikan daftar URL foto produk yang diupload.
+     */
+    public function getAllImageUrlsAttribute(): array
+    {
+        $images = $this->all_images;
+        if (empty($images)) {
+            return [asset('images/logo-hilalkraf.jpg')];
+        }
+
+        return array_map(fn (string $p) => self::resolveImageUrl($p), $images);
     }
 
     public function store(): BelongsTo

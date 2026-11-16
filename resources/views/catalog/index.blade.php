@@ -201,7 +201,9 @@ Algoritma:
                     @endif
                     @if(\App\Models\CmsContent::val('value_2', 'Langsung ke kreator') !== '')
                         <span class="inline-flex items-center gap-1.5">
-                            <span class="w-4 h-4 rounded-full bg-[#D5F5E6] text-[#0B6E4F] flex items-center justify-center text-[10px]">💬</span>
+                            <span class="w-4 h-4 rounded-full bg-[#D5F5E6] text-[#0B6E4F] flex items-center justify-center text-[10px]">
+                                <svg class="w-2.5 h-2.5 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                            </span>
                             {{ \App\Models\CmsContent::val('value_2', 'Langsung ke kreator') }}
                         </span>
                     @endif
@@ -338,16 +340,16 @@ Algoritma:
         @foreach($promoCards as $banner)
             @php
                 $cardText = strtolower($banner->title . ' ' . ($banner->content ?? '') . ' ' . ($banner->category ?? ''));
-                $icon = match(true) {
-                    str_contains($cardText, 'pelajar') || str_contains($cardText, 'siswa') => '🎓',
-                    str_contains($cardText, 'keluarga') || str_contains($cardText, 'wali') => '🏠',
-                    str_contains($cardText, 'alumni') || str_contains($cardText, 'lulus') => '🎖️',
-                    str_contains($cardText, 'bazar') || str_contains($cardText, 'event') || str_contains($cardText, 'promo') => '🎪',
+                $iconSvg = match(true) {
+                    str_contains($cardText, 'pelajar') || str_contains($cardText, 'siswa') => '<svg class="w-3.5 h-3.5 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>',
+                    str_contains($cardText, 'keluarga') || str_contains($cardText, 'wali') => '<svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>',
+                    str_contains($cardText, 'alumni') || str_contains($cardText, 'lulus') => '<svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>',
+                    str_contains($cardText, 'bazar') || str_contains($cardText, 'event') || str_contains($cardText, 'promo') => '<svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>',
                     default => match($loop->index % 4) {
-                        0 => '🎓',
-                        1 => '🏠',
-                        2 => '🎖️',
-                        default => '🎪',
+                        0 => '<svg class="w-3.5 h-3.5 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>',
+                        1 => '<svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>',
+                        2 => '<svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/></svg>',
+                        default => '<svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>',
                     }
                 };
 
@@ -387,7 +389,7 @@ Algoritma:
             <div class="flex-shrink-0 w-[240px] sm:w-[260px] snap-start rounded-xl {{ $style['bg'] }} border {{ $style['border'] }} p-3 sm:p-3.5 shadow-xs hover:shadow-sm transition-all duration-200 flex items-start justify-between gap-2.5">
                 <div class="min-w-0 flex-1 space-y-1">
                     <div class="flex items-center gap-1.5">
-                        <span class="text-xs shrink-0 select-none">{{ $icon }}</span>
+                        <span class="w-4 h-4 flex items-center justify-center shrink-0">{!! $iconSvg !!}</span>
                         <span class="text-[10px] font-bold uppercase tracking-wider {{ $style['badge'] }} px-1.5 py-0.5 rounded-md truncate max-w-full">
                             {{ $banner->category ?: 'Info & Promo' }}
                         </span>
@@ -428,7 +430,7 @@ Algoritma:
         <div>
             <h2 class="text-lg sm:text-xl font-extrabold text-[#0F291E]">Katalog Karya Siswa</h2>
             <p class="text-xs text-slate-500 mt-0.5">
-                Menampilkan {{ $products->total() }} karya terkurasi beserta jumlah dilihat (👁️), suka (❤️), dan komentar (💬)
+                Menampilkan {{ $products->total() }} karya terkurasi buatan siswa-siswi SMK Plus Al Hilal
             </p>
         </div>
 
@@ -457,8 +459,8 @@ Algoritma:
                 @endif
                 <select name="sort" onchange="this.form.submit()" class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 focus:border-[#0B6E4F] focus:outline-none cursor-pointer">
                     <option value="rekomendasi" @selected(request('sort', 'rekomendasi') === 'rekomendasi')>Urutkan: Rekomendasi</option>
-                    <option value="populer" @selected(request('sort') === 'populer')>Paling Banyak Dilihat (👁️)</option>
-                    <option value="disukai" @selected(request('sort') === 'disukai')>Paling Banyak Disukai (❤️)</option>
+                    <option value="populer" @selected(request('sort') === 'populer')>Paling Populer (Dilihat)</option>
+                    <option value="disukai" @selected(request('sort') === 'disukai')>Paling Banyak Disukai</option>
                     <option value="terbaru" @selected(request('sort') === 'terbaru')>Terbaru</option>
                 </select>
             </form>
@@ -545,20 +547,24 @@ Algoritma:
                             <!-- Tombol Utama: Pesan Resmi Lewat Aplikasi (Lebih Kontras & Mencolok) -->
                             <a href="{{ route('products.show', $product->slug) }}"
                                class="inline-flex items-center justify-center gap-1 rounded-lg sm:rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white shadow-xs hover:shadow-sm py-1.5 sm:py-2 px-2 text-[10px] sm:text-xs font-extrabold transition text-center active:scale-95">
-                                <span>🚚 Pesan</span>
+                                <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                <span>Pesan</span>
                             </a>
                         </div>
 
                         <!-- Metrik Interaksi (Lihat, Suka, Komentar) -->
                         <div class="flex items-center justify-between text-[9px] sm:text-[11px] text-slate-400 font-medium px-0.5">
                             <span class="inline-flex items-center gap-1" title="Dilihat">
-                                👁️ {{ number_format($product->views_count ?? 0) }}
+                                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <span>{{ number_format($product->views_count ?? 0) }}</span>
                             </span>
                             <span class="inline-flex items-center gap-1 text-rose-500 font-semibold" title="Disukai">
-                                ❤️ {{ number_format($product->likes_count ?? 0) }}
+                                <svg class="w-3 h-3 fill-rose-500 text-rose-500" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                                <span>{{ number_format($product->likes_count ?? 0) }}</span>
                             </span>
                             <span class="inline-flex items-center gap-1 text-slate-500" title="Komentar">
-                                💬 {{ number_format($product->comments_count ?? 0) }}
+                                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                <span>{{ number_format($product->comments_count ?? 0) }}</span>
                             </span>
                         </div>
                     </div>
@@ -664,7 +670,7 @@ Algoritma:
                 toast.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 z-[9999] bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 border border-slate-700 transition-all duration-300';
                 document.body.appendChild(toast);
             }
-            toast.innerHTML = '<span>🔗</span><span>Link produk berhasil disalin ke clipboard!</span>';
+            toast.innerHTML = '<svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg><span>Link produk berhasil disalin ke clipboard!</span>';
             toast.style.opacity = '1';
             toast.style.transform = 'translate(-50%, 0)';
             setTimeout(() => {

@@ -134,9 +134,9 @@ class Order extends Model
     public function getDeliveryMethodShortLabelAttribute(): string
     {
         return match ($this->delivery_method) {
-            'delivery_lokal'    => '🛵 Antar Langsung',
-            'shipping_transfer' => '🚚 Transfer Antar',
-            default             => '🏫 Datang ke Sekolah',
+            'delivery_lokal'    => 'Antar Langsung',
+            'shipping_transfer' => 'Transfer Antar',
+            default             => 'Datang ke Sekolah',
         };
     }
 
@@ -160,7 +160,7 @@ class Order extends Model
             return [
                 1 => ['key' => 'pesan', 'label' => '1. Dipesan', 'desc' => 'Pesanan masuk / Konfirmasi'],
                 2 => ['key' => 'kemas', 'label' => '2. Dikemas', 'desc' => 'Disiapkan di SMK Plus Al Hilal'],
-                3 => ['key' => 'sampai', 'label' => '3. Diterima', 'desc' => 'Diambil di sekolah & beri ★'],
+                3 => ['key' => 'sampai', 'label' => '3. Diterima', 'desc' => 'Diambil di sekolah & beri penilaian'],
             ];
         }
 
@@ -168,7 +168,7 @@ class Order extends Model
             1 => ['key' => 'pesan', 'label' => '1. Dipesan', 'desc' => 'Pesanan masuk'],
             2 => ['key' => 'kemas', 'label' => '2. Dikemas', 'desc' => 'Sedang dikemas penjual'],
             3 => ['key' => 'kirim', 'label' => '3. Dikirim', 'desc' => $this->delivery_method === 'delivery_lokal' ? 'Dalam perjalanan diantar kurir' : 'Dalam perjalanan ekspedisi'],
-            4 => ['key' => 'sampai', 'label' => '4. Diterima', 'desc' => 'Diterima pembeli & beri ★'],
+            4 => ['key' => 'sampai', 'label' => '4. Diterima', 'desc' => 'Diterima pembeli & beri penilaian'],
         ];
     }
 

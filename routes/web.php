@@ -68,7 +68,10 @@ Route::middleware(['auth', 'role:buyer,seller,admin,super_admin'])->prefix('pemb
     Route::get('/laporan', [ReportController::class, 'buyer'])->name('reports');
     Route::post('/keranjang/{product}', [BuyerOrderController::class, 'addToCart'])->name('cart.add');
     Route::get('/keranjang', [BuyerOrderController::class, 'viewCart'])->name('cart.index');
+    Route::patch('/keranjang/{productId}', [BuyerOrderController::class, 'updateCartQuantity'])->name('cart.update');
     Route::delete('/keranjang/{productId}', [BuyerOrderController::class, 'removeFromCart'])->name('cart.remove');
+    Route::post('/keranjang-hapus-terpilih', [BuyerOrderController::class, 'removeSelectedFromCart'])->name('cart.remove-selected');
+    Route::match(['get', 'post'], '/transaksi', [BuyerOrderController::class, 'showCheckout'])->name('checkout.index');
     Route::post('/checkout', [BuyerOrderController::class, 'checkout'])->name('checkout');
     Route::post('/pesan-langsung/{product}', [BuyerOrderController::class, 'directOrder'])->name('direct-order');
     Route::patch('/pesanan/{order}/sampai', [BuyerOrderController::class, 'markDelivered'])->name('orders.delivered');

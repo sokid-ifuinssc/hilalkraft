@@ -373,7 +373,7 @@ Algoritma:
                         <form action="{{ route('admin.impersonate.role', 'super_admin') }}" method="POST">
                             @csrf
                             <button type="submit" class="w-full rounded-xl bg-[#0F291E] hover:bg-[#0B6E4F] text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5">
-                                <span>👑</span>
+                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                                 <span>Mode Super Admin</span>
                             </button>
                         </form>
@@ -383,7 +383,9 @@ Algoritma:
                     <div class="rounded-2xl border-2 {{ session()->get('view_as_role') === 'admin' ? 'border-blue-600 bg-blue-50/30 shadow-md ring-2 ring-blue-500/20' : 'border-slate-200 bg-[#F8FAFC]' }} p-4 sm:p-5 flex flex-col justify-between space-y-4">
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
-                                <span class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg font-bold shadow-xs">👨‍🏫</span>
+                                <span class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+                                </span>
                                 <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Admin Sekolah</span>
                             </div>
                             <div>
@@ -416,7 +418,7 @@ Algoritma:
                         <form action="{{ route('admin.impersonate.role', 'admin') }}" method="POST">
                             @csrf
                             <button type="submit" class="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5">
-                                <span>👨‍🏫</span>
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>
                                 <span>Lihat Tampilan Admin Guru</span>
                             </button>
                         </form>
@@ -426,7 +428,9 @@ Algoritma:
                     <div class="rounded-2xl border-2 border-slate-200 bg-[#F8FAFC] p-4 sm:p-5 flex flex-col justify-between space-y-4">
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
-                                <span class="w-9 h-9 rounded-xl bg-[#0B6E4F] text-white flex items-center justify-center text-lg font-bold shadow-xs">🏪</span>
+                                <span class="w-9 h-9 rounded-xl bg-[#0B6E4F] text-white flex items-center justify-center shadow-xs">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                </span>
                                 <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Ruang Karya</span>
                             </div>
                             <div>
@@ -457,7 +461,7 @@ Algoritma:
                         </div>
 
                         <a href="{{ route('seller.dashboard') }}" class="w-full rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5 text-center">
-                            <span>🏪</span>
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                             <span>Buka Ruang Toko / Seller</span>
                         </a>
                     </div>
@@ -466,7 +470,9 @@ Algoritma:
                     <div class="rounded-2xl border-2 border-slate-200 bg-[#F8FAFC] p-4 sm:p-5 flex flex-col justify-between space-y-4">
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
-                                <span class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg font-bold shadow-xs">🛍️</span>
+                                <span class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                </span>
                                 <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Ruang Pembeli</span>
                             </div>
                             <div>
@@ -497,7 +503,7 @@ Algoritma:
                         </div>
 
                         <a href="{{ route('buyer.dashboard') }}" class="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5 text-center">
-                            <span>🛍️</span>
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                             <span>Buka Dashboard Pembeli</span>
                         </a>
                     </div>

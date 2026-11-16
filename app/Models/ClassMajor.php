@@ -59,12 +59,14 @@ class ClassMajor extends Model
         }
 
         $base = strtolower(trim(preg_replace('/\s*\(.*?\)\s*/', ' ', $trimmed)));
+        $base = trim(preg_replace('/[^a-z0-9\s]/', '', $base));
         return [$base, $acronym, strtolower($trimmed)];
     }
 
     /**
      * Mencari kecocokan nama jurusan dari master database yang diinputkan Super Admin.
-     * Mendukung variasi dengan/tanpa singkatan tanda kurung, case-insensitive, dan substring.
+     * Mendukung variasi dengan/tanpa singkatan tanda kurung, case-insensitive, substring,
+     * serta singkatan populer (TKJ/TKJT, AKL/AK, TO, RPL, DKV).
      */
     public static function findMatchingMasterMajor(?string $input, $masterList = null): ?string
     {
@@ -88,7 +90,7 @@ class ClassMajor extends Model
 
         // 2. Base name match (mengabaikan singkatan di dalam tanda kurung)
         foreach ($masters as $m) {
-            [$mBase, $mAcro] = static::cleanMajorName($m);
+            [$mBase] = static::cleanMajorName($m);
             if (! empty($mBase) && $mBase === $inputBase) {
                 return $m;
             }
@@ -96,7 +98,7 @@ class ClassMajor extends Model
 
         // 3. Substring match pada base name (misal: "Teknik Komputer dan Jaringan" vs "Teknik Komputer dan Jaringan Telekomunikasi")
         foreach ($masters as $m) {
-            [$mBase, $mAcro] = static::cleanMajorName($m);
+            [$mBase] = static::cleanMajorName($m);
             if (! empty($mBase) && ! empty($inputBase)) {
                 if (str_contains($mBase, $inputBase) || str_contains($inputBase, $mBase)) {
                     return $m;
@@ -109,6 +111,45 @@ class ClassMajor extends Model
             [$mBase, $mAcro] = static::cleanMajorName($m);
             if (! empty($mAcro) && ($inputLower === $mAcro || $inputAcro === $mAcro)) {
                 return $m;
+            }
+        }
+
+        // 5. Dictionary sinonim singkatan umum SMK
+        $synonymKeywords = [
+            'tkj'  => ['komputer', 'jaringan'],
+            'tkjt' => ['komputer', 'jaringan', 'telekomunikasi'],
+            'rpl'  => ['perangkat', 'lunak'],
+            'pplg' => ['pengembangan', 'perangkat', 'lunak'],
+            'akl'  => ['akuntansi', 'keuangan'],
+            'ak'   => ['akuntansi'],
+            'to'   => ['otomotif'],
+            'tsm'  => ['sepeda', 'motor', 'otomotif'],
+            'tkr'  => ['kendaraan', 'ringan', 'otomotif'],
+            'dkv'  => ['desain', 'komunikasi', 'visual'],
+        ];
+
+        foreach ($synonymKeywords as $abbr => $keywords) {
+            if (str_contains($inputLower, $abbr)) {
+                foreach ($masters as $m) {
+                    $mLower = strtolower($m);
+                    foreach ($keywords as $kw) {
+                        if (str_contains($mLower, $kw)) {
+                            return $m;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 6. Token overlap (jika memiliki kata kunci utama sama, e.g. "komputer", "otomotif", "akuntansi")
+        $coreWords = ['komputer', 'jaringan', 'akuntansi', 'otomotif', 'desain', 'perangkat', 'boga', 'busana', 'listrik'];
+        foreach ($coreWords as $cw) {
+            if (str_contains($inputLower, $cw)) {
+                foreach ($masters as $m) {
+                    if (str_contains(strtolower($m), $cw)) {
+                        return $m;
+                    }
+                }
             }
         }
 
