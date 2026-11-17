@@ -109,23 +109,36 @@ Algoritma:
 <body class="min-h-screen flex flex-col bg-[#F8FAFC] text-[#0F291E] antialiased selection:bg-[#0B6E4F] selection:text-white">
 
     @if(session()->has('impersonator_id') || session()->has('view_as_role'))
-        <aside class="sticky top-0 z-[100] bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white px-4 py-2 text-xs font-semibold shadow-md flex items-center justify-between gap-3 border-b border-amber-900/40">
-            <div class="flex items-center gap-2 truncate">
-                <span class="text-sm shrink-0 animate-pulse">👀</span>
+        @php
+            $impOrigName = session('impersonator_name') ?? ($impersonationActor?->name ?? 'Akun Asal');
+            $impOrigRole = session('impersonator_role') ?? ($impersonationActor?->role ?? 'super_admin');
+            $impReturnLabel = $impOrigRole === 'admin' ? 'Admin' : 'Super Admin';
+        @endphp
+        <aside class="sticky top-0 z-[100] bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white px-4 py-2 text-xs font-semibold shadow-md flex flex-wrap items-center justify-between gap-2 border-b border-amber-900/40">
+            <div class="flex items-center gap-2 truncate min-w-0">
+                <svg class="w-4 h-4 shrink-0 text-amber-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 @if(session()->has('impersonator_id'))
-                    <span class="truncate">Mode Simulasi: Anda sedang melihat sebagai <strong>{{ auth()->user()->name }}</strong> (Peran: <span class="bg-black/30 px-2 py-0.5 rounded-full font-bold uppercase text-[10px]">{{ auth()->user()->role_label }}</span>)</span>
+                    <span class="truncate">Mode Lihat Sebagai: <strong>{{ auth()->user()->name }}</strong> (<span class="bg-black/30 px-2 py-0.5 rounded-full font-bold uppercase text-[10px]">{{ auth()->user()->role_label }}</span>)</span>
                 @else
                     <span class="truncate">Mode Simulasi: Anda sedang melihat tampilan sebagai <strong>Admin (Guru)</strong></span>
                 @endif
             </div>
-            <form action="{{ route('admin.impersonate.leave') }}" method="POST" class="shrink-0">
-                @csrf
-                <button type="submit" class="rounded-lg bg-white text-amber-950 font-black px-3 py-1 text-xs hover:bg-amber-100 shadow-sm transition active:scale-95 flex items-center gap-1.5">
-                    <span>↶</span>
-                    <span class="hidden sm:inline">Kembali ke Super Admin</span>
-                    <span class="sm:hidden">Keluar</span>
-                </button>
-            </form>
+            <div class="flex items-center gap-2 shrink-0">
+                @if(isset($impersonationActor) && $impersonationActor)
+                    <button type="button" onclick="openLihatSebagaiModal()" class="rounded-lg bg-amber-900/40 hover:bg-amber-900/60 border border-white/25 text-white font-bold px-2.5 py-1 text-xs transition flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                        <span>Ganti User</span>
+                    </button>
+                @endif
+                <form action="{{ route('admin.impersonate.leave') }}" method="POST" class="shrink-0">
+                    @csrf
+                    <button type="submit" class="rounded-lg bg-white text-amber-950 font-black px-3 py-1 text-xs hover:bg-amber-100 shadow-sm transition active:scale-95 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                        <span class="hidden sm:inline">Kembali ke {{ $impReturnLabel }} ({{ \Illuminate\Support\Str::limit($impOrigName, 16) }})</span>
+                        <span class="sm:hidden">Kembali</span>
+                    </button>
+                </form>
+            </div>
         </aside>
     @endif
 
@@ -241,13 +254,20 @@ Algoritma:
                                 };
                             @endphp
 
+                            @if(isset($impersonationActor) && $impersonationActor)
+                                <button type="button" onclick="openLihatSebagaiModal()" class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-white px-2.5 sm:px-3 py-1.5 text-xs font-bold text-[#0B6E4F] hover:bg-emerald-50 transition shadow-2xs" title="Lihat sistem sebagai pengguna lain">
+                                    <svg class="w-3.5 h-3.5 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <span class="hidden md:inline">Lihat Sebagai</span>
+                                </button>
+                            @endif
+
                             @if(in_array(auth()->user()->role, ['admin', 'super_admin']))
                                 <a href="{{ route('seller.dashboard') }}" class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-white px-2.5 sm:px-3 py-1.5 text-xs font-bold text-[#0B6E4F] hover:bg-emerald-50 transition shadow-2xs" title="Kelola Toko Guru Saya (Produk & Pesanan)">
-                                    <span>🏪</span>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                                     <span class="hidden xs:inline">Toko</span>
                                 </a>
                                 <a href="{{ route('buyer.dashboard') }}" class="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-white px-2.5 sm:px-3 py-1.5 text-xs font-bold text-amber-800 hover:bg-amber-50 transition shadow-2xs" title="Lihat Akun Pembeli (Pesanan & Keranjang)">
-                                    <span>🛍️</span>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                                     <span class="hidden md:inline">Pembeli</span>
                                 </a>
                             @endif
@@ -389,6 +409,8 @@ Algoritma:
             </div>
         </footer>
     @endunless
+
+    @include('partials.impersonate-modal')
 
 </body>
 </html>

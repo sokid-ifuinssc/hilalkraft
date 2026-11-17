@@ -135,73 +135,11 @@ Fungsi:
                 </div>
             </div>
             <div class="flex items-center gap-2 sm:gap-3">
-                @if($authUser->role === 'super_admin' || session()->has('impersonator_id'))
-                    <div class="relative inline-block text-left" id="role-switcher-dropdown">
-                        <button type="button" onclick="document.getElementById('role-switcher-menu').classList.toggle('hidden')" class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-[#EBF9F2] px-3 py-1.5 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition shadow-2xs">
-                            <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                            <span class="hidden sm:inline">Lihat Sebagai Peran</span>
-                            <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div id="role-switcher-menu" class="hidden absolute right-0 mt-2 w-64 rounded-2xl bg-white shadow-xl border border-slate-200 p-2.5 z-50 text-xs space-y-1">
-                            <div class="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Pilih Tampilan Role:</div>
-                            
-                            <!-- 1. Super Admin -->
-                            <form action="{{ route('admin.impersonate.role', 'super_admin') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl hover:bg-slate-50 {{ session()->get('view_as_role') ? 'text-slate-700' : 'bg-emerald-50 text-[#0B6E4F] font-bold' }}">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                                        <div>
-                                            <div class="font-bold">Super Admin</div>
-                                            <div class="text-[10px] text-slate-400">Kendali penuh sistem & master DB</div>
-                                        </div>
-                                    </div>
-                                </button>
-                            </form>
-
-                            <!-- 2. Admin (Guru) -->
-                            <form action="{{ route('admin.impersonate.role', 'admin') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl hover:bg-blue-50 {{ session()->get('view_as_role') === 'admin' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-700' }}">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
-                                        <div>
-                                            <div class="font-bold">Admin (Guru)</div>
-                                            <div class="text-[10px] text-slate-400">Pendamping & moderasi toko</div>
-                                        </div>
-                                    </div>
-                                </button>
-                            </form>
-
-                            <!-- 3. Pemilik Toko (Seller) -->
-                            <a href="{{ route('seller.dashboard') }}" class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl hover:bg-emerald-50 text-slate-700">
-                                <div class="flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                                    <div>
-                                        <div class="font-bold">Pemilik Toko (Seller)</div>
-                                        <div class="text-[10px] text-slate-400">Ruang kelola produk & pesanan siswa</div>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <!-- 4. Pembeli (Buyer) -->
-                            <a href="{{ route('buyer.dashboard') }}" class="w-full text-left flex items-center justify-between px-2.5 py-2 rounded-xl hover:bg-amber-50 text-slate-700">
-                                <div class="flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                                    <div>
-                                        <div class="font-bold">Pembeli (Buyer)</div>
-                                        <div class="text-[10px] text-slate-400">Ruang transaksi belanja & keranjang</div>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <div class="border-t border-slate-100 my-1"></div>
-                            <a href="{{ route('home') }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-50 text-slate-500 font-medium text-[11px]">
-                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-                                <span>Katalog Publik Marketplace</span>
-                            </a>
-                        </div>
-                    </div>
+                @if(isset($impersonationActor) && $impersonationActor)
+                    <button type="button" onclick="openLihatSebagaiModal()" class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-[#EBF9F2] px-3 py-1.5 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition shadow-2xs">
+                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span>Lihat Sebagai</span>
+                    </button>
                 @endif
 
                 <div class="w-8 h-8 rounded-full bg-[#D5F5E6] text-[#0B6E4F] font-extrabold text-xs flex items-center justify-center shrink-0">

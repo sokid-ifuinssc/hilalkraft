@@ -74,6 +74,15 @@ Algoritma:
                     <span>⊞</span>
                     <span>Ringkasan</span>
                 </a>
+                @if(isset($impersonationActor) && $impersonationActor)
+                    <button type="button" onclick="openLihatSebagaiModal()" class="w-full text-left flex items-center justify-between rounded-xl px-3.5 py-2.5 text-[#0F291E] bg-slate-50 border border-slate-200 hover:bg-[#EBF9F2] hover:border-emerald-200 transition">
+                        <span class="flex items-center gap-3">
+                            <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <span class="font-bold">Lihat Sebagai User</span>
+                        </span>
+                        <span class="rounded-full bg-[#EBF9F2] px-2 py-0.5 text-[10px] font-bold text-[#0B6E4F]">Semua</span>
+                    </button>
+                @endif
                 <a href="{{ route('seller.dashboard') }}" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-emerald-800 bg-emerald-50/80 border border-emerald-300 hover:bg-emerald-100 transition shadow-2xs" title="Buka Toko Guru & Kelola Produk Saya">
                     <span class="flex items-center gap-3">
                         <span>🏪</span>
@@ -166,6 +175,12 @@ Algoritma:
             </div>
 
             <div class="flex items-center gap-3">
+                @if(isset($impersonationActor) && $impersonationActor)
+                    <button type="button" onclick="openLihatSebagaiModal()" class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-[#EBF9F2] px-3 py-1.5 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition shadow-2xs">
+                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span>Lihat Sebagai User</span>
+                    </button>
+                @endif
                 <div class="text-right hidden sm:block">
                     <p class="text-xs font-bold text-[#0F291E] leading-none">{{ auth()->user()->name }}</p>
                     <p class="text-[10px] text-slate-400 mt-0.5">{{ auth()->user()->role === 'super_admin' ? 'Super Admin' : 'Admin (Guru SMK Plus Al Hilal)' }}</p>
@@ -233,12 +248,14 @@ Algoritma:
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
-                    <a href="#sec-role-matrix" class="rounded-xl bg-purple-50 border border-purple-200 px-3.5 py-2 text-xs font-bold text-purple-900 hover:bg-purple-100 transition flex items-center gap-1.5 shadow-2xs">
-                        <span>🎭</span>
-                        <span>Lihat Sebagai & Skema Role</span>
-                    </a>
+                    @if(isset($impersonationActor) && $impersonationActor)
+                        <button type="button" onclick="openLihatSebagaiModal()" class="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2 text-xs font-bold text-[#0B6E4F] hover:bg-emerald-100 transition flex items-center gap-1.5 shadow-2xs">
+                            <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <span>Lihat Sebagai User</span>
+                        </button>
+                    @endif
                     <a href="{{ route('seller.dashboard') }}" class="rounded-xl bg-emerald-50 border border-emerald-300 px-3.5 py-2 text-xs font-bold text-[#0B6E4F] hover:bg-emerald-100 transition flex items-center gap-1.5 shadow-2xs">
-                        <span>🏪</span>
+                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                         <span>Toko Guru Saya</span>
                     </a>
                     <a href="{{ route('admin.reports') }}" class="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
@@ -308,59 +325,71 @@ Algoritma:
             </div>
 
             <!-- ========================================================================
-                 SKEMA ROLE & MATRIX HAK AKSES SISTEM (BISA SEBAGAI APA SAJA?)
+                 SKEMA "LIHAT SEBAGAI SEMUA USER" & RINGKASAN HAK AKSES SISTEM
                  ======================================================================== -->
             <div id="sec-role-matrix" class="rounded-2xl bg-white border border-slate-200/80 p-6 sm:p-7 space-y-6 shadow-xs">
                 <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
                     <div>
                         <div class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-0.5 text-[10px] font-black uppercase text-[#0B6E4F] mb-1">
-                            🎭 SKEMA PERAN & KEMAMPUAN SISTEM HILALKRAFT
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <span>FITUR LIHAT SEBAGAI SEMUA USER</span>
                         </div>
-                        <h2 class="text-base sm:text-xl font-black text-[#0F291E]">Panduan Peran: Siapa Bisa Menjadi Apa Saja?</h2>
+                        <h2 class="text-base sm:text-xl font-black text-[#0F291E]">Lihat Sebagai User & Skema Peran</h2>
                         <p class="text-xs text-slate-500 mt-0.5">
-                            Super Admin memiliki hak kendali penuh untuk beralih (switch view) atau masuk merasakan website dari sudut pandang peran mana pun.
+                            @if(auth()->user()->isSuperAdmin())
+                                Super Admin dapat masuk melihat tampilan sistem secara langsung sebagai semua user terdaftar (Pemilik Toko, Pembeli, Admin Guru, dan Super Admin).
+                            @else
+                                Admin dapat masuk melihat tampilan sistem secara langsung sebagai semua user terdaftar (Pemilik Toko, Pembeli, dan sesama Admin Guru).
+                            @endif
                         </p>
                     </div>
 
-                    @if(session()->has('view_as_role') || session()->has('impersonator_id'))
-                        <form action="{{ route('admin.impersonate.leave') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black px-4 py-2 text-xs shadow-sm transition active:scale-95 flex items-center gap-2">
-                                <span>↶</span>
-                                <span>Reset / Keluar ke Super Admin</span>
+                    <div class="flex flex-wrap items-center gap-2">
+                        @if(isset($impersonationActor) && $impersonationActor)
+                            <button type="button" onclick="openLihatSebagaiModal('all')" class="rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white font-bold px-4 py-2 text-xs shadow-xs transition active:scale-95 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span>Pilih User (Semua Peran)</span>
                             </button>
-                        </form>
-                    @endif
+                        @endif
+
+                        @if(session()->has('view_as_role') || session()->has('impersonator_id'))
+                            <form action="{{ route('admin.impersonate.leave') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black px-4 py-2 text-xs shadow-sm transition active:scale-95 flex items-center gap-2">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                    <span>Kembali ke Akun Asal</span>
+                                </button>
+                            </form>
+                        @endif
+                    </div>
                 </div>
 
-                <!-- 4 Kartu Peran & Kemampuan -->
+                <!-- 4 Kartu Peran & Pemilihan User Langsung -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
                     <!-- 1. SUPER ADMIN -->
                     <div class="rounded-2xl border-2 {{ (!session()->has('view_as_role') && auth()->user()->role === 'super_admin') ? 'border-emerald-600 bg-emerald-50/20 shadow-md ring-2 ring-emerald-500/20' : 'border-slate-200 bg-[#F8FAFC]' }} p-4 sm:p-5 flex flex-col justify-between space-y-4">
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
-                                <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-900 to-[#0F291E] text-white flex items-center justify-center text-lg font-bold shadow-xs">👑</span>
-                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">God Mode</span>
+                                <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-900 to-[#0F291E] text-white flex items-center justify-center shadow-xs">
+                                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                </span>
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Penuh</span>
                             </div>
                             <div>
                                 <h3 class="text-sm font-black text-[#0F291E]">Super Admin</h3>
                                 <p class="text-[11px] text-slate-500 mt-0.5">Pemegang Otoritas & Kebijakan Tertinggi</p>
                             </div>
                             <div class="space-y-1.5 text-xs text-slate-600 border-t border-slate-200/60 pt-3">
-                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Bisa Sebagai Apa Saja?</p>
+                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Hak Akses:</p>
                                 <ul class="space-y-1 text-[11px]">
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-emerald-600 font-bold">✓</span>
-                                        <span><strong>Semua Akses:</strong> Super Admin, Admin Guru, Toko, & Pembeli.</span>
+                                        <span>Lihat sebagai <strong>semua user</strong> tanpa batas.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-emerald-600 font-bold">✓</span>
                                         <span>Kelola User & tetapkan Guru jadi Admin.</span>
-                                    </li>
-                                    <li class="flex items-start gap-1.5">
-                                        <span class="text-emerald-600 font-bold">✓</span>
-                                        <span>Reset massal like, view & deteksi akun.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-emerald-600 font-bold">✓</span>
@@ -370,17 +399,20 @@ Algoritma:
                             </div>
                         </div>
 
-                        <form action="{{ route('admin.impersonate.role', 'super_admin') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="w-full rounded-xl bg-[#0F291E] hover:bg-[#0B6E4F] text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5">
-                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                                <span>Mode Super Admin</span>
+                        @if(isset($impersonationActor) && $impersonationActor->role === 'super_admin')
+                            <button type="button" onclick="openLihatSebagaiModal('super_admin')" class="w-full rounded-xl bg-[#0F291E] hover:bg-[#0B6E4F] text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5">
+                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <span>Lihat Sebagai Super Admin</span>
                             </button>
-                        </form>
+                        @else
+                            <span class="w-full rounded-xl bg-slate-100 text-slate-500 font-bold text-[11px] py-2 px-3 text-center">
+                                Khusus Super Admin
+                            </span>
+                        @endif
                     </div>
 
                     <!-- 2. ADMIN (GURU) -->
-                    <div class="rounded-2xl border-2 {{ session()->get('view_as_role') === 'admin' ? 'border-blue-600 bg-blue-50/30 shadow-md ring-2 ring-blue-500/20' : 'border-slate-200 bg-[#F8FAFC]' }} p-4 sm:p-5 flex flex-col justify-between space-y-4">
+                    <div class="rounded-2xl border-2 {{ auth()->user()->role === 'admin' ? 'border-blue-600 bg-blue-50/30 shadow-md ring-2 ring-blue-500/20' : 'border-slate-200 bg-[#F8FAFC]' }} p-4 sm:p-5 flex flex-col justify-between space-y-4">
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
@@ -393,35 +425,28 @@ Algoritma:
                                 <p class="text-[11px] text-slate-500 mt-0.5">Pendamping & Pengelola Produk Siswa</p>
                             </div>
                             <div class="space-y-1.5 text-xs text-slate-600 border-t border-slate-200/60 pt-3">
-                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Bisa Sebagai Apa Saja?</p>
+                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Hak Akses:</p>
                                 <ul class="space-y-1 text-[11px]">
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-blue-600 font-bold">✓</span>
-                                        <span><strong>Admin:</strong> Moderasi karya & pantau toko siswa.</span>
+                                        <span><strong>Lihat Sebagai:</strong> Bisa masuk sebagai semua Seller, Buyer & Admin.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-emerald-600 font-bold">★</span>
-                                        <span><strong>Bisa Jadi Seller:</strong> Guru admin bisa punya toko sendiri untuk jual karya guru/jurusan!</span>
-                                    </li>
-                                    <li class="flex items-start gap-1.5">
-                                        <span class="text-blue-600 font-bold">✓</span>
-                                        <span><strong>Pembeli:</strong> Belanja karya siswa (Diskon Keluarga 10%).</span>
+                                        <span><strong>Kelola Toko:</strong> Punya toko guru & moderasi toko siswa.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-slate-400 font-bold">✗</span>
-                                        <span class="text-slate-400">Tidak bisa hapus atau ubah akun Super Admin.</span>
+                                        <span class="text-slate-400">Tidak bisa ubah/masuk ke akun Super Admin.</span>
                                     </li>
                                 </ul>
                             </div>
                         </div>
 
-                        <form action="{{ route('admin.impersonate.role', 'admin') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5">
-                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>
-                                <span>Lihat Tampilan Admin Guru</span>
-                            </button>
-                        </form>
+                        <button type="button" onclick="openLihatSebagaiModal('admin')" class="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <span>Pilih User Admin ({{ $adminCount }})</span>
+                        </button>
                     </div>
 
                     <!-- 3. PEMILIK TOKO (SELLER) -->
@@ -438,32 +463,28 @@ Algoritma:
                                 <p class="text-[11px] text-slate-500 mt-0.5">Siswa & Guru Pembuat Karya Inovasi</p>
                             </div>
                             <div class="space-y-1.5 text-xs text-slate-600 border-t border-slate-200/60 pt-3">
-                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Bisa Sebagai Apa Saja?</p>
+                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Aktivitas Utama:</p>
                                 <ul class="space-y-1 text-[11px]">
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-emerald-600 font-bold">✓</span>
-                                        <span>Tambah/edit produk karya, harga, foto, & stok.</span>
+                                        <span>Upload 5 foto produk, harga, & stok karya.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-emerald-600 font-bold">✓</span>
-                                        <span>Atur rekening bank / e-wallet toko untuk transfer.</span>
+                                        <span>Atur rekening bank/e-wallet & proses pesanan.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-emerald-600 font-bold">✓</span>
-                                        <span>Kelola 4 tahap pesanan: Dipesan ➔ Dikemas ➔ Dikirim.</span>
-                                    </li>
-                                    <li class="flex items-start gap-1.5">
-                                        <span class="text-emerald-600 font-bold">✓</span>
-                                        <span>Atur diskon khusus toko & klaim diskon bazar.</span>
+                                        <span>Atur diskon khusus toko & ikuti bazar SMK.</span>
                                     </li>
                                 </ul>
                             </div>
                         </div>
 
-                        <a href="{{ route('seller.dashboard') }}" class="w-full rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5 text-center">
+                        <button type="button" onclick="openLihatSebagaiModal('seller')" class="w-full rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5 text-center">
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                            <span>Buka Ruang Toko / Seller</span>
-                        </a>
+                            <span>Pilih Pemilik Toko ({{ $sellerCount }})</span>
+                        </button>
                     </div>
 
                     <!-- 4. PEMBELI (BUYER) -->
@@ -480,32 +501,28 @@ Algoritma:
                                 <p class="text-[11px] text-slate-500 mt-0.5">Siswa, Guru, Wali, Alumni & Umum</p>
                             </div>
                             <div class="space-y-1.5 text-xs text-slate-600 border-t border-slate-200/60 pt-3">
-                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Bisa Sebagai Apa Saja?</p>
+                                <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Aktivitas Utama:</p>
                                 <ul class="space-y-1 text-[11px]">
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-amber-600 font-bold">✓</span>
-                                        <span>Pesan produk resmi lewat web (Keranjang & Direct).</span>
+                                        <span>Keranjang belanja & halaman transaksi terpisah.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-amber-600 font-bold">✓</span>
-                                        <span>Dapat diskon otomatis (Pelajar 10%, Keluarga 10%, dll).</span>
+                                        <span>Dapat diskon otomatis (Pelajar/Keluarga/Alumni).</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
                                         <span class="text-amber-600 font-bold">✓</span>
-                                        <span>Lacak status pesanan live & riwayat transaksi.</span>
-                                    </li>
-                                    <li class="flex items-start gap-1.5">
-                                        <span class="text-amber-600 font-bold">✓</span>
-                                        <span>Beri rating bintang (★ 1-5) & ulasan komentar.</span>
+                                        <span>Lacak status pesanan & beri rating ulasan.</span>
                                     </li>
                                 </ul>
                             </div>
                         </div>
 
-                        <a href="{{ route('buyer.dashboard') }}" class="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5 text-center">
+                        <button type="button" onclick="openLihatSebagaiModal('buyer')" class="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs py-2 px-3 transition shadow-xs flex items-center justify-center gap-1.5 text-center">
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                            <span>Buka Dashboard Pembeli</span>
-                        </a>
+                            <span>Pilih Akun Pembeli ({{ $buyerCount }})</span>
+                        </button>
                     </div>
 
                 </div>
@@ -1260,12 +1277,20 @@ Algoritma:
                                         {{ $user->created_at?->format('d M Y') ?? '-' }}
                                     </td>
 
+                                    @php
+                                        $canImpersonateRow = $user->id !== auth()->id()
+                                            && $user->is_active
+                                            && (auth()->user()->isSuperAdmin() || (auth()->user()->isAdmin() && $user->role !== 'super_admin'));
+                                        $canManageRow = auth()->user()->isSuperAdmin()
+                                            || (auth()->user()->role === 'admin' && in_array($user->role, ['seller', 'buyer'], true));
+                                    @endphp
                                     <td class="py-3.5 px-5 text-right whitespace-nowrap space-x-2">
-                                        @if($user->id !== auth()->id() && auth()->user()->role === 'super_admin')
-                                            <form action="{{ route('admin.impersonate', $user) }}" method="POST" class="inline" onsubmit="return confirm('Masuk dan lihat tampilan website sebagai {{ addslashes($user->name) }} ({{ $user->role_label }})?');">
+                                        @if($canImpersonateRow)
+                                            <form action="{{ route('admin.impersonate', $user) }}" method="POST" class="inline" onsubmit="return confirm('Lihat tampilan website sebagai {{ addslashes($user->name) }} ({{ $user->role_label }})?');">
                                                 @csrf
-                                                <button type="submit" class="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1 text-[10px] font-bold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs" title="Simulasikan dan lihat website sebagai pengguna ini">
-                                                    👁️ Masuk Akun
+                                                <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1 text-[10px] font-bold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs" title="Lihat website sebagai pengguna ini">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                    <span>Lihat Sebagai</span>
                                                 </button>
                                             </form>
                                         @endif
@@ -1275,30 +1300,32 @@ Algoritma:
                                                 @csrf
                                                 @method('PATCH')
                                                 <button type="submit" class="rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-[10px] font-bold text-amber-800 hover:bg-amber-100">
-                                                    {{ $user->role === 'admin' ? 'Set Seller' : '👑 Jadikan Admin' }}
+                                                    {{ $user->role === 'admin' ? 'Set Seller' : 'Jadikan Admin' }}
                                                 </button>
                                             </form>
                                         @endif
 
-                                        <button type="button"
-                                                data-name="{{ $user->name }}"
-                                                data-email="{{ $user->email }}"
-                                                data-phone="{{ $user->phone }}"
-                                                data-role="{{ $user->role }}"
-                                                data-active="{{ $user->is_active ? 1 : 0 }}"
-                                                data-password="{{ $realtimePassword }}"
-                                                data-url="{{ route('admin.users.update', $user) }}"
-                                                onclick="openEditUserModal(this)"
-                                                class="font-bold text-[#0B6E4F] hover:underline">
-                                            Edit
-                                        </button>
+                                        @if($canManageRow)
+                                            <button type="button"
+                                                    data-name="{{ $user->name }}"
+                                                    data-email="{{ $user->email }}"
+                                                    data-phone="{{ $user->phone }}"
+                                                    data-role="{{ $user->role }}"
+                                                    data-active="{{ $user->is_active ? 1 : 0 }}"
+                                                    data-password="{{ auth()->user()->isSuperAdmin() ? $realtimePassword : '' }}"
+                                                    data-url="{{ route('admin.users.update', $user) }}"
+                                                    onclick="openEditUserModal(this)"
+                                                    class="font-bold text-[#0B6E4F] hover:underline">
+                                                Edit
+                                            </button>
 
-                                        @if($user->id !== auth()->id())
-                                            <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Hapus pengguna ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="font-bold text-rose-600 hover:underline">Hapus</button>
-                                            </form>
+                                            @if($user->id !== auth()->id())
+                                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('Hapus pengguna ini?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="font-bold text-rose-600 hover:underline">Hapus</button>
+                                                </form>
+                                            @endif
                                         @endif
                                     </td>
                                 </tr>
@@ -1589,13 +1616,19 @@ Algoritma:
                                     <td class="py-3.5 px-4 text-right">
                                         <div class="flex items-center justify-end gap-1.5 flex-wrap">
                                             @if(!$store->trashed())
-                                                {{-- Masuk / Buka Dashboard Toko Ini sebagai Pemilik --}}
-                                                @if(auth()->user()->isSuperAdmin() && $store->owner)
-                                                    <form action="{{ route('admin.impersonate', $store->owner) }}" method="POST" class="inline" onsubmit="return confirm('Buka dan kelola dashboard toko ini sebagai {{ addslashes($store->owner->name ?? $store->store_name) }}?');">
+                                                {{-- Masuk / Lihat Sebagai Pemilik Toko Ini --}}
+                                                @php
+                                                    $canImpersonateOwner = $store->owner
+                                                        && $store->owner->id !== auth()->id()
+                                                        && $store->owner->is_active
+                                                        && (auth()->user()->isSuperAdmin() || (auth()->user()->isAdmin() && $store->owner->role !== 'super_admin'));
+                                                @endphp
+                                                @if($canImpersonateOwner)
+                                                    <form action="{{ route('admin.impersonate', $store->owner) }}" method="POST" class="inline" onsubmit="return confirm('Lihat tampilan dashboard toko ini sebagai {{ addslashes($store->owner->name ?? $store->store_name) }}?');">
                                                         @csrf
-                                                        <button type="submit" class="inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 transition shadow-2xs" title="Masuk dan kelola toko sebagai pemilik toko">
-                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                                                            <span>Masuk Toko</span>
+                                                        <button type="submit" class="inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 transition shadow-2xs" title="Lihat dan kelola toko sebagai pemilik toko">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                            <span>Lihat Sebagai</span>
                                                         </button>
                                                     </form>
                                                 @endif

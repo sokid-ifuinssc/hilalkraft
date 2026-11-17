@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use PDO;
 use Throwable;
@@ -80,6 +81,58 @@ class AppServiceProvider extends ServiceProvider
                 // Abaikan jika gagal
             }
         }
+
+        $this->registerImpersonationViewComposer();
+    }
+
+    /**
+     * Membagikan daftar seluruh user untuk fitur "Lihat Sebagai" kepada Super Admin dan Admin
+     * (termasuk saat sesi simulasi sedang aktif) tanpa membebani pengunjung publik.
+     */
+    private function registerImpersonationViewComposer(): void
+    {
+        View::composer(['layouts.app', 'layouts.panel', 'admin.dashboard'], function ($view) {
+            static $cache = [];
+
+            $cacheKey = (auth()->id() ?? 'guest') . '|' . (session('impersonator_id') ?? 'none');
+            if (! array_key_exists($cacheKey, $cache)) {
+                $actor = null;
+                $users = collect();
+                try {
+                    if (auth()->check()) {
+                        $currentUser = auth()->user();
+                        $impId = session('impersonator_id');
+
+                        if ($impId) {
+                            $candidate = User::find($impId);
+                            if ($candidate && $candidate->is_active && in_array($candidate->role, ['super_admin', 'admin'], true)) {
+                                $actor = $candidate;
+                            }
+                        } elseif ($currentUser && $currentUser->is_active && in_array($currentUser->role, ['super_admin', 'admin'], true)) {
+                            $actor = $currentUser;
+                        }
+
+                        if ($actor && Schema::hasTable('users')) {
+                            $users = User::with('store:id,user_id,store_name')
+                                ->select('id', 'name', 'email', 'role', 'user_subtype', 'is_teacher', 'class_name', 'major_name', 'is_active')
+                                ->where('is_active', true)
+                                ->when($actor->role !== 'super_admin', fn ($q) => $q->where('role', '!=', 'super_admin'))
+                                ->orderByRaw("CASE role WHEN 'super_admin' THEN 1 WHEN 'admin' THEN 2 WHEN 'seller' THEN 3 ELSE 4 END")
+                                ->orderBy('name')
+                                ->get();
+                        }
+                    }
+                } catch (Throwable $e) {
+                    $actor = null;
+                    $users = collect();
+                }
+
+                $cache[$cacheKey] = ['actor' => $actor, 'users' => $users];
+            }
+
+            $view->with('impersonationActor', $cache[$cacheKey]['actor']);
+            $view->with('impersonatableUsers', $cache[$cacheKey]['users']);
+        });
     }
 
     private function ensureSchemaAndSampleData(): void
