@@ -114,6 +114,46 @@ class User extends Authenticatable
     }
 
     /**
+     * Memeriksa apakah pengguna memiliki peran Super Admin.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    /**
+     * Memeriksa apakah pengguna memiliki akses panel admin (Admin Guru atau Super Admin).
+     */
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['super_admin', 'admin'], true);
+    }
+
+    /**
+     * Memeriksa apakah pengguna adalah pemilik toko (seller).
+     */
+    public function isSeller(): bool
+    {
+        return $this->role === 'seller';
+    }
+
+    /**
+     * Memeriksa apakah pengguna adalah pembeli (buyer).
+     */
+    public function isBuyer(): bool
+    {
+        return $this->role === 'buyer';
+    }
+
+    /**
+     * Memeriksa apakah pengguna berstatus guru.
+     */
+    public function isTeacher(): bool
+    {
+        return (bool) $this->is_teacher || $this->user_subtype === 'guru';
+    }
+
+    /**
      * Fungsi: Menyusun teks alamat lengkap dari Desa, Kecamatan, Kabupaten, dan Kode Pos.
      */
     public function getFullAddressAttribute(): string
