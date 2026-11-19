@@ -122,7 +122,7 @@ Fungsi:
                                     Sedang Aktif
                                 </span>
                             @else
-                                <form action="{{ route('admin.impersonate', $lsUser) }}" method="POST">
+                                <form action="{{ route('admin.impersonate', $lsUser, false) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white px-3 py-1.5 text-xs font-bold shadow-2xs transition active:scale-95">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -144,7 +144,7 @@ Fungsi:
             {{-- Footer --}}
             <div class="px-5 py-3 border-t border-slate-100 bg-[#F8FAFC] flex items-center justify-between gap-3">
                 @if(session()->has('impersonator_id') || session()->has('view_as_role'))
-                    <form action="{{ route('admin.impersonate.leave') }}" method="POST">
+                    <form action="{{ route('admin.impersonate.leave', [], false) }}" method="POST">
                         @csrf
                         <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-1.5 text-xs font-bold transition shadow-xs">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>

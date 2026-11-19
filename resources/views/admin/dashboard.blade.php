@@ -359,7 +359,7 @@ Algoritma:
                         @endif
 
                         @if(session()->has('view_as_role') || session()->has('impersonator_id'))
-                            <form action="{{ route('admin.impersonate.leave') }}" method="POST">
+                            <form action="{{ route('admin.impersonate.leave', [], false) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black px-4 py-2 text-xs shadow-sm transition active:scale-95 flex items-center gap-2">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
@@ -1309,7 +1309,7 @@ Algoritma:
                                     @endphp
                                     <td class="py-3.5 px-5 text-right whitespace-nowrap space-x-2">
                                         @if($canImpersonateRow)
-                                            <form action="{{ route('admin.impersonate', $user) }}" method="POST" class="inline" onsubmit="return confirm('Lihat tampilan website sebagai {{ addslashes($user->name) }} ({{ $user->role_label }})?');">
+                                            <form action="{{ route('admin.impersonate', $user, false) }}" method="POST" class="inline" onsubmit="return confirm('Lihat tampilan website sebagai {{ addslashes($user->name) }} ({{ $user->role_label }})?');">
                                                 @csrf
                                                 <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1 text-[10px] font-bold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs" title="Lihat website sebagai pengguna ini">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -1649,7 +1649,7 @@ Algoritma:
                                                         && (auth()->user()->isSuperAdmin() || (auth()->user()->isAdmin() && $store->owner->role !== 'super_admin'));
                                                 @endphp
                                                 @if($canImpersonateOwner)
-                                                    <form action="{{ route('admin.impersonate', $store->owner) }}" method="POST" class="inline" onsubmit="return confirm('Lihat tampilan dashboard toko ini sebagai {{ addslashes($store->owner->name ?? $store->store_name) }}?');">
+                                                    <form action="{{ route('admin.impersonate', $store->owner, false) }}" method="POST" class="inline" onsubmit="return confirm('Lihat tampilan dashboard toko ini sebagai {{ addslashes($store->owner->name ?? $store->store_name) }}?');">
                                                         @csrf
                                                         <button type="submit" class="inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 transition shadow-2xs" title="Lihat dan kelola toko sebagai pemilik toko">
                                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>

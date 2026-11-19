@@ -130,7 +130,7 @@ Algoritma:
                         <span>Ganti User</span>
                     </button>
                 @endif
-                <form action="{{ route('admin.impersonate.leave') }}" method="POST" class="shrink-0">
+                <form action="{{ route('admin.impersonate.leave', [], false) }}" method="POST" class="shrink-0">
                     @csrf
                     <button type="submit" class="rounded-lg bg-white text-amber-950 font-black px-3 py-1 text-xs hover:bg-amber-100 shadow-sm transition active:scale-95 flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>

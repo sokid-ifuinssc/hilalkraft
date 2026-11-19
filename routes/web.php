@@ -186,6 +186,25 @@ Route::middleware('auth')->group(function () {
     Route::post('/panel-admin/impersonate-role/{role}', [AdminDashboardController::class, 'impersonateRole'])->name('admin.impersonate.role');
     Route::post('/kembali-ke-super-admin', [AdminDashboardController::class, 'leaveImpersonate'])->name('admin.impersonate.leave');
 
+    // Pengaman jika URL impersonasi diakses lewat GET (refresh browser / back / redirect pasca-login):
+    // tidak pernah mengeksekusi impersonasi via GET (aman dari CSRF), melainkan mengarahkan ulang dengan aman.
+    $impersonateGetFallback = function (\Illuminate\Http\Request $request) {
+        $auth = $request->user();
+        if (! $auth) {
+            return redirect()->route('login');
+        }
+
+        return match ($auth->role) {
+            'super_admin', 'admin' => redirect()->route('admin.dashboard'),
+            'seller'               => redirect()->route('seller.dashboard'),
+            'buyer'                => redirect()->route('buyer.dashboard'),
+            default                => redirect()->route('home'),
+        };
+    };
+    Route::get('/panel-admin/impersonate/{any?}', $impersonateGetFallback)->where('any', '.*');
+    Route::get('/panel-admin/impersonate-role/{any?}', $impersonateGetFallback)->where('any', '.*');
+    Route::get('/kembali-ke-super-admin', $impersonateGetFallback);
+
     // Scan Barcode / QR Kehadiran Bazar, Stand Toko & Poin Doorprize (Pembeli / Akun Terdaftar)
     Route::get('/bazar/scan/{token}', [BazaarManagementController::class, 'handleTokenScan'])->name('bazaar.scan.token');
     Route::get('/pembeli/bazar-poin', [BazaarManagementController::class, 'scanPage'])->name('bazaar.scan.page');

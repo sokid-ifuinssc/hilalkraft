@@ -31,6 +31,7 @@ namespace {
             health: '/up',
         )
         ->withMiddleware(function (Middleware $middleware) {
+            $middleware->trustProxies(at: '*');
             $middleware->alias([
                 'role' => RoleMiddleware::class,
             ]);
