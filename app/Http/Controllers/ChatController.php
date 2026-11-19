@@ -27,6 +27,7 @@ class ChatController extends Controller
 {
     public function index(Request $request): View
     {
+        StoreConversation::ensureTablesExist();
         $user = $request->user();
         $store = $user->store;
 
@@ -101,6 +102,7 @@ class ChatController extends Controller
 
     public function startWithStore(Request $request, Store $store): RedirectResponse
     {
+        StoreConversation::ensureTablesExist();
         $user = $request->user();
 
         if (($store->status ?? 'active') !== 'active' || ! $store->is_verified) {
@@ -141,6 +143,7 @@ class ChatController extends Controller
 
     public function startWithBuyer(Request $request, User $buyer): RedirectResponse
     {
+        StoreConversation::ensureTablesExist();
         $user = $request->user();
         $store = $user->store;
 

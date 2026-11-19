@@ -150,4 +150,50 @@ class StoreConversation extends Model
             return 0;
         }
     }
+
+    /**
+     * Auto-healing skema tabel chat bila kode baru ditarik di server tanpa
+     * menjalankan `php artisan migrate` secara manual.
+     */
+    public static function ensureTablesExist(): void
+    {
+        try {
+            $hasConv = Schema::hasTable('store_conversations');
+            $hasMsg = Schema::hasTable('store_messages');
+            if ($hasConv && $hasMsg) {
+                return;
+            }
+
+            if (! $hasConv && Schema::hasTable('users') && Schema::hasTable('stores')) {
+                Schema::create('store_conversations', function ($table) {
+                    $table->id();
+                    $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
+                    $table->foreignId('store_id')->constrained('stores')->cascadeOnDelete();
+                    $table->foreignId('last_product_id')->nullable()->constrained('products')->nullOnDelete();
+                    $table->timestamp('last_message_at')->nullable();
+                    $table->timestamps();
+
+                    $table->unique(['buyer_id', 'store_id']);
+                    $table->index('last_message_at');
+                });
+            }
+
+            if (! Schema::hasTable('store_messages') && Schema::hasTable('store_conversations') && Schema::hasTable('users')) {
+                Schema::create('store_messages', function ($table) {
+                    $table->id();
+                    $table->foreignId('conversation_id')->constrained('store_conversations')->cascadeOnDelete();
+                    $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
+                    $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
+                    $table->text('body');
+                    $table->timestamp('read_at')->nullable();
+                    $table->timestamps();
+
+                    $table->index(['conversation_id', 'id']);
+                    $table->index(['sender_id', 'read_at']);
+                });
+            }
+        } catch (\Throwable $e) {
+            // Abaikan bila proses migrasi paralel sedang berjalan
+        }
+    }
 }

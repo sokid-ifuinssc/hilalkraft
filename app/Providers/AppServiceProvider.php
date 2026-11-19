@@ -223,13 +223,17 @@ class AppServiceProvider extends ServiceProvider
                 ! Schema::hasTable('users') ||
                 ! Schema::hasTable('regencies') ||
                 ! Schema::hasTable('bazaar_doorprize_winners') ||
-                ! Schema::hasColumn('bazaar_events', 'points_checkin')
+                ! Schema::hasColumn('bazaar_events', 'points_checkin') ||
+                ! Schema::hasTable('store_conversations') ||
+                ! Schema::hasTable('store_messages')
             ) {
                 Artisan::call('migrate', ['--force' => true]);
             }
         } catch (Throwable $e) {
             // Abaikan jika migrasi sedang berjalan
         }
+
+        \App\Models\StoreConversation::ensureTablesExist();
 
         // Lengkapi token QR & kode pendek pada acara bazar yang belum memilikinya
         try {
