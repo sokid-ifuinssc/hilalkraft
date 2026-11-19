@@ -103,7 +103,7 @@ class BuyerOrderController extends Controller
      * Mendeteksi acara bazar aktif tempat pembeli sudah melakukan scan hadir / kunjungan stand
      * dan toko termasuk peserta resmi bazar tersebut agar poin transaksi tetap tercatat.
      */
-    private function detectBazaarEventForStoreOrder(Store $store, User $buyer, ?string $preferredVoucherCode = null): ?BazaarEvent
+    private function detectBazaarEventForStoreOrder(Store $store, User $buyer): ?BazaarEvent
     {
         if (! Schema::hasTable('bazaar_store_participants')) {
             return null;
@@ -121,16 +121,6 @@ class BuyerOrderController extends Controller
 
         if ($participatingEventIds->isEmpty()) {
             return null;
-        }
-
-        if ($preferredVoucherCode !== null && $preferredVoucherCode !== '') {
-            $matchedVoucherEvent = $activeEvents->first(
-                fn ($ev) => $participatingEventIds->contains($ev->id)
-                    && strtoupper((string) $ev->voucher_code) === strtoupper($preferredVoucherCode)
-            );
-            if ($matchedVoucherEvent) {
-                return $matchedVoucherEvent;
-            }
         }
 
         // Prioritaskan event bazar yang sudah pernah di-scan pengunjung jika ada
@@ -386,8 +376,6 @@ class BuyerOrderController extends Controller
             'destination_kecamatan'  => ['nullable', 'string', 'max:100'],
             'destination_desa'       => ['nullable', 'string', 'max:100'],
             'notes'                  => ['nullable', 'string', 'max:500'],
-            'bazaar_voucher_code'    => ['nullable', 'string', 'max:50'],
-            'is_bazaar_offline'      => ['nullable', 'boolean'],
             'direct_product_id'      => ['nullable', 'integer'],
             'direct_quantity'        => ['nullable', 'integer', 'min:1'],
             'checkout_product_ids'   => ['nullable', 'array'],
@@ -473,16 +461,14 @@ class BuyerOrderController extends Controller
             default  => $rawShippingAddr !== '' ? $rawShippingAddr : ($buyer->full_address ?: "Desa {$desa}, Kec. {$kecamatan}, Kab. {$kabupaten}"),
         };
 
-        $voucherCode = strtoupper(trim((string) ($validated['bazaar_voucher_code'] ?? '')));
-
         $groupedByStore = collect($itemsToProcess)->groupBy('store_id');
 
-        DB::transaction(function () use ($groupedByStore, $buyer, $validated, $voucherCode, $deliveryMethod, $shippingCost, $kabupaten, $kecamatan, $desa, $shippingAddress) {
+        DB::transaction(function () use ($groupedByStore, $buyer, $validated, $deliveryMethod, $shippingCost, $kabupaten, $kecamatan, $desa, $shippingAddress) {
             foreach ($groupedByStore as $storeId => $items) {
                 $store = Store::findOrFail($storeId);
                 $subtotal = (float) $items->sum(fn ($item) => $item['price'] * $item['quantity']);
 
-                $storeBazaarEvent = $this->detectBazaarEventForStoreOrder($store, $buyer, $voucherCode);
+                $storeBazaarEvent = $this->detectBazaarEventForStoreOrder($store, $buyer);
                 $isBazaarOrder = $storeBazaarEvent !== null && $storeBazaarEvent->isActiveNow();
 
                 $pricing = $store->calculateOrderPricing($subtotal, $buyer, $storeBazaarEvent, $isBazaarOrder);
@@ -573,8 +559,6 @@ class BuyerOrderController extends Controller
             'destination_kabupaten' => ['nullable', 'string', 'max:100'],
             'destination_kecamatan' => ['nullable', 'string', 'max:100'],
             'destination_desa'      => ['nullable', 'string', 'max:100'],
-            'is_bazaar_offline'     => ['nullable', 'boolean'],
-            'bazaar_voucher_code'   => ['nullable', 'string', 'max:50'],
             'shipping_address'      => ['nullable', 'string', 'max:255'],
             'notes'                 => ['nullable', 'string', 'max:500'],
         ]);
@@ -604,9 +588,7 @@ class BuyerOrderController extends Controller
 
         $shippingCost = Order::calculateEstimatedShipping($deliveryMethod, $kabupaten, $kecamatan);
 
-        $voucherCode = strtoupper(trim((string) ($validated['bazaar_voucher_code'] ?? '')));
-
-        $bazaarEvent = $this->detectBazaarEventForStoreOrder($store, $buyer, $voucherCode);
+        $bazaarEvent = $this->detectBazaarEventForStoreOrder($store, $buyer);
         $isBazaarOrder = $bazaarEvent !== null && $bazaarEvent->isActiveNow();
 
         $subtotal = (float) $product->price * $qty;

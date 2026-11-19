@@ -834,7 +834,7 @@ Algoritma:
                                 </p>
                                 @foreach($activeBazaarEvents as $ev)
                                     <p class="text-[11px] text-[#0B6E4F]">
-                                        &bull; <strong>{{ $ev->title }}</strong> ({{ $ev->location ?? 'SMK Plus Al Hilal' }}) — Kode Voucher: <span class="font-mono font-extrabold bg-white px-2 py-0.5 rounded border border-emerald-300">{{ $ev->voucher_code }}</span> (Diskon Event {{ $ev->discount_percent }}% + Diskon Ekstra Toko Anda {{ $store->discount_bazar_extra ?? 0 }}%)
+                                        &bull; <strong>{{ $ev->title }}</strong> ({{ $ev->location ?? 'SMK Plus Al Hilal' }}) &mdash; Diskon Event {{ $ev->discount_percent }}% + Diskon Ekstra Toko Anda {{ $store->discount_bazar_extra ?? 0 }}% (otomatis diterapkan oleh sistem jika toko Anda terdaftar &amp; disetujui sebagai peserta acara).
                                     </p>
                                 @endforeach
                             </div>

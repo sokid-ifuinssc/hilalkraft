@@ -298,10 +298,11 @@ Algoritma:
         'image'    => null,
     ]);
 
-    if ($bazarEvent) {
+    $hasActiveBazaarStores = isset($activeBazaarByStore) && $activeBazaarByStore->isNotEmpty();
+    if ($bazarEvent && $hasActiveBazaarStores) {
         $promoCards->push((object)[
             'category' => 'Promo Bazar',
-            'title'    => "Bazar {$bazarEvent->discount_percent}% ({$bazarEvent->voucher_code})",
+            'title'    => "Bazar {$bazarEvent->discount_percent}% (Otomatis)",
             'content'  => $bazarEvent->title . ' • Lokasi: ' . ($bazarEvent->location ?? 'SMK Plus Al Hilal'),
             'link_url' => '#katalog-produk',
             'image'    => null,
