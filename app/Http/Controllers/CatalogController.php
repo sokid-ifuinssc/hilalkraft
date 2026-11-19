@@ -17,9 +17,9 @@ use Illuminate\View\View;
  * CONTROLLER: CATALOG CONTROLLER (KATALOG, DETEKSI VIEWS MATA, LIKE & KOMENTAR)
  * ============================================================================
  * Fungsi:
- *   Menangani katalog produk publik, pencatatan jumlah dilihat (ikon mata 👁️)
+ *   Menangani katalog produk publik, pencatatan jumlah dilihat (ikon mata)
  *   baik dari pengunjung tamu (Guest) maupun pengguna berakun, pemberian
- *   komentar produk oleh pengguna berakun, serta fitur suka (like ❤️).
+ *   komentar produk oleh pengguna berakun, serta fitur suka (like).
  * ============================================================================
  */
 class CatalogController extends Controller
@@ -83,7 +83,7 @@ class CatalogController extends Controller
     /**
      * Fungsi:
      *   Menampilkan halaman detail produk, mendeteksi & menambah jumlah dilihat
-     *   (ikon mata 👁️) untuk Guest maupun User berakun, serta memuat komentar.
+     *   (ikon mata) untuk Guest maupun User berakun, serta memuat komentar.
      *
      * Algoritma (Real-Time View Tracking & Visitor Profiling):
      *   1. Increment `views_count` secara atomik pada tabel `products` dan `stores`.
@@ -176,7 +176,7 @@ class CatalogController extends Controller
     }
 
     /**
-     * Fungsi: Menambah suka (like ❤️) pada produk oleh pengunjung maupun pengguna berakun.
+     * Fungsi: Menambah suka (like) pada produk oleh pengunjung maupun pengguna berakun.
      * Algoritma (Deduplicated Like Toggle / Counter):
      *   Mengecek apakah `user_id` (jika login) atau `ip_address` (jika guest) sudah
      *   menyukai produk ini; jika belum, simpan ke `product_likes` dan increment `likes_count`.

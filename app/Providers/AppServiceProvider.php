@@ -15,25 +15,12 @@ use Throwable;
 
 /**
  * ============================================================================
- * SERVICE PROVIDER: APP SERVICE PROVIDER (AUTO-BOOTSTRAPPER DB, MIGRATION & CMS)
+ * SERVICE PROVIDER: APP SERVICE PROVIDER (AUTO-BOOTSTRAPPER DB & MIGRATION)
  * ============================================================================
- * Fungsi:
- *   Menyiapkan koneksi database (MySQL `db_hilalkraft` dengan fallback SQLite),
- *   menjalankan migrasi skema terbaru (termasuk `cms_contents`), dan memastikan
- *   data awal yang diminta pengguna tersedia secara otomatis satu kali:
- *   - 1 Super Admin (`superadmin@hilalkraft.sch.id`)
- *   - 2 Guru sebagai Admin: Ibu Silvi Dwi Manitik & Ibu Melinda
- *   - 1 Siswa Pemilik Toko + 1 Karya Siswa Contoh (`Gantungan Kunci Bunga`)
- *   - 1 Pembeli (`Aditya Pratama`)
- *   - Blok Konten CMS Website (`cms_contents`)
- * Algoritma:
- *   1. Mencoba koneksi ke MySQL (`db_hilalkraft`) dan beralih ke SQLite lokal
- *      apabila layanan MySQL sedang tidak aktif.
- *   2. Menjalankan `migrate --force` secara otomatis apabila tabel baru seperti
- *      `cms_contents` belum tersedia.
- *   3. Menggunakan penanda satu kali (`cms_seeded_v2_{connection}.flag`) agar
- *      sinkronisasi data contoh berjalan satu kali pada masing-masing database
- *      tanpa menimpa perubahan yang dilakukan pengguna selanjutnya.
+ * Menyiapkan koneksi database (MySQL dengan fallback SQLite), memastikan
+ * migrasi skema terbaru berjalan jika tabel inti belum ada, melengkapi token
+ * QR bazar yang kosong, dan menjalankan seeder non-destruktif hanya saat
+ * database benar-benar kosong (belum memiliki user).
  * ============================================================================
  */
 class AppServiceProvider extends ServiceProvider
@@ -232,47 +219,16 @@ class AppServiceProvider extends ServiceProvider
         }
 
         try {
-            if (! Schema::hasTable('regencies')) {
+            if (
+                ! Schema::hasTable('users') ||
+                ! Schema::hasTable('regencies') ||
+                ! Schema::hasTable('bazaar_doorprize_winners') ||
+                ! Schema::hasColumn('bazaar_events', 'points_checkin')
+            ) {
                 Artisan::call('migrate', ['--force' => true]);
             }
         } catch (Throwable $e) {
             // Abaikan jika migrasi sedang berjalan
-        }
-
-        try {
-            if (Schema::hasTable('cms_contents')) {
-                DB::statement("UPDATE cms_contents SET content = REPLACE(content, 'dikeola', 'dikelola') WHERE content LIKE '%dikeola%'");
-                DB::statement("UPDATE cms_contents SET title = REPLACE(title, 'dikeola', 'dikelola') WHERE title LIKE '%dikeola%'");
-            }
-            if (Schema::hasTable('class_majors') && Schema::hasTable('users')) {
-                \App\Models\ClassMajor::syncUsersWithMaster();
-            }
-        } catch (Throwable $e) {
-            // Abaikan jika belum siap
-        }
-
-        if (
-            ! Schema::hasTable('users') ||
-            ! Schema::hasTable('categories') ||
-            ! Schema::hasTable('class_majors') ||
-            ! Schema::hasTable('product_comments') ||
-            ! Schema::hasTable('product_likes') ||
-            ! Schema::hasTable('visitor_logs') ||
-            ! Schema::hasTable('cms_contents') ||
-            ! Schema::hasTable('bazaar_events') ||
-            ! Schema::hasTable('bazaar_store_participants') ||
-            ! Schema::hasTable('bazaar_visitor_points') ||
-            ! Schema::hasTable('bazaar_doorprize_winners') ||
-            ! Schema::hasTable('activity_logs') ||
-            ! Schema::hasColumn('bazaar_events', 'checkin_token') ||
-            ! Schema::hasColumn('cms_contents', 'duration_seconds') ||
-            ! Schema::hasColumn('orders', 'progress_status') ||
-            ! Schema::hasColumn('orders', 'delivery_method') ||
-            ! Schema::hasColumn('stores', 'discount_pelajar') ||
-            ! Schema::hasColumn('users', 'user_subtype') ||
-            ! Schema::hasColumn('products', 'views_count')
-        ) {
-            Artisan::call('migrate', ['--force' => true]);
         }
 
         // Lengkapi token QR & kode pendek pada acara bazar yang belum memilikinya
@@ -286,46 +242,12 @@ class AppServiceProvider extends ServiceProvider
                     });
             }
         } catch (Throwable $e) {
-            // Abaikan
+            // Abaikan jika belum siap
         }
 
-        // Pastikan minimal 1 contoh Acara Bazar SMK aktif tersedia jika tabel bazaar_events masih kosong
-        if (Schema::hasTable('bazaar_events') && \App\Models\BazaarEvent::count() === 0) {
-            \App\Models\BazaarEvent::create([
-                'title'               => 'Bazar Karya & Inovasi SMK Plus Al Hilal (SMK PAL)',
-                'voucher_code'        => 'BAZARSMKPAL',
-                'location'            => 'Halaman Utama SMK Plus Al Hilal Arjawinangun',
-                'description'         => 'Diskon spesial bagi pembeli yang hadir langsung atau berbelanja pada acara Bazar Karya & Inovasi SMK Plus Al Hilal.',
-                'discount_percent'    => 10,
-                'max_discount_amount' => null,
-                'start_date'          => date('Y-m-d'),
-                'end_date'            => date('Y-m-d', strtotime('+6 months')),
-                'is_active'           => true,
-            ]);
-
-            if (Schema::hasColumn('stores', 'discount_pelajar')) {
-                \App\Models\Store::where('discount_pelajar', 0)
-                    ->where('discount_keluarga', 0)
-                    ->update([
-                        'discount_pelajar'     => 10,
-                        'discount_keluarga'    => 15,
-                        'discount_alumni'      => 10,
-                        'discount_bazar_extra' => 5,
-                    ]);
-            }
-        }
-
-        // Sinkronisasi satu kali (One-Time Flag v8):
-        // - Membersihkan seluruh data seeder dummy (pembeli, toko siswa, produk, pesanan, iklan mitra)
-        // - Menyisakan HANYA akun Super Admin dan Admin (Guru)
-        $connName = DB::getDefaultConnection();
-        $seedFlag = storage_path("app/cms_seeded_v8_{$connName}.flag");
-        if (! is_file($seedFlag)) {
+        // Jalankan seeder non-destruktif hanya pada instalasi database kosong (belum ada akun sama sekali)
+        if (Schema::hasTable('users') && \App\Models\User::count() === 0) {
             app(DatabaseSeeder::class)->run();
-
-            @file_put_contents($seedFlag, date('c'));
-        } elseif ($connName === 'mysql') {
-            DatabaseSeeder::syncLiveSnapshotToStorage();
         }
     }
 }

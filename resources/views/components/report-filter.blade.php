@@ -33,10 +33,15 @@ Props:
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
             <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Periode laporan</p>
-            <p class="text-sm font-extrabold text-[#0F291E]">📅 {{ $range['label'] }} <span class="text-xs font-semibold text-slate-400">· grafik {{ $range['group_label'] }}</span></p>
+            <p class="text-sm font-extrabold text-[#0F291E] flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <span>{{ $range['label'] }}</span>
+                <span class="text-xs font-semibold text-slate-400">&middot; grafik {{ $range['group_label'] }}</span>
+            </p>
         </div>
         <a href="{{ $exportUrl }}" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
-            ⬇️ Unduh CSV (Excel)
+            <svg class="w-3.5 h-3.5 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            <span>Unduh CSV (Excel)</span>
         </a>
     </div>
 

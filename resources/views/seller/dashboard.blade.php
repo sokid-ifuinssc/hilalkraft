@@ -5,8 +5,8 @@ VIEW: DASHBOARD PEMILIK TOKO & PRODUK SAYA (seller/dashboard.blade.php)
 Fungsi:
   Menampilkan halaman kelola produk & profil pemilik toko sesuai referensi
   desain Figma `Kelola produk · Desktop.png` (Sidebar Ruang Karya Siswa,
-  4 Kartu Ringkasan, Tabel Produk Saya dengan indikator 👁️ Lihat, ❤️ Suka,
-  💬 Komentar, Daftar Pesanan, serta Form Edit Profil Lengkap Satu Toko Satu
+  4 Kartu Ringkasan, Tabel Produk Saya dengan indikator Lihat, Suka,
+  Komentar, Daftar Pesanan, serta Form Edit Profil Lengkap Satu Toko Satu
   Akun bagi Siswa maupun Guru).
 Algoritma:
   1. Menghitung jumlah produk dengan stok menipis (`stock <= 3`) untuk
@@ -77,41 +77,41 @@ Algoritma:
             <nav class="space-y-1 text-xs font-semibold" id="seller-sidebar-nav">
                 @if(in_array($user->role, ['admin', 'super_admin']))
                     <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 rounded-xl px-3.5 py-2 bg-emerald-50 text-[#0B6E4F] font-bold hover:bg-emerald-100 transition border border-emerald-200/60 mb-2">
-                        <span>⚙️</span>
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                         <span>Panel Admin</span>
                     </a>
                 @endif
                 <button type="button" onclick="switchSellerTab('all')" class="seller-nav-item w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition text-left" data-target="all">
-                    <span>⊞</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
                     <span>Semua Menu</span>
                 </button>
                 <button type="button" onclick="switchSellerTab('produk')" class="seller-nav-item w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 bg-[#EBF9F2] text-[#0B6E4F] font-bold text-left transition" data-target="produk">
                     <span class="flex items-center gap-3">
-                        <span>📦</span>
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                         <span>Produk Saya</span>
                     </span>
                     <span class="rounded-full bg-white/80 px-2 py-0.5 text-[10px]">{{ $products->total() }}</span>
                 </button>
                 <button type="button" onclick="switchSellerTab('pesanan')" class="seller-nav-item w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition text-left" data-target="pesanan">
                     <span class="flex items-center gap-3">
-                        <span>🚚</span>
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
                         <span>Progres Pesanan</span>
                     </span>
                     <span class="rounded-full bg-[#EBF9F2] px-2 py-0.5 text-[10px] font-bold text-[#0B6E4F]">{{ $orders->count() }}</span>
                 </button>
                 <button type="button" onclick="switchSellerTab('diskon')" class="seller-nav-item w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition text-left" data-target="diskon">
                     <span class="flex items-center gap-3">
-                        <span>🏷️</span>
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
                         <span>Diskon & Bazar</span>
                     </span>
                     <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">Promo</span>
                 </button>
                 <button type="button" onclick="switchSellerTab('profil')" class="seller-nav-item w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition text-left" data-target="profil">
-                    <span>🏪</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 20V14h6v6" /></svg>
                     <span>Profil Toko</span>
                 </button>
                 <a href="{{ route('seller.reports') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>📊</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                     <span>Laporan Penjualan</span>
                 </a>
             </nav>
@@ -120,7 +120,9 @@ Algoritma:
         <!-- Bagian Bawah Sidebar -->
         <div class="space-y-4">
             <div class="rounded-2xl bg-[#EBF9F2] p-4 space-y-1.5">
-                <span class="w-6 h-6 rounded-full bg-white text-[#0B6E4F] flex items-center justify-center text-xs font-bold">🛟</span>
+                <span class="w-6 h-6 rounded-full bg-white text-[#0B6E4F] flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                </span>
                 <p class="text-xs font-bold text-[#0F291E] pt-1">Butuh bantuan?</p>
                 <p class="text-[11px] text-slate-500">Tim hilalkraft siap membantu.</p>
                 <button type="button" onclick="switchSellerTab('profil')" class="inline-block text-[11px] font-bold text-[#0B6E4F] hover:underline pt-0.5 text-left">
@@ -145,7 +147,7 @@ Algoritma:
         <header class="h-16 bg-white border-b border-slate-200/80 px-4 sm:px-10 flex items-center justify-between gap-3 sticky top-0 z-30">
             <div class="flex items-center gap-3">
                 <button type="button" onclick="toggleSellerSidebar(true)" class="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 border border-slate-200 flex items-center gap-1.5 font-bold text-xs">
-                    <span>☰</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     <span>Menu</span>
                 </button>
                 <div class="text-xs text-slate-400 hidden sm:flex items-center gap-2">
@@ -160,7 +162,7 @@ Algoritma:
             <div class="flex items-center gap-3">
                 @if(in_array($user->role, ['admin', 'super_admin']))
                     <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 text-[#0B6E4F] border border-emerald-200/60 px-3 py-1.5 text-xs font-bold hover:bg-emerald-100 transition">
-                        <span>⚙️</span>
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                         <span>Panel Admin</span>
                     </a>
                 @endif
@@ -182,8 +184,8 @@ Algoritma:
             <div id="seller-floating-toast" class="fixed top-5 right-5 z-[9999] max-w-md w-[92vw] sm:w-[420px] transition-all duration-300">
                 @if(session('success'))
                     <div class="rounded-2xl bg-white border-2 border-[#10B981] p-4 shadow-2xl flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-[#EBF9F2] text-[#0B6E4F] flex items-center justify-center font-bold text-base shrink-0">
-                            ✓
+                        <div class="w-8 h-8 rounded-full bg-[#EBF9F2] text-[#0B6E4F] flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="text-xs font-extrabold text-[#0B6E4F] uppercase tracking-wider">Perubahan Berhasil Disimpan</p>
@@ -194,8 +196,8 @@ Algoritma:
                 @endif
                 @if(session('error'))
                     <div class="rounded-2xl bg-white border-2 border-rose-500 p-4 shadow-2xl flex items-start gap-3 mt-2">
-                        <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-base shrink-0">
-                            ✕
+                        <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="text-xs font-extrabold text-rose-600 uppercase tracking-wider">Perhatian / Gagal</p>
@@ -228,23 +230,28 @@ Algoritma:
 
             <!-- Bilah Navigasi Tab Cepat (Quick Switcher Pills Anti-Scroll Panjang di Mobile & Desktop) -->
             <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs font-bold -mx-1 px-1">
-                <button type="button" onclick="switchSellerTab('all')" class="seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-[#0B6E4F] text-white" data-pill="all">
-                    ⊞ Semua Menu
+                <button type="button" onclick="switchSellerTab('all')" class="seller-pill inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-[#0B6E4F] text-white" data-pill="all">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                    <span>Semua Menu</span>
                 </button>
-                <button type="button" onclick="switchSellerTab('produk')" class="seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="produk">
-                    📦 Produk Saya ({{ $products->total() }})
+                <button type="button" onclick="switchSellerTab('produk')" class="seller-pill inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="produk">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                    <span>Produk Saya ({{ $products->total() }})</span>
                 </button>
-                <button type="button" onclick="switchSellerTab('pesanan')" class="seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="pesanan">
-                    🚚 Progres Pesanan ({{ $orders->count() }})
+                <button type="button" onclick="switchSellerTab('pesanan')" class="seller-pill inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="pesanan">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
+                    <span>Progres Pesanan ({{ $orders->count() }})</span>
                 </button>
-                <button type="button" onclick="switchSellerTab('diskon')" class="seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="diskon">
-                    🏷️ Diskon & Bazar
+                <button type="button" onclick="switchSellerTab('diskon')" class="seller-pill inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="diskon">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                    <span>Diskon & Bazar</span>
                 </button>
-                <button type="button" onclick="switchSellerTab('profil')" class="seller-pill rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="profil">
-                    🏪 Profil Toko
+                <button type="button" onclick="switchSellerTab('profil')" class="seller-pill inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200" data-pill="profil">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 20V14h6v6" /></svg>
+                    <span>Profil Toko</span>
                 </button>
-                <a href="{{ route('seller.reports') }}" class="rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 flex items-center gap-1">
-                    <span>📊</span>
+                <a href="{{ route('seller.reports') }}" class="rounded-full px-3.5 py-1.5 transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 inline-flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                     <span>Laporan Penjualan</span>
                 </a>
             </div>
@@ -259,7 +266,8 @@ Algoritma:
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <a href="{{ route('seller.reports') }}" class="inline-flex items-center gap-2 rounded-xl border border-[#CDEFE0] bg-[#EBF9F2] px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
-                            📊 Laporan
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                            <span>Laporan</span>
                         </a>
                         <a href="{{ route('seller.products.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-[#0B6E4F] px-4.5 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-[#08583F] transition shadow-sm">
                             <span>+ Tambah Produk Baru</span>
@@ -272,7 +280,7 @@ Algoritma:
                     <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
                         <div class="flex items-center justify-between text-xs text-slate-400">
                             <span>Produk aktif</span>
-                            <span class="text-[#0B6E4F]">📦</span>
+                            <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                         </div>
                         <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ $store->products_count }}</p>
                         <p class="text-[11px] font-semibold text-[#0B6E4F]">Semua sudah tayang</p>
@@ -280,8 +288,8 @@ Algoritma:
 
                     <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
                         <div class="flex items-center justify-between text-xs text-slate-400">
-                            <span>Total dilihat (👁️)</span>
-                            <span class="text-[#0B6E4F]">👁️</span>
+                            <span>Total dilihat</span>
+                            <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                         </div>
                         <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ number_format($store->views_count + $products->sum('views_count')) }}</p>
                         <p class="text-[11px] font-semibold text-[#0B6E4F]">Pengunjung & akun</p>
@@ -290,10 +298,10 @@ Algoritma:
                     <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
                         <div class="flex items-center justify-between text-xs text-slate-400">
                             <span>Suka & Komentar</span>
-                            <span class="text-[#0B6E4F]">❤️</span>
+                            <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                         </div>
                         <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">
-                            {{ number_format($products->sum('likes_count')) }} <span class="text-sm font-semibold text-slate-400">/ {{ number_format($store->comments_count ?? 0) }} 💬</span>
+                            {{ number_format($products->sum('likes_count')) }} <span class="text-sm font-semibold text-slate-400">/ {{ number_format($store->comments_count ?? 0) }} ulasan</span>
                         </p>
                         <p class="text-[11px] font-semibold text-[#0B6E4F]">Apresiasi karya</p>
                     </div>
@@ -301,7 +309,7 @@ Algoritma:
                     <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
                         <div class="flex items-center justify-between text-xs text-slate-400">
                             <span>Stok menipis</span>
-                            <span class="text-amber-600">⚠️</span>
+                            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                         </div>
                         <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ $lowStockProducts->count() }}</p>
                         <p class="text-[11px] font-semibold text-[#0B6E4F]">{{ $lowStockProducts->count() > 0 ? 'Perlu segera ditambah' : 'Stok aman terkendali' }}</p>
@@ -348,7 +356,7 @@ Algoritma:
                                 <th class="py-3 px-4">HARGA</th>
                                 <th class="py-3 px-4">STOK</th>
                                 <th class="py-3 px-4">STATUS</th>
-                                <th class="py-3 px-4">INTERAKSI (👁️/❤️/💬)</th>
+                                <th class="py-3 px-4">INTERAKSI</th>
                                 <th class="py-3 px-5 text-right">AKSI</th>
                             </tr>
                         </thead>
@@ -378,7 +386,20 @@ Algoritma:
                                         <span class="rounded-md bg-[#EBF9F2] px-2.5 py-1 text-[10px] font-bold text-[#0B6E4F]">Aktif</span>
                                     </td>
                                     <td class="py-3.5 px-4 font-medium text-slate-600">
-                                        👁️ {{ $product->views_count ?? 0 }} • ❤️ {{ $product->likes_count ?? 0 }} • 💬 {{ $product->comments_count ?? 0 }}
+                                        <span class="inline-flex items-center gap-2.5 text-[11px]">
+                                            <span class="inline-flex items-center gap-1" title="Dilihat">
+                                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                <span>{{ $product->views_count ?? 0 }}</span>
+                                            </span>
+                                            <span class="inline-flex items-center gap-1" title="Disukai">
+                                                <svg class="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                                <span>{{ $product->likes_count ?? 0 }}</span>
+                                            </span>
+                                            <span class="inline-flex items-center gap-1" title="Komentar">
+                                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                                <span>{{ $product->comments_count ?? 0 }}</span>
+                                            </span>
+                                        </span>
                                     </td>
                                     <td class="py-3.5 px-5 text-right whitespace-nowrap space-x-3">
                                         <a href="{{ route('seller.products.edit', $product) }}" class="font-bold text-[#0B6E4F] hover:underline">Edit</a>
@@ -414,7 +435,8 @@ Algoritma:
                 <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
                     <div>
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-[#EBF9F2] px-3 py-1 text-[11px] font-bold text-[#0B6E4F] mb-2">
-                            🚚 Skema Progres Transaksi & Pengiriman
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
+                            <span>Skema Progres Transaksi & Pengiriman</span>
                         </span>
                         <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Kelola Progres Pesanan Pembeli</h2>
                         <p class="text-xs text-slate-500 mt-0.5">
@@ -447,7 +469,7 @@ Algoritma:
                         1 => ['key' => 'pesan', 'label' => '1. Dipesan', 'desc' => 'Pesanan masuk / WA'],
                         2 => ['key' => 'kemas', 'label' => '2. Dikemas', 'desc' => 'Disiapkan penjual'],
                         3 => ['key' => 'kirim', 'label' => '3. Dikirim', 'desc' => 'Dalam perjalanan / COD'],
-                        4 => ['key' => 'sampai', 'label' => '4. Sampai', 'desc' => 'Diterima & beri ★'],
+                        4 => ['key' => 'sampai', 'label' => '4. Sampai', 'desc' => 'Diterima & beri ulasan'],
                     ];
                 @endphp
 
@@ -469,20 +491,24 @@ Algoritma:
                                 <div class="space-y-1">
                                     <div class="flex flex-wrap items-center gap-2">
                                         <span class="font-extrabold text-sm text-[#0F291E]">#{{ $order->order_code }}</span>
-                                        <span class="rounded-full bg-white border border-slate-200 px-2.5 py-0.5 text-[11px] font-bold text-slate-700">
-                                            👤 {{ $order->buyer?->name ?? 'Pembeli' }}
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-white border border-slate-200 px-2.5 py-0.5 text-[11px] font-bold text-slate-700">
+                                            <svg class="w-3 h-3 text-slate-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                            <span>{{ $order->buyer?->name ?? 'Pembeli' }}</span>
                                         </span>
-                                        <span class="rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-bold text-[#0B6E4F]">
-                                            🏷️ {{ $buyerSubtypeLabel }}
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-bold text-[#0B6E4F]">
+                                            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                                            <span>{{ $buyerSubtypeLabel }}</span>
                                         </span>
                                         @if($order->is_bazaar_offline || $order->bazaar_voucher_code)
                                             <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800">
-                                                🎪 Acara Bazar SMK ({{ $order->bazaar_voucher_code ?? 'Hadir di Bazar' }})
+                                                Acara Bazar SMK ({{ $order->bazaar_voucher_code ?? 'Hadir di Bazar' }})
                                             </span>
                                         @endif
                                     </div>
-                                    <p class="text-[11px] text-slate-500">
-                                        📍 {{ $order->shipping_address }} • 📞 {{ $order->buyer_phone }} • 🕒 {{ $order->created_at?->format('d M Y, H:i') }}
+                                    <p class="text-[11px] text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                                        <span>{{ $order->shipping_address }}</span>
+                                        <span>&bull; {{ $order->buyer_phone }}</span>
+                                        <span>&bull; {{ $order->created_at?->format('d M Y, H:i') }}</span>
                                     </p>
                                 </div>
 
@@ -491,7 +517,8 @@ Algoritma:
                                         <a href="https://wa.me/{{ $buyerPhoneClean }}?text={{ $waBuyerText }}"
                                            target="_blank"
                                            class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 transition">
-                                            <span>💬 Hubungi WA Pembeli</span>
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                            <span>Hubungi WA Pembeli</span>
                                         </a>
                                     @endif
                                     <!-- Badge Metode Transaksi & Pengiriman -->
@@ -519,7 +546,11 @@ Algoritma:
                                         <div class="rounded-xl p-3 border transition {{ $isDone ? 'bg-[#EBF9F2] border-[#0B6E4F]/30 text-[#0F291E]' : 'bg-white border-slate-200/80 text-slate-400' }}">
                                             <div class="flex items-center justify-between gap-2 mb-1">
                                                 <span class="w-6 h-6 rounded-full text-[11px] font-extrabold flex items-center justify-center {{ $isDone ? 'bg-[#0B6E4F] text-white' : 'bg-slate-100 text-slate-400' }}">
-                                                    {{ $isDone ? '✓' : $stepNum }}
+                                                    @if($isDone)
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                    @else
+                                                        {{ $stepNum }}
+                                                    @endif
                                                 </span>
                                                 @if($isCurrent)
                                                     <span class="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#0B6E4F] text-white">Tahap Saat Ini</span>
@@ -531,8 +562,9 @@ Algoritma:
                                     @endforeach
                                 </div>
                             @else
-                                <div class="rounded-xl bg-rose-50 border border-rose-200 px-4 py-2.5 text-xs font-bold text-rose-700">
-                                    ✕ Pesanan ini telah dibatalkan.
+                                <div class="rounded-xl bg-rose-50 border border-rose-200 px-4 py-2.5 text-xs font-bold text-rose-700 flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    <span>Pesanan ini telah dibatalkan.</span>
                                 </div>
                             @endif
 
@@ -602,11 +634,11 @@ Algoritma:
                             @if($order->buyer_rating)
                                 <div class="rounded-xl bg-amber-50/90 border border-amber-200 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm font-extrabold text-amber-700">
+                                        <span class="inline-flex items-center gap-1 text-xs font-extrabold text-amber-700">
                                             @for($i = 1; $i <= 5; $i++)
-                                                {{ $i <= $order->buyer_rating ? '★' : '☆' }}
+                                                <svg class="w-3.5 h-3.5 {{ $i <= $order->buyer_rating ? 'text-amber-500' : 'text-slate-300' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                                             @endfor
-                                            ({{ $order->buyer_rating }}/5)
+                                            <span class="ml-0.5">({{ $order->buyer_rating }}/5)</span>
                                         </span>
                                         <span class="text-xs font-bold text-[#0F291E]">Rating dari {{ $order->buyer?->name }}:</span>
                                         <span class="text-xs text-slate-600 italic">"{{ $order->buyer_review ?: 'Terima kasih, karya sangat bagus!' }}"</span>
@@ -617,12 +649,14 @@ Algoritma:
 
                             <!-- Form Kontrol Ubah Tahap Progres oleh Pemilik Toko -->
                             @if($effProgress === 'sampai')
-                                <div class="rounded-xl bg-[#EBF9F2] border border-[#B8E8D2] px-4 py-2.5 text-xs text-[#0B6E4F] font-bold flex items-center justify-between">
-                                    <span>✅ Pesanan ini telah selesai ({{ $order->delivery_method === 'pickup' ? 'Telah Diambil di Sekolah' : 'Sampai ke Pembeli' }}) dan tidak dapat dibatalkan.</span>
+                                <div class="rounded-xl bg-[#EBF9F2] border border-[#B8E8D2] px-4 py-2.5 text-xs text-[#0B6E4F] font-bold flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                    <span>Pesanan ini telah selesai ({{ $order->delivery_method === 'pickup' ? 'Telah Diambil di Sekolah' : 'Sampai ke Pembeli' }}) dan tidak dapat dibatalkan.</span>
                                 </div>
                             @elseif($effProgress === 'dibatalkan')
-                                <div class="rounded-xl bg-rose-50 border border-rose-200 px-4 py-2.5 text-xs text-rose-700 font-bold flex items-center justify-between">
-                                    <span>✕ Pesanan ini telah dibatalkan.</span>
+                                <div class="rounded-xl bg-rose-50 border border-rose-200 px-4 py-2.5 text-xs text-rose-700 font-bold flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    <span>Pesanan ini telah dibatalkan.</span>
                                 </div>
                             @else
                                 <form action="{{ route('seller.orders.status', $order) }}" method="POST" class="space-y-3 pt-1">
@@ -649,7 +683,7 @@ Algoritma:
                                                     <option value="kirim" @selected($effProgress === 'kirim')>3. Kirim (Diserahkan ke Ekspedisi)</option>
                                                     <option value="sampai" @selected($effProgress === 'sampai')>4. Sampai (Diterima Pembeli)</option>
                                                 @endif
-                                                <option value="dibatalkan">✕ Batalkan Pesanan</option>
+                                                <option value="dibatalkan">Batalkan Pesanan</option>
                                             </select>
                                         </div>
                                         <div class="flex-1">
@@ -672,8 +706,9 @@ Algoritma:
                                     @endif
 
                                     <div class="flex justify-end pt-1">
-                                        <button type="submit" class="w-full sm:w-auto rounded-xl bg-[#0B6E4F] px-5 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-sm">
-                                            ✓ Simpan Perubahan Progres
+                                        <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0B6E4F] px-5 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-sm">
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                            <span>Simpan Perubahan Progres</span>
                                         </button>
                                     </div>
                                 </form>
@@ -697,7 +732,8 @@ Algoritma:
                 <div class="border-b border-slate-100 pb-4 flex flex-wrap items-start justify-between gap-4">
                     <div>
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200/80 px-3 py-1 text-[11px] font-bold text-amber-800 mb-2">
-                            🏷️ Skema Diskon Pembeli & Bazar SMK Plus Al Hilal
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                            <span>Skema Diskon Pembeli & Bazar SMK Plus Al Hilal</span>
                         </span>
                         <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Atur Diskon Berdasarkan Jenis Pembeli & Event Bazar</h2>
                         <p class="text-xs text-slate-500 mt-0.5">
@@ -713,7 +749,7 @@ Algoritma:
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         <div class="rounded-2xl bg-[#F8FAFC] border border-slate-200/80 p-4 space-y-2">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-extrabold text-[#0F291E]">🎓 Diskon Pelajar</span>
+                                <span class="text-xs font-extrabold text-[#0F291E]">Diskon Pelajar</span>
                                 <span class="text-[10px] font-bold text-[#0B6E4F] bg-[#EBF9F2] px-2 py-0.5 rounded-full">Siswa/Pelajar</span>
                             </div>
                             <p class="text-[11px] text-slate-500">Potongan khusus bagi pembeli berstatus Pelajar.</p>
@@ -725,7 +761,7 @@ Algoritma:
 
                         <div class="rounded-2xl bg-[#F8FAFC] border border-slate-200/80 p-4 space-y-2">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-extrabold text-[#0F291E]">🏫 Keluarga SMK</span>
+                                <span class="text-xs font-extrabold text-[#0F291E]">Keluarga SMK</span>
                                 <span class="text-[10px] font-bold text-[#0B6E4F] bg-[#EBF9F2] px-2 py-0.5 rounded-full">Warga SMK PAL</span>
                             </div>
                             <p class="text-[11px] text-slate-500">Potongan khusus Guru, Staf & Keluarga Besar SMK Plus Al Hilal.</p>
@@ -737,7 +773,7 @@ Algoritma:
 
                         <div class="rounded-2xl bg-[#F8FAFC] border border-slate-200/80 p-4 space-y-2">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-extrabold text-[#0F291E]">🤝 Diskon Alumni</span>
+                                <span class="text-xs font-extrabold text-[#0F291E]">Diskon Alumni</span>
                                 <span class="text-[10px] font-bold text-slate-600 bg-slate-200/70 px-2 py-0.5 rounded-full">Alumni</span>
                             </div>
                             <p class="text-[11px] text-slate-500">Potongan harga bagi pembeli dari Ikatan Alumni SMK PAL.</p>
@@ -749,7 +785,7 @@ Algoritma:
 
                         <div class="rounded-2xl bg-[#F8FAFC] border border-slate-200/80 p-4 space-y-2">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-extrabold text-[#0F291E]">🌐 Pembeli Umum</span>
+                                <span class="text-xs font-extrabold text-[#0F291E]">Pembeli Umum</span>
                                 <span class="text-[10px] font-bold text-slate-600 bg-slate-200/70 px-2 py-0.5 rounded-full">Masyarakat</span>
                             </div>
                             <p class="text-[11px] text-slate-500">Potongan promo reguler untuk pembeli masyarakat umum.</p>
@@ -761,7 +797,7 @@ Algoritma:
 
                         <div class="rounded-2xl bg-amber-50/70 border border-amber-200 p-4 space-y-2">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-extrabold text-amber-900">🎪 Ekstra Bazar</span>
+                                <span class="text-xs font-extrabold text-amber-900">Ekstra Bazar</span>
                                 <span class="text-[10px] font-bold text-amber-800 bg-amber-200/70 px-2 py-0.5 rounded-full">Hadir di Bazar</span>
                             </div>
                             <p class="text-[11px] text-amber-800/80">Tambahan diskon toko saat pembeli datang ke Stand Bazar SMK.</p>
@@ -776,11 +812,11 @@ Algoritma:
                         <div class="rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] p-4 flex flex-wrap items-center justify-between gap-3">
                             <div class="space-y-0.5">
                                 <p class="text-xs font-extrabold text-[#0F291E]">
-                                    🎪 Acara Bazar & Event Sekolah yang Sedang Aktif:
+                                    Acara Bazar & Event Sekolah yang Sedang Aktif:
                                 </p>
                                 @foreach($activeBazaarEvents as $ev)
                                     <p class="text-[11px] text-[#0B6E4F]">
-                                        • <strong>{{ $ev->title }}</strong> ({{ $ev->location ?? 'SMK Plus Al Hilal' }}) — Kode Voucher: <span class="font-mono font-extrabold bg-white px-2 py-0.5 rounded border border-emerald-300">{{ $ev->voucher_code }}</span> (Diskon Event {{ $ev->discount_percent }}% + Diskon Ekstra Toko Anda {{ $store->discount_bazar_extra ?? 0 }}%)
+                                        &bull; <strong>{{ $ev->title }}</strong> ({{ $ev->location ?? 'SMK Plus Al Hilal' }}) — Kode Voucher: <span class="font-mono font-extrabold bg-white px-2 py-0.5 rounded border border-emerald-300">{{ $ev->voucher_code }}</span> (Diskon Event {{ $ev->discount_percent }}% + Diskon Ekstra Toko Anda {{ $store->discount_bazar_extra ?? 0 }}%)
                                     </p>
                                 @endforeach
                             </div>
@@ -788,8 +824,9 @@ Algoritma:
                     @endif
 
                     <div class="flex justify-end">
-                        <button type="submit" class="rounded-xl bg-[#0B6E4F] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-sm">
-                            ✓ Simpan Skema Diskon Toko
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-[#0B6E4F] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-sm">
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            <span>Simpan Skema Diskon Toko</span>
                         </button>
                     </div>
                 </form>
@@ -993,7 +1030,7 @@ Algoritma:
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-xs sm:text-sm font-extrabold text-[#0F291E] flex items-center gap-2">
-                                    <span>💳</span>
+                                    <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                                     <span>Informasi Rekening Bank & E-Wallet Toko (Untuk Transaksi Transfer)</span>
                                 </h3>
                                 <p class="text-[11px] text-slate-500 mt-0.5">
@@ -1001,8 +1038,9 @@ Algoritma:
                                 </p>
                             </div>
                             @if($store->has_payment_account)
-                                <span class="rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0B6E4F]">
-                                    ✓ Rekening Terpasang
+                                <span class="inline-flex items-center gap-1 rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0B6E4F]">
+                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                    <span>Rekening Terpasang</span>
                                 </span>
                             @else
                                 <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800">
@@ -1014,7 +1052,7 @@ Algoritma:
                         <!-- Rekening Bank -->
                         <div class="rounded-xl bg-white border border-slate-200 p-4 space-y-3">
                             <span class="text-xs font-extrabold text-[#0F291E] flex items-center gap-1.5">
-                                <span>🏦</span>
+                                <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                                 <span>1. Rekening Bank Toko (BCA / BRI / BNI / Mandiri / BSI / BJB)</span>
                             </span>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1036,7 +1074,7 @@ Algoritma:
                         <!-- E-Wallet -->
                         <div class="rounded-xl bg-white border border-slate-200 p-4 space-y-3">
                             <span class="text-xs font-extrabold text-[#0F291E] flex items-center gap-1.5">
-                                <span>📱</span>
+                                <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                                 <span>2. Akun E-Wallet (DANA / GoPay / OVO / ShopeePay)</span>
                             </span>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1063,8 +1101,9 @@ Algoritma:
                     </div>
 
                     <div class="flex justify-end pt-2">
-                        <button type="submit" class="rounded-xl bg-[#0B6E4F] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#08583F] transition">
-                            ✓ Simpan Profil & Toko
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-[#0B6E4F] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#08583F] transition">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            <span>Simpan Profil & Toko</span>
                         </button>
                     </div>
                 </form>

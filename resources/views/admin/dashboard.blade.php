@@ -7,8 +7,8 @@ Fungsi:
   Figma `Admin overview · Desktop.png`:
   1. Sidebar Administrasi SMK Plus Al Hilal (termasuk menu CMS Website &
      CMS Karya Siswa).
-  2. 4 Kartu KPI, Grafik Performa Toko (Views 👁️, Komentar 💬, Likes ❤️,
-     Transaksi 🛒), dan Kartu Komunitas hilalkraft.
+  2. 4 Kartu KPI, Grafik Performa Toko (Views, Komentar, Likes,
+     Transaksi), dan Kartu Komunitas hilalkraft.
   3. CMS Konten Website & Banner Beranda (Bisa Diedit & Ditambahkan).
   4. CMS Karya Siswa / Produk Marketplace (Bisa Diedit, Ditambahkan, & Dihapus).
   5. Manajemen User, Kredensial Password Realtime Super Admin, & Penetapan
@@ -85,58 +85,58 @@ Algoritma:
                 @endif
                 <a href="{{ route('seller.dashboard') }}" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-emerald-800 bg-emerald-50/80 border border-emerald-300 hover:bg-emerald-100 transition shadow-2xs" title="Buka Toko Guru & Kelola Produk Saya">
                     <span class="flex items-center gap-3">
-                        <span>🏪</span>
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 20V14h6v6" /></svg>
                         <span class="font-bold">Toko Guru Saya</span>
                     </span>
                     <span class="rounded-full bg-[#0B6E4F] px-2 py-0.5 text-[10px] font-bold text-white">Seller</span>
                 </a>
                 <a href="{{ route('admin.reports') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>📊</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                     <span>Laporan & Rekap</span>
                 </a>
                 <a href="{{ route('admin.logs') }}" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span class="flex items-center gap-3">
-                        <span>📋</span>
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         <span>Log Akses & Audit</span>
                     </span>
                     <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Sistem</span>
                 </a>
                 <a href="{{ route('admin.interactions') }}" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span class="flex items-center gap-3">
-                        <span>🔍</span>
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         <span>Audit Interaksi & Reset</span>
                     </span>
                     <span class="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">Radar</span>
                 </a>
                 <a href="#sec-cms" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>✨</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     <span>CMS Konten Website</span>
                 </a>
                 <a href="#sec-cms-produk" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>🎨</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     <span>CMS Karya Siswa</span>
                 </a>
                 <a href="#sec-manajemen-user" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>👥</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     <span>Manajemen User & Guru</span>
                 </a>
                 <a href="#sec-kelola-toko" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>🏪</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                     <span>Peringkat & Kelola Toko</span>
                 </a>
                 <a href="#sec-diskon-bazar" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span class="flex items-center gap-3">
-                        <span>🏷️</span>
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
                         <span>Pengelolaan Diskon & Bazar</span>
                     </span>
                     <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">Promo</span>
                 </a>
                 <a href="#sec-master-data" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>📦</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                     <span>Kategori & Kelas/Jurusan</span>
                 </a>
                 <a href="#sec-laporan-pengunjung" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>🧭</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     <span>Laporan Pengunjung</span>
                 </a>
             </nav>
@@ -144,7 +144,9 @@ Algoritma:
 
         <div class="space-y-4 pt-4">
             <div class="rounded-2xl bg-[#EBF9F2] p-4 space-y-1.5">
-                <span class="w-6 h-6 rounded-full bg-white text-[#0B6E4F] flex items-center justify-center text-xs font-bold">✨</span>
+                <span class="w-6 h-6 rounded-full bg-white text-[#0B6E4F] flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </span>
                 <p class="text-xs font-bold text-[#0F291E] pt-1">CMS Aktif</p>
                 <p class="text-[11px] text-slate-500">Konten beranda & karya siswa dapat diedit dan ditambah kapan saja.</p>
                 <a href="#sec-cms" class="inline-block text-[11px] font-bold text-[#0B6E4F] hover:underline pt-0.5">
@@ -196,8 +198,8 @@ Algoritma:
             <div id="admin-floating-toast" class="fixed top-5 right-5 z-[9999] max-w-md w-[92vw] sm:w-[420px] transition-all duration-300">
                 @if(session('success'))
                     <div class="rounded-2xl bg-white border-2 border-[#10B981] p-4 shadow-2xl flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-[#EBF9F2] text-[#0B6E4F] flex items-center justify-center font-bold text-base shrink-0">
-                            ✓
+                        <div class="w-8 h-8 rounded-full bg-[#EBF9F2] text-[#0B6E4F] flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="text-xs font-extrabold text-[#0B6E4F] uppercase tracking-wider">Perubahan Berhasil Disimpan</p>
@@ -208,8 +210,8 @@ Algoritma:
                 @endif
                 @if(session('error'))
                     <div class="rounded-2xl bg-white border-2 border-rose-500 p-4 shadow-2xl flex items-start gap-3 mt-2">
-                        <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-base shrink-0">
-                            ✕
+                        <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="text-xs font-extrabold text-rose-600 uppercase tracking-wider">Perhatian / Gagal</p>
@@ -258,17 +260,21 @@ Algoritma:
                         <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                         <span>Toko Guru Saya</span>
                     </a>
-                    <a href="{{ route('admin.reports') }}" class="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
-                        📊 Laporan & Rekap
+                    <a href="{{ route('admin.reports') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
+                        <svg class="w-3.5 h-3.5 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                        <span>Laporan & Rekap</span>
                     </a>
-                    <a href="{{ route('admin.logs') }}" class="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
-                        📋 Log Audit
+                    <a href="{{ route('admin.logs') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
+                        <svg class="w-3.5 h-3.5 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        <span>Log Audit</span>
                     </a>
-                    <a href="{{ route('admin.interactions') }}" class="rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
-                        🔍 Audit Interaksi & Reset
+                    <a href="{{ route('admin.interactions') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
+                        <svg class="w-3.5 h-3.5 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        <span>Audit Interaksi & Reset</span>
                     </a>
-                    <a href="#sec-cms" class="rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] px-3.5 py-2 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
-                        ✨ CMS Website
+                    <a href="#sec-cms" class="inline-flex items-center gap-1.5 rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] px-3.5 py-2 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        <span>CMS Website</span>
                     </a>
                     <a href="#sec-cms-produk" class="rounded-xl bg-[#0B6E4F] px-3.5 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition">
                         + Karya Siswa
@@ -281,7 +287,7 @@ Algoritma:
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
                     <div class="flex items-center justify-between text-xs text-slate-400">
                         <span>Total Users</span>
-                        <span class="text-[#0B6E4F]">👥</span>
+                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     </div>
                     <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ number_format($stats['total_users']) }}</p>
                     <p class="text-[11px] font-semibold text-[#0B6E4F]">Termasuk 2 Guru Admin, Siswa & Pembeli</p>
@@ -290,26 +296,26 @@ Algoritma:
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
                     <div class="flex items-center justify-between text-xs text-slate-400">
                         <span>Status & Data Toko</span>
-                        <span class="text-[#0B6E4F]">🏪</span>
+                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 20V14h6v6" /></svg>
                     </div>
                     <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ number_format($stats['total_stores']) }}</p>
-                    <p class="text-[11px] font-semibold text-slate-500">
-                        <span class="text-emerald-700 font-bold">🟢 {{ $stats['active_stores'] }} Aktif</span> • 
-                        <span class="text-amber-700 font-bold">🟡 {{ $stats['inactive_stores'] }} Nonaktif</span> • 
-                        <span class="text-rose-700 font-bold">🔴 {{ $stats['deleted_stores'] }} Terhapus</span>
+                    <p class="text-[11px] font-semibold text-slate-500 flex flex-wrap items-center gap-x-2">
+                        <span class="inline-flex items-center gap-1 text-emerald-700 font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>{{ $stats['active_stores'] }} Aktif</span>
+                        <span class="inline-flex items-center gap-1 text-amber-700 font-bold"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>{{ $stats['inactive_stores'] }} Nonaktif</span>
+                        <span class="inline-flex items-center gap-1 text-rose-700 font-bold"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>{{ $stats['deleted_stores'] }} Terhapus</span>
                     </p>
                 </div>
 
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
                     <div class="flex items-center justify-between text-xs text-slate-400">
                         <span>Karya Siswa Aktif</span>
-                        <span class="text-[#0B6E4F]">🎨</span>
+                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                     </div>
                     <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ number_format($stats['total_products']) }}</p>
                     <p class="text-[11px] font-semibold text-[#0B6E4F]">
                         <a href="{{ route('admin.interactions') }}" class="hover:underline flex items-center gap-1" title="Buka menu audit interaksi & deteksi akun">
-                            <span>👁️ {{ number_format($stats['total_views']) }} dilihat • ❤️ {{ number_format($stats['total_likes']) }} suka</span>
-                            <span>→</span>
+                            <span>{{ number_format($stats['total_views']) }} dilihat &bull; {{ number_format($stats['total_likes']) }} suka</span>
+                            <span>&rarr;</span>
                         </a>
                     </p>
                 </div>
@@ -317,7 +323,7 @@ Algoritma:
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-2">
                     <div class="flex items-center justify-between text-xs text-slate-400">
                         <span>Blok Konten CMS</span>
-                        <span class="text-[#0B6E4F]">✨</span>
+                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     </div>
                     <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ number_format($cmsContents->count()) }}</p>
                     <p class="text-[11px] font-semibold text-[#0B6E4F]">Bisa diedit & ditambah langsung</p>
@@ -384,15 +390,15 @@ Algoritma:
                                 <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Hak Akses:</p>
                                 <ul class="space-y-1 text-[11px]">
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span>Lihat sebagai <strong>semua user</strong> tanpa batas.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span>Kelola User & tetapkan Guru jadi Admin.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span>Atur CMS, Kelas, Jurusan & Diskon Global.</span>
                                     </li>
                                 </ul>
@@ -428,15 +434,15 @@ Algoritma:
                                 <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Hak Akses:</p>
                                 <ul class="space-y-1 text-[11px]">
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-blue-600 font-bold">✓</span>
+                                        <svg class="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span><strong>Lihat Sebagai:</strong> Bisa masuk sebagai semua Seller, Buyer & Admin.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-emerald-600 font-bold">★</span>
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span><strong>Kelola Toko:</strong> Punya toko guru & moderasi toko siswa.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-slate-400 font-bold">✗</span>
+                                        <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                         <span class="text-slate-400">Tidak bisa ubah/masuk ke akun Super Admin.</span>
                                     </li>
                                 </ul>
@@ -466,15 +472,15 @@ Algoritma:
                                 <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Aktivitas Utama:</p>
                                 <ul class="space-y-1 text-[11px]">
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span>Upload 5 foto produk, harga, & stok karya.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span>Atur rekening bank/e-wallet & proses pesanan.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-emerald-600 font-bold">✓</span>
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span>Atur diskon khusus toko & ikuti bazar SMK.</span>
                                     </li>
                                 </ul>
@@ -504,15 +510,15 @@ Algoritma:
                                 <p class="font-bold text-[10px] uppercase tracking-wider text-slate-400">Aktivitas Utama:</p>
                                 <ul class="space-y-1 text-[11px]">
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-amber-600 font-bold">✓</span>
+                                        <svg class="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span>Keranjang belanja & halaman transaksi terpisah.</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-amber-600 font-bold">✓</span>
+                                        <svg class="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span>Dapat diskon otomatis (Pelajar/Keluarga/Alumni).</span>
                                     </li>
                                     <li class="flex items-start gap-1.5">
-                                        <span class="text-amber-600 font-bold">✓</span>
+                                        <svg class="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span>Lacak status pesanan & beri rating ulasan.</span>
                                     </li>
                                 </ul>
@@ -536,15 +542,16 @@ Algoritma:
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
                             <div class="inline-flex items-center gap-1.5 rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0B6E4F] mb-1">
-                                📊 FILTER PERINGKAT TOKO TERATAS
+                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                <span>FILTER PERINGKAT TOKO TERATAS</span>
                             </div>
-                            <h2 class="text-sm sm:text-base font-extrabold text-[#0F291E]">Grafik Toko Teratas (Pelihat, Like, Komentar, Rating ★ & Pesanan)</h2>
+                            <h2 class="text-sm sm:text-base font-extrabold text-[#0F291E]">Grafik Toko Teratas (Pelihat, Like, Komentar, Rating & Pesanan)</h2>
                             <p class="text-xs text-slate-400">
                                 Jika jumlah toko banyak, gunakan filter di bawah untuk melihat toko teratas berdasarkan pengunjung terbanyak, like terbanyak, komentar terbanyak, atau rating bintang tertinggi.
                             </p>
                         </div>
                         <span id="top-store-highlight-badge" class="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-[11px] font-extrabold text-amber-800">
-                            🏆 Memuat Peringkat Toko...
+                            Memuat Peringkat Toko...
                         </span>
                     </div>
 
@@ -553,11 +560,11 @@ Algoritma:
                         <div>
                             <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Urutkan Toko Teratas</label>
                             <select id="chart-sort-metric" onchange="updateStoreAnalyticsChart()" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-bold text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
-                                <option value="views">👁️ Pengunjung / Pelihat Terbanyak</option>
-                                <option value="likes">❤️ Like / Disukai Terbanyak</option>
-                                <option value="comments">💬 Komentar Terbanyak</option>
-                                <option value="ratings">★ Rating Bintang Teratas</option>
-                                <option value="orders">🛒 Pesanan / Transaksi Terbanyak</option>
+                                <option value="views">Pengunjung / Pelihat Terbanyak</option>
+                                <option value="likes">Like / Disukai Terbanyak</option>
+                                <option value="comments">Komentar Terbanyak</option>
+                                <option value="ratings">Rating Bintang Teratas</option>
+                                <option value="orders">Pesanan / Transaksi Terbanyak</option>
                             </select>
                         </div>
 
@@ -583,7 +590,7 @@ Algoritma:
                         <div>
                             <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Mode Tampilan Grafik</label>
                             <select id="chart-dataset-mode" onchange="updateStoreAnalyticsChart()" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-bold text-[#0B6E4F] focus:border-[#0B6E4F] focus:outline-none">
-                                <option value="all">Semua Metrik (👁️ ❤️ 💬 ★ 🛒)</option>
+                                <option value="all">Semua Metrik (Dilihat, Suka, Komentar, Rating, Pesanan)</option>
                                 <option value="selected">Fokus Metrik Terpilih Saja</option>
                             </select>
                         </div>
@@ -643,8 +650,11 @@ Algoritma:
                     </div>
 
                     <a href="#sec-cms" class="flex items-center justify-between rounded-xl bg-[#EBF9F2] border border-[#CDEFE0] px-4 py-3 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
-                        <span>✨ Kelola CMS Beranda & Karya Siswa</span>
-                        <span>→</span>
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            <span>Kelola CMS Beranda & Karya Siswa</span>
+                        </span>
+                        <span>&rarr;</span>
                     </a>
                 </div>
             </div>
@@ -656,7 +666,8 @@ Algoritma:
                 <div class="p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <div class="inline-flex items-center gap-1.5 rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-bold text-[#0B6E4F] mb-1">
-                            ✨ CMS WEBSITE & IKLAN MITRA
+                            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            <span>CMS WEBSITE & IKLAN MITRA</span>
                         </div>
                         <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">CMS Iklan Mitra (BSI, PT. Mega Mentari, Daihatsu) & Konten Website</h2>
                         <p class="text-xs text-slate-400">
@@ -694,7 +705,7 @@ Algoritma:
                             @forelse($cmsContents as $cms)
                                 @php
                                     $sectionBadge = match($cms->section) {
-                                        'iklan' => '⚡ Iklan Mitra (Atas)',
+                                        'iklan' => 'Iklan Mitra (Atas)',
                                         'topbar' => 'Topbar Atas',
                                         'hero' => 'Hero Beranda',
                                         'values' => '3 Keunggulan',
@@ -726,7 +737,7 @@ Algoritma:
                                         <p class="text-slate-700 line-clamp-2">{{ $cms->content }}</p>
                                         @if($cms->section === 'iklan')
                                             <p class="text-[11px] font-semibold {{ $cms->isWithinContract() ? 'text-[#0B6E4F]' : 'text-rose-600' }} mt-0.5">
-                                                📅 {{ $cms->contract_status_label }}
+                                                {{ $cms->contract_status_label }}
                                             </p>
                                         @elseif($cms->link_url)
                                             <p class="text-[11px] text-slate-400 mt-0.5">Tautan: {{ $cms->link_url }}</p>
@@ -734,8 +745,9 @@ Algoritma:
                                     </td>
                                     <td class="py-3.5 px-4 font-semibold text-slate-600 whitespace-nowrap">
                                         @if($cms->section === 'iklan')
-                                            <span class="rounded-lg bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-bold text-amber-800">
-                                                ⏱ {{ $cms->duration_seconds ?: 5 }} detik
+                                            <span class="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-bold text-amber-800">
+                                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                <span>{{ $cms->duration_seconds ?: 5 }} detik</span>
                                             </span>
                                         @else
                                             <span class="text-slate-400">#{{ $cms->sort_order }}</span>
@@ -790,7 +802,8 @@ Algoritma:
                 <div class="p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <div class="inline-flex items-center gap-1.5 rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-bold text-[#0B6E4F] mb-1">
-                            🎨 CMS KARYA SISWA
+                            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                            <span>CMS KARYA SISWA</span>
                         </div>
                         <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Kelola Karya Siswa & Produk Marketplace</h2>
                         <p class="text-xs text-slate-400">
@@ -814,7 +827,7 @@ Algoritma:
                                 <th class="py-3 px-4">KATEGORI</th>
                                 <th class="py-3 px-4">HARGA</th>
                                 <th class="py-3 px-4">STOK</th>
-                                <th class="py-3 px-4 text-center">INTERAKSI (👁️/❤️/💬)</th>
+                                <th class="py-3 px-4 text-center">INTERAKSI</th>
                                 <th class="py-3 px-5 text-right">AKSI</th>
                             </tr>
                         </thead>
@@ -856,14 +869,23 @@ Algoritma:
                                     </td>
                                     <td class="py-3.5 px-4 text-center whitespace-nowrap">
                                         <div class="space-y-1">
-                                            <span class="inline-flex items-center gap-2 rounded-lg bg-[#F8FAFC] border border-slate-200/80 px-2.5 py-1 text-[11px]">
-                                                <span title="Dilihat">👁️ {{ number_format($prod->views_count) }}</span>
-                                                <span title="Disukai">❤️ {{ number_format($prod->likes_count ?? 0) }}</span>
-                                                <span title="Komentar">💬 {{ number_format($prod->comments_count ?? 0) }}</span>
+                                            <span class="inline-flex items-center gap-2.5 rounded-lg bg-[#F8FAFC] border border-slate-200/80 px-2.5 py-1 text-[11px]">
+                                                <span class="inline-flex items-center gap-1" title="Dilihat">
+                                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                    <span>{{ number_format($prod->views_count) }}</span>
+                                                </span>
+                                                <span class="inline-flex items-center gap-1" title="Disukai">
+                                                    <svg class="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                                    <span>{{ number_format($prod->likes_count ?? 0) }}</span>
+                                                </span>
+                                                <span class="inline-flex items-center gap-1" title="Komentar">
+                                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                                    <span>{{ number_format($prod->comments_count ?? 0) }}</span>
+                                                </span>
                                             </span>
                                             <div>
                                                 <a href="{{ route('admin.interactions', ['product_id' => $prod->id]) }}" class="text-[10px] font-bold text-[#0B6E4F] hover:underline flex items-center justify-center gap-1" title="Lihat siapa yang komentar, suka, dan melihat produk ini">
-                                                    <span>🔍 Audit Akun</span>
+                                                    <span>Audit Akun</span>
                                                 </a>
                                             </div>
                                         </div>
@@ -873,7 +895,7 @@ Algoritma:
                                                 onclick="openProductResetModal({{ $prod->id }}, '{{ addslashes($prod->product_name) }}', {{ $prod->views_count }}, {{ $prod->likes_count ?? 0 }}, {{ $prod->comments_count ?? 0 }})"
                                                 class="font-bold text-amber-600 hover:underline text-xs"
                                                 title="Reset interaksi suka, komentar, atau lihat untuk karya ini">
-                                            🔄 Reset
+                                            Reset
                                         </button>
 
                                         <button type="button"
@@ -914,7 +936,9 @@ Algoritma:
                 @if(session('success'))
                     <div class="m-6 mb-0 rounded-xl bg-[#EBF9F2] border border-[#B8E8D2] p-3.5 text-xs text-[#0B6E4F] font-bold flex items-center justify-between gap-3 shadow-xs">
                         <div class="flex items-center gap-2">
-                            <span class="w-5 h-5 rounded-full bg-[#0B6E4F] text-white flex items-center justify-center text-[10px]">✓</span>
+                            <span class="w-5 h-5 rounded-full bg-[#0B6E4F] text-white flex items-center justify-center shrink-0">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            </span>
                             <span>{{ session('success') }}</span>
                         </div>
                         <span class="text-[10px] text-[#0B6E4F]/70 font-normal">Tersimpan</span>
@@ -931,8 +955,9 @@ Algoritma:
 
                         <div class="flex items-center gap-2">
                             @if(auth()->user()->role === 'super_admin')
-                                <button type="button" onclick="toggleAllPasswords()" class="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
-                                    👁️ Password Realtime
+                                <button type="button" onclick="toggleAllPasswords()" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                                    <svg class="w-3.5 h-3.5 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                    <span>Password Realtime</span>
                                 </button>
                             @endif
                             <button type="button" onclick="document.getElementById('add-user-modal').classList.remove('hidden'); document.getElementById('add-user-modal').classList.add('flex');" class="rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-semibold text-white hover:bg-[#08583F] transition">
@@ -945,7 +970,7 @@ Algoritma:
                     @if($teachers->count() > 0)
                         <div class="rounded-2xl bg-[#EBF9F2]/70 border border-[#CDEFE0] p-4 space-y-2.5">
                             <div class="flex items-center justify-between">
-                                <p class="text-xs font-extrabold text-[#0B6E4F]">👩‍🏫 Daftar Guru SMK Plus Al Hilal (Hak Akses Admin)</p>
+                                <p class="text-xs font-extrabold text-[#0B6E4F]">Daftar Guru SMK Plus Al Hilal (Hak Akses Admin)</p>
                                 <span class="text-[11px] font-semibold text-slate-500">{{ $teachers->count() }} Guru Terdaftar</span>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -953,7 +978,7 @@ Algoritma:
                                     <div class="rounded-xl bg-white border border-emerald-500/20 p-3 flex items-center justify-between gap-3">
                                         <div>
                                             <p class="text-xs font-bold text-[#0F291E]">{{ $teacher->name }}</p>
-                                            <p class="text-[11px] text-slate-500">{{ $teacher->email }} • NUPTK: {{ $teacher->nuptk ?? '-' }}</p>
+                                            <p class="text-[11px] text-slate-500">{{ $teacher->email }} &bull; NUPTK: {{ $teacher->nuptk ?? '-' }}</p>
                                             <span class="inline-block mt-1 rounded-md px-2 py-0.5 text-[10px] font-bold {{ $teacher->role === 'admin' ? 'bg-[#D5F5E6] text-[#0B6E4F]' : 'bg-slate-100 text-slate-600' }}">
                                                 Peran: {{ $teacher->role === 'admin' ? 'Admin Aktif' : 'Guru / Pemilik Toko' }}
                                             </span>
@@ -963,7 +988,7 @@ Algoritma:
                                                 @csrf
                                                 @method('PATCH')
                                                 <button type="submit" class="rounded-lg bg-[#0B6E4F] px-3 py-1.5 text-[10px] font-bold text-white hover:bg-[#08583F] transition">
-                                                    {{ $teacher->role === 'admin' ? 'Jadikan Seller' : '👑 Jadikan Admin' }}
+                                                    {{ $teacher->role === 'admin' ? 'Jadikan Seller' : 'Jadikan Admin' }}
                                                 </button>
                                             </form>
                                         @endif
@@ -992,7 +1017,7 @@ Algoritma:
                             <!-- Filter Khusus Siswa -->
                             <a href="{{ route('admin.dashboard', array_merge(request()->except(['page', 'role']), ['student_only' => 1])) }}#sec-manajemen-user"
                                class="admin-role-filter-btn rounded-lg px-3 py-1.5 text-xs font-bold transition flex items-center gap-1.5 {{ $isStudentOnly ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-emerald-50 text-[#0B6E4F] border border-emerald-300 hover:bg-emerald-100' }}">
-                                <span>🎓 Khusus Siswa (Toko & Pelajar)</span>
+                                <span>Khusus Siswa (Toko & Pelajar)</span>
                                 <span class="rounded-full bg-emerald-200/60 px-1.5 py-0.2 text-[10px] text-[#0B6E4F] font-extrabold">{{ $sellerCount + ($visitorByCategory['Pelajar'] ?? 0) }}</span>
                             </a>
 
@@ -1020,12 +1045,11 @@ Algoritma:
                         <div class="rounded-2xl bg-[#F8FAFC] border border-slate-200 p-4 space-y-3">
                             <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-[#0F291E]">
                                 <div class="flex items-center gap-1.5">
-                                    <span>🔎</span>
+                                    <svg class="w-3.5 h-3.5 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                                     <span>Filter Siswa (Kelas & Jurusan) serta Filter Wilayah (Daerah)</span>
                                 </div>
                                 @if($isFiltering)
                                     <a href="{{ route('admin.dashboard') }}#sec-manajemen-user" class="text-[11px] font-bold text-rose-600 hover:underline flex items-center gap-1">
-                                        <span>✕</span>
                                         <span>Reset Semua Filter</span>
                                     </a>
                                 @endif
@@ -1110,7 +1134,7 @@ Algoritma:
                                 <div class="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
                                     <span class="text-slate-500 font-semibold">Filter aktif:</span>
                                     @if($isStudentOnly)
-                                        <span class="rounded-full bg-emerald-100 text-[#0B6E4F] px-2.5 py-0.5 font-bold">🎓 Khusus Siswa</span>
+                                        <span class="rounded-full bg-emerald-100 text-[#0B6E4F] px-2.5 py-0.5 font-bold">Khusus Siswa</span>
                                     @endif
                                     @if(request('class_name'))
                                         <span class="rounded-full bg-blue-100 text-blue-800 px-2.5 py-0.5 font-bold">Kelas: {{ request('class_name') }}</span>
@@ -1190,7 +1214,7 @@ Algoritma:
                                                 <p class="font-bold text-[#0F291E]">{{ $user->name }}</p>
                                                 <p class="text-[11px] text-slate-400">{{ $user->email }}</p>
                                                 @if($user->phone)
-                                                    <p class="text-[10px] text-slate-400">📱 {{ $user->phone }}</p>
+                                                    <p class="text-[10px] text-slate-400 font-mono">{{ $user->phone }}</p>
                                                 @endif
                                             </div>
                                         </div>
@@ -1201,7 +1225,6 @@ Algoritma:
                                         @if($user->class_name || $user->major_name)
                                             <div class="space-y-0.5">
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-[#EBF9F2] px-2 py-0.5 text-[11px] font-extrabold text-[#0B6E4F]">
-                                                    <span>🎓</span>
                                                     <span>Kelas {{ $user->class_name }} {{ $user->major_name ? '— ' . $user->major_name : '' }}</span>
                                                 </span>
                                                 @if($user->nis_nisn)
@@ -1211,7 +1234,6 @@ Algoritma:
                                         @elseif($user->is_teacher || $user->nuptk)
                                             <div class="space-y-0.5">
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                                                    <span>👨‍🏫</span>
                                                     <span>Guru SMK {{ $user->major_name ? '• ' . $user->major_name : '' }}</span>
                                                 </span>
                                                 @if($user->nuptk)
@@ -1237,7 +1259,6 @@ Algoritma:
                                         @if($user->kabupaten || $user->kecamatan)
                                             <div class="space-y-0.5">
                                                 <p class="font-bold text-[#0F291E] flex items-center gap-1 text-xs">
-                                                    <span>📍</span>
                                                     <span>{{ $user->kabupaten }}</span>
                                                 </p>
                                                 <p class="text-[11px] text-slate-500">
@@ -1253,7 +1274,9 @@ Algoritma:
                                         <td class="py-3.5 px-4">
                                             <div class="inline-flex items-center gap-1.5 rounded-lg bg-[#F8FAFC] border border-slate-200 px-2.5 py-1">
                                                 <code data-pw="{{ $realtimePassword }}" class="pw-display font-mono font-bold text-[#0B6E4F]">{{ $realtimePassword }}</code>
-                                                <button type="button" onclick="toggleSinglePassword(this)" class="text-slate-400 hover:text-slate-700" title="Lihat/Sembunyikan">👁️</button>
+                                                <button type="button" onclick="toggleSinglePassword(this)" class="text-slate-400 hover:text-slate-700" title="Lihat/Sembunyikan">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                </button>
                                             </div>
                                             <span class="block text-[10px] mt-0.5 {{ $isEdited ? 'text-amber-600' : 'text-slate-400' }}">
                                                 {{ $isEdited ? 'Sudah diedit' : 'Belum diedit' }}
@@ -1462,8 +1485,9 @@ Algoritma:
             <div id="sec-kelola-toko" class="rounded-2xl bg-white border border-slate-200/80 overflow-hidden">
                 <div class="p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <span class="inline-flex items-center gap-1 rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0B6E4F] mb-1">
-                            🏆 MANAJEMEN TOKO & AUDIT STATUS
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-[#EBF9F2] px-2.5 py-0.5 text-[10px] font-extrabold text-[#0B6E4F] mb-1">
+                            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                            <span>MANAJEMEN TOKO & AUDIT STATUS</span>
                         </span>
                         <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Daftar, Peringkat & Status Kelola Toko</h2>
                         <p class="text-xs text-slate-400">
@@ -1473,12 +1497,12 @@ Algoritma:
 
                     <div class="flex flex-wrap items-center gap-2 text-xs">
                         <select id="table-store-sort" onchange="sortAdminStoresTable()" class="rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 font-bold text-[#0F291E] focus:bg-white focus:border-[#0B6E4F] focus:outline-none">
-                            <option value="views">Urutkan: 👁️ Pelihat Terbanyak</option>
-                            <option value="likes">Urutkan: ❤️ Like Terbanyak</option>
-                            <option value="comments">Urutkan: 💬 Komentar Terbanyak</option>
-                            <option value="ratings">Urutkan: ★ Rating Bintang Teratas</option>
-                            <option value="orders">Urutkan: 🛒 Pesanan Terbanyak</option>
-                            <option value="created">Urutkan: 📅 Pendaftaran Terbaru</option>
+                            <option value="views">Urutkan: Pelihat Terbanyak</option>
+                            <option value="likes">Urutkan: Like Terbanyak</option>
+                            <option value="comments">Urutkan: Komentar Terbanyak</option>
+                            <option value="ratings">Urutkan: Rating Bintang Teratas</option>
+                            <option value="orders">Urutkan: Pesanan Terbanyak</option>
+                            <option value="created">Urutkan: Pendaftaran Terbaru</option>
                         </select>
                         <input type="search" id="table-store-search" oninput="sortAdminStoresTable()" placeholder="Cari nama toko / pemilik / kelas..." class="rounded-xl border border-slate-200 bg-[#F8FAFC] px-3.5 py-2 text-xs focus:bg-white focus:border-[#0B6E4F] focus:outline-none w-48 sm:w-60">
                     </div>
@@ -1517,7 +1541,7 @@ Algoritma:
                                 <th class="py-3 px-3">HISTORI TANGGAL</th>
                                 <th class="py-3 px-3">STATUS</th>
                                 <th class="py-3 px-3 text-center">PERFORMA & INTERAKSI</th>
-                                <th class="py-3 px-3">🏷️ DISKON</th>
+                                <th class="py-3 px-3">DISKON</th>
                                 <th class="py-3 px-4 text-right">AKSI</th>
                             </tr>
                         </thead>
@@ -1555,26 +1579,27 @@ Algoritma:
                                         <div class="text-[10px] text-slate-500">{{ $store->student_class ?? ($store->owner->role ?? '-') }}</div>
                                         @if($store->contact_number)
                                             <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $store->contact_number) }}" target="_blank" class="text-[10px] text-emerald-700 hover:underline inline-flex items-center gap-1 mt-0.5">
-                                                <span>💬 {{ $store->contact_number }}</span>
+                                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                                <span>{{ $store->contact_number }}</span>
                                             </a>
                                         @endif
                                     </td>
                                     <td class="py-3.5 px-3 text-[10px] text-slate-600 space-y-1">
                                         <div class="flex items-center gap-1" title="Tanggal Pemilik Mendaftar Akun">
-                                            <span class="text-slate-400">👤 Daftar Akun:</span>
+                                            <span class="text-slate-400">Daftar Akun:</span>
                                             <span class="font-medium text-slate-700">{{ $store->owner?->created_at ? $store->owner->created_at->format('d/m/Y H:i') : '-' }}</span>
                                         </div>
                                         <div class="flex items-center gap-1" title="Tanggal Pendaftaran Toko">
-                                            <span class="text-slate-400">🏪 Buat Toko:</span>
+                                            <span class="text-slate-400">Buat Toko:</span>
                                             <span class="font-semibold text-slate-800">{{ $store->created_at ? $store->created_at->format('d/m/Y H:i') : '-' }}</span>
                                         </div>
                                         <div class="flex items-center gap-1" title="Tanggal Terakhir Toko Diperbarui">
-                                            <span class="text-slate-400">✏️ Diedit:</span>
+                                            <span class="text-slate-400">Diedit:</span>
                                             <span class="text-slate-600">{{ $store->updated_at ? $store->updated_at->format('d/m/Y H:i') : '-' }}</span>
                                         </div>
                                         @if($store->trashed())
                                             <div class="flex items-center gap-1 text-rose-600 font-bold" title="Tanggal Toko Dihapus">
-                                                <span>🗑️ Dihapus:</span>
+                                                <span>Dihapus:</span>
                                                 <span>{{ $store->deleted_at ? $store->deleted_at->format('d/m/Y H:i') : '-' }}</span>
                                             </div>
                                         @endif
@@ -1599,11 +1624,11 @@ Algoritma:
                                     </td>
                                     <td class="py-3.5 px-3 text-center">
                                         <div class="inline-flex flex-wrap items-center justify-center gap-1.5 text-[10px]">
-                                            <span class="rounded bg-slate-100 px-1.5 py-0.5 font-bold text-slate-700" title="Total Dilihat">👁️ {{ number_format($store->metric_views) }}</span>
-                                            <span class="rounded bg-rose-50 px-1.5 py-0.5 font-bold text-rose-600" title="Total Suka">❤️ {{ number_format($store->metric_likes) }}</span>
-                                            <span class="rounded bg-blue-50 px-1.5 py-0.5 font-bold text-blue-700" title="Total Komentar">💬 {{ number_format($store->metric_comments) }}</span>
-                                            <span class="rounded bg-amber-50 px-1.5 py-0.5 font-bold text-amber-700" title="Rating">★ {{ number_format($store->metric_rating, 1, ',', '.') }}</span>
-                                            <span class="rounded bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-700" title="Pesanan">🛒 {{ number_format($store->metric_orders) }}</span>
+                                            <span class="rounded bg-slate-100 px-1.5 py-0.5 font-bold text-slate-700" title="Total Dilihat">{{ number_format($store->metric_views) }} dilihat</span>
+                                            <span class="rounded bg-rose-50 px-1.5 py-0.5 font-bold text-rose-600" title="Total Suka">{{ number_format($store->metric_likes) }} suka</span>
+                                            <span class="rounded bg-blue-50 px-1.5 py-0.5 font-bold text-blue-700" title="Total Komentar">{{ number_format($store->metric_comments) }} ulasan</span>
+                                            <span class="rounded bg-amber-50 px-1.5 py-0.5 font-bold text-amber-700" title="Rating">{{ number_format($store->metric_rating, 1, ',', '.') }}/5</span>
+                                            <span class="rounded bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-700" title="Pesanan">{{ number_format($store->metric_orders) }} trx</span>
                                         </div>
                                     </td>
                                     <td class="py-3.5 px-3 text-[10px] text-slate-600 space-y-0.5">
@@ -1638,7 +1663,7 @@ Algoritma:
                                                     @csrf
                                                     @method('PATCH')
                                                     <button type="submit" class="rounded-xl px-2.5 py-1 text-xs font-semibold transition {{ $store->is_verified ? 'border border-slate-200 text-slate-600 hover:bg-slate-100' : 'bg-[#0B6E4F] text-white hover:bg-[#08583F]' }}" title="{{ $store->is_verified ? 'Nonaktifkan toko ini' : 'Verifikasi dan aktifkan toko' }}">
-                                                        {{ $store->is_verified ? 'Nonaktifkan' : '✓ Verifikasi' }}
+                                                        {{ $store->is_verified ? 'Nonaktifkan' : 'Verifikasi' }}
                                                     </button>
                                                 </form>
 
@@ -1698,7 +1723,8 @@ Algoritma:
                 <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
                     <div>
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-0.5 text-[10px] font-extrabold text-amber-800 mb-1">
-                            🏷️ PENGELOLAAN BESARAN DISKON & EVENT BAZAR SMK
+                            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                            <span>PENGELOLAAN BESARAN DISKON & EVENT BAZAR SMK</span>
                         </span>
                         <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Kelola Besaran Diskon Pembeli & Acara Bazar SMK Plus Al Hilal</h2>
                         <p class="text-xs text-slate-400">
@@ -1712,7 +1738,7 @@ Algoritma:
                     @csrf
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="text-base">🏷️</span>
+                            <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
                             <div>
                                 <p class="font-extrabold text-[#0F291E] text-xs sm:text-sm">Kebijakan Besaran Diskon Standar Sekolah</p>
                                 <p class="text-[11px] text-slate-500">Besaran diskon standar ini berlaku untuk pembeli terverifikasi saat berbelanja di seluruh toko karya SMK.</p>
@@ -1727,7 +1753,7 @@ Algoritma:
                         <!-- Diskon Pelajar -->
                         <div class="bg-white rounded-xl p-3 border border-emerald-200/70">
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                🎓 Diskon Pelajar (%)
+                                Diskon Pelajar (%)
                             </label>
                             <div class="flex items-center gap-1.5">
                                 <input type="number" name="policy_discount_pelajar" required min="0" max="90" value="{{ old('policy_discount_pelajar', $defaultDiscounts['pelajar'] ?? 10) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-[#0B6E4F] focus:bg-white focus:outline-none">
@@ -1739,7 +1765,7 @@ Algoritma:
                         <!-- Diskon Keluarga SMK -->
                         <div class="bg-white rounded-xl p-3 border border-emerald-200/70">
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                👨‍👩‍👧 Diskon Keluarga (%)
+                                Diskon Keluarga (%)
                             </label>
                             <div class="flex items-center gap-1.5">
                                 <input type="number" name="policy_discount_keluarga" required min="0" max="90" value="{{ old('policy_discount_keluarga', $defaultDiscounts['keluarga'] ?? 10) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-[#0B6E4F] focus:bg-white focus:outline-none">
@@ -1751,7 +1777,7 @@ Algoritma:
                         <!-- Diskon Alumni -->
                         <div class="bg-white rounded-xl p-3 border border-emerald-200/70">
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                🎓 Diskon Alumni (%)
+                                Diskon Alumni (%)
                             </label>
                             <div class="flex items-center gap-1.5">
                                 <input type="number" name="policy_discount_alumni" required min="0" max="90" value="{{ old('policy_discount_alumni', $defaultDiscounts['alumni'] ?? 5) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-[#0B6E4F] focus:bg-white focus:outline-none">
@@ -1763,7 +1789,7 @@ Algoritma:
                         <!-- Diskon Pengunjung Umum -->
                         <div class="bg-white rounded-xl p-3 border border-emerald-200/70">
                             <label class="block text-[11px] font-bold text-slate-700 mb-1">
-                                🌐 Diskon Umum (%)
+                                Diskon Umum (%)
                             </label>
                             <div class="flex items-center gap-1.5">
                                 <input type="number" name="policy_discount_umum" required min="0" max="90" value="{{ old('policy_discount_umum', $defaultDiscounts['umum'] ?? 0) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-[#0B6E4F] focus:bg-white focus:outline-none">
@@ -1775,7 +1801,7 @@ Algoritma:
                         <!-- Diskon Ekstra Bazar Stand -->
                         <div class="bg-white rounded-xl p-3 border border-amber-300">
                             <label class="block text-[11px] font-bold text-amber-900 mb-1">
-                                🎪 Ekstra Bazar Toko (%)
+                                Ekstra Bazar Toko (%)
                             </label>
                             <div class="flex items-center gap-1.5">
                                 <input type="number" name="policy_discount_bazar_extra" required min="0" max="90" value="{{ old('policy_discount_bazar_extra', $defaultDiscounts['bazar_extra'] ?? 5) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-amber-800 focus:bg-white focus:outline-none">
@@ -1785,14 +1811,53 @@ Algoritma:
                         </div>
                     </div>
 
+                    <div class="pt-3 border-t border-emerald-200/70 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <p class="font-extrabold text-[#0F291E] text-xs">Kebijakan Default Poin Pengunjung & Doorprize Bazar</p>
+                            <span class="rounded-full bg-amber-100 text-amber-900 font-extrabold text-[10px] px-2.5 py-0.5">Poin Doorprize</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="bg-white rounded-xl p-3 border border-emerald-200/70">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">Poin Scan Hadir Acara</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" name="policy_bazaar_points_checkin" required min="0" max="10000" value="{{ old('policy_bazaar_points_checkin', $defaultPoints['checkin'] ?? 50) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-[#0B6E4F] focus:bg-white focus:outline-none">
+                                    <span class="font-bold text-slate-400">poin</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400 mt-1 block">Poin saat pembeli scan QR gerbang acara</span>
+                            </div>
+                            <div class="bg-white rounded-xl p-3 border border-blue-200/80">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">Poin Scan Kunjungan Stand</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" name="policy_bazaar_points_stand_visit" required min="0" max="10000" value="{{ old('policy_bazaar_points_stand_visit', $defaultPoints['stand_visit'] ?? 20) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-blue-700 focus:bg-white focus:outline-none">
+                                    <span class="font-bold text-slate-400">poin</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400 mt-1 block">Poin saat pembeli scan QR stand toko</span>
+                            </div>
+                            <div class="bg-white rounded-xl p-3 border border-amber-300">
+                                <label class="block text-[11px] font-bold text-amber-900 mb-1">Poin Per Transaksi Bazar</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" name="policy_bazaar_points_transaction" required min="0" max="10000" value="{{ old('policy_bazaar_points_transaction', $defaultPoints['transaction'] ?? 30) }}" class="w-full rounded-lg border border-slate-200 bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-extrabold text-amber-800 focus:bg-white focus:outline-none">
+                                    <span class="font-bold text-amber-700">poin</span>
+                                </div>
+                                <span class="text-[10px] text-amber-700 mt-1 block">Otomatis masuk saat transaksi disetujui</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-emerald-200/60">
-                        <label class="flex items-center gap-2 cursor-pointer text-[11px] text-[#0F291E] font-semibold">
-                            <input type="checkbox" name="apply_to_all_stores" value="1" class="rounded border-emerald-400 text-[#0B6E4F] focus:ring-[#0B6E4F]">
-                            <span>Terapkan langsung besaran diskon standar ini ke seluruh toko aktif yang ada di sistem</span>
-                        </label>
+                        <div class="space-y-1.5">
+                            <label class="flex items-center gap-2 cursor-pointer text-[11px] text-[#0F291E] font-semibold">
+                                <input type="checkbox" name="apply_to_all_stores" value="1" class="rounded border-emerald-400 text-[#0B6E4F] focus:ring-[#0B6E4F]">
+                                <span>Terapkan langsung besaran diskon standar ini ke seluruh toko aktif yang ada di sistem</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer text-[11px] text-amber-900 font-semibold">
+                                <input type="checkbox" name="apply_points_to_active_bazaars" value="1" class="rounded border-amber-400 text-amber-700 focus:ring-amber-600">
+                                <span>Terapkan langsung standar poin di atas ke seluruh acara bazar yang sedang aktif</span>
+                            </label>
+                        </div>
                         <button type="submit" class="rounded-xl bg-[#0B6E4F] px-4 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-xs flex items-center gap-1.5">
-                            <span>💾</span>
-                            <span>Simpan Kebijakan Diskon Sekolah</span>
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            <span>Simpan Kebijakan Diskon & Poin</span>
                         </button>
                     </div>
                 </form>
@@ -1840,9 +1905,18 @@ Algoritma:
                         <div>
                             <label class="block font-bold text-slate-600 mb-1">Poin Hadir / Stand / Trx</label>
                             <div class="grid grid-cols-3 gap-1.5">
-                                <input type="number" name="points_checkin" value="50" min="0" title="Poin scan hadir acara bazar" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-center text-[#0B6E4F]">
-                                <input type="number" name="points_stand_visit" value="20" min="0" title="Poin scan kunjungan stand toko" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-center text-blue-700">
-                                <input type="number" name="points_transaction" value="30" min="0" title="Poin per transaksi bazar" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-center text-amber-700">
+                                <label class="block text-center">
+                                    <span class="block text-[9px] font-bold text-[#0B6E4F] mb-0.5">Hadir</span>
+                                    <input type="number" name="points_checkin" value="{{ old('points_checkin', $defaultPoints['checkin'] ?? 50) }}" min="0" title="Poin scan hadir acara bazar" class="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-center text-[#0B6E4F]">
+                                </label>
+                                <label class="block text-center">
+                                    <span class="block text-[9px] font-bold text-blue-700 mb-0.5">Stand</span>
+                                    <input type="number" name="points_stand_visit" value="{{ old('points_stand_visit', $defaultPoints['stand_visit'] ?? 20) }}" min="0" title="Poin scan kunjungan stand toko" class="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-center text-blue-700">
+                                </label>
+                                <label class="block text-center">
+                                    <span class="block text-[9px] font-bold text-amber-700 mb-0.5">Trx</span>
+                                    <input type="number" name="points_transaction" value="{{ old('points_transaction', $defaultPoints['transaction'] ?? 30) }}" min="0" title="Poin per transaksi bazar" class="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-center text-amber-700">
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -1941,6 +2015,10 @@ Algoritma:
                                                         start_date: '{{ $bz->start_date?->format('Y-m-d') ?? '' }}',
                                                         end_date: '{{ $bz->end_date?->format('Y-m-d') ?? '' }}',
                                                         max_discount_amount: '{{ $bz->max_discount_amount ? (int)$bz->max_discount_amount : '' }}',
+                                                        points_checkin: {{ (int) ($bz->points_checkin ?? 50) }},
+                                                        points_stand_visit: {{ (int) ($bz->points_stand_visit ?? 20) }},
+                                                        points_transaction: {{ (int) ($bz->points_transaction ?? 30) }},
+                                                        allow_self_register: {{ ($bz->allow_self_register ?? true) ? 1 : 0 }},
                                                         is_active: {{ $bz->is_active ? 1 : 0 }}
                                                     })"
                                                     class="font-bold text-[#0B6E4F] hover:underline bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
@@ -2011,7 +2089,7 @@ Algoritma:
                                                         bazar: {{ (int)$st->discount_bazar_extra }}
                                                     })"
                                                     class="font-bold text-[#0B6E4F] hover:underline bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                                                ✏️ Sesuaikan Diskon
+                                                Sesuaikan Diskon
                                             </button>
                                         </td>
                                     </tr>
@@ -2031,8 +2109,8 @@ Algoritma:
                 <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden border border-slate-100">
                     <div class="px-6 py-4 bg-amber-50/80 border-b border-amber-200/80 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="text-base">🎪</span>
-                            <h3 class="font-extrabold text-[#0F291E] text-sm">Edit Acara Bazar & Event Diskon</h3>
+                            <svg class="w-4 h-4 text-amber-700 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                            <h3 class="font-extrabold text-[#0F291E] text-sm">Edit Acara Bazar, Poin & Event Diskon</h3>
                         </div>
                         <button type="button" onclick="closeEditBazaarModal()" class="text-slate-400 hover:text-slate-700 font-extrabold text-lg">&times;</button>
                     </div>
@@ -2079,21 +2157,49 @@ Algoritma:
                             </div>
                         </div>
 
+                        <div class="grid grid-cols-3 gap-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 p-3">
+                            <div>
+                                <label class="block font-bold text-[#0F291E] mb-1 text-[11px]">Poin Hadir QR</label>
+                                <input type="number" id="edit_bz_points_checkin" name="points_checkin" min="0" max="10000" required class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-extrabold text-[#0B6E4F] focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-[#0F291E] mb-1 text-[11px]">Poin Stand Toko</label>
+                                <input type="number" id="edit_bz_points_stand_visit" name="points_stand_visit" min="0" max="10000" required class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-extrabold text-blue-700 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-[#0F291E] mb-1 text-[11px]">Poin Transaksi</label>
+                                <input type="number" id="edit_bz_points_transaction" name="points_transaction" min="0" max="10000" required class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-extrabold text-amber-700 focus:outline-none">
+                            </div>
+                        </div>
+
                         <div>
                             <label class="block font-bold text-slate-700 mb-1">Deskripsi Acara / Keterangan</label>
                             <textarea id="edit_bz_description" name="description" rows="2" class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 focus:bg-white focus:outline-none"></textarea>
                         </div>
 
-                        <div class="rounded-xl bg-slate-50 p-3 border border-slate-200 flex items-center justify-between">
-                            <div>
-                                <p class="font-bold text-slate-700">Status Keaktifan Acara</p>
-                                <p class="text-[10px] text-slate-400">Jika aktif, voucher dan diskon bazar dapat digunakan pembeli.</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div class="rounded-xl bg-slate-50 p-3 border border-slate-200 flex items-center justify-between gap-2">
+                                <div>
+                                    <p class="font-bold text-slate-700">Status Acara</p>
+                                    <p class="text-[10px] text-slate-400">Aktifkan voucher & poin</p>
+                                </div>
+                                <label class="flex items-center gap-1.5 cursor-pointer shrink-0">
+                                    <input type="hidden" name="is_active" value="0">
+                                    <input type="checkbox" id="edit_bz_is_active" name="is_active" value="1" class="rounded border-slate-300 text-[#0B6E4F] focus:ring-[#0B6E4F]">
+                                    <span class="font-bold text-[#0B6E4F]">Aktif</span>
+                                </label>
                             </div>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="hidden" name="is_active" value="0">
-                                <input type="checkbox" id="edit_bz_is_active" name="is_active" value="1" class="rounded border-slate-300 text-[#0B6E4F] focus:ring-[#0B6E4F]">
-                                <span class="font-bold text-[#0B6E4F]">Aktifkan Acara</span>
-                            </label>
+                            <div class="rounded-xl bg-slate-50 p-3 border border-slate-200 flex items-center justify-between gap-2">
+                                <div>
+                                    <p class="font-bold text-slate-700">Pengajuan Toko</p>
+                                    <p class="text-[10px] text-slate-400">Izinkan toko mendaftar</p>
+                                </div>
+                                <label class="flex items-center gap-1.5 cursor-pointer shrink-0">
+                                    <input type="hidden" name="allow_self_register" value="0">
+                                    <input type="checkbox" id="edit_bz_allow_self_register" name="allow_self_register" value="1" class="rounded border-slate-300 text-[#0B6E4F] focus:ring-[#0B6E4F]">
+                                    <span class="font-bold text-[#0B6E4F]">Buka</span>
+                                </label>
+                            </div>
                         </div>
 
                         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
@@ -2113,7 +2219,7 @@ Algoritma:
                 <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-slate-100">
                     <div class="px-6 py-4 bg-emerald-50/80 border-b border-emerald-200/80 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="text-base">🏪</span>
+                            <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 20V14h6v6" /></svg>
                             <div>
                                 <h3 class="font-extrabold text-[#0F291E] text-sm">Sesuaikan Diskon Toko</h3>
                                 <p id="edit_store_name_title" class="text-[11px] text-[#0B6E4F] font-bold"></p>
@@ -2128,28 +2234,28 @@ Algoritma:
 
                         <div class="grid grid-cols-2 gap-3">
                             <div class="bg-[#F8FAFC] rounded-xl p-3 border border-slate-200">
-                                <label class="block font-bold text-slate-700 mb-1">🎓 Pelajar (%)</label>
+                                <label class="block font-bold text-slate-700 mb-1">Pelajar (%)</label>
                                 <input type="number" id="edit_store_pelajar" name="discount_pelajar" required min="0" max="90" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-bold text-[#0B6E4F]">
                             </div>
                             <div class="bg-[#F8FAFC] rounded-xl p-3 border border-slate-200">
-                                <label class="block font-bold text-slate-700 mb-1">👨‍👩‍👧 Keluarga SMK (%)</label>
+                                <label class="block font-bold text-slate-700 mb-1">Keluarga SMK (%)</label>
                                 <input type="number" id="edit_store_keluarga" name="discount_keluarga" required min="0" max="90" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-bold text-[#0B6E4F]">
                             </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div class="bg-[#F8FAFC] rounded-xl p-3 border border-slate-200">
-                                <label class="block font-bold text-slate-700 mb-1">🎓 Alumni (%)</label>
+                                <label class="block font-bold text-slate-700 mb-1">Alumni (%)</label>
                                 <input type="number" id="edit_store_alumni" name="discount_alumni" required min="0" max="90" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-bold text-[#0B6E4F]">
                             </div>
                             <div class="bg-[#F8FAFC] rounded-xl p-3 border border-slate-200">
-                                <label class="block font-bold text-slate-700 mb-1">🌐 Umum (%)</label>
+                                <label class="block font-bold text-slate-700 mb-1">Umum (%)</label>
                                 <input type="number" id="edit_store_umum" name="discount_umum" required min="0" max="90" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-bold text-[#0B6E4F]">
                             </div>
                         </div>
 
                         <div class="bg-amber-50 rounded-xl p-3 border border-amber-200">
-                            <label class="block font-bold text-amber-900 mb-1">🎪 Diskon Ekstra Bazar Stand (%)</label>
+                            <label class="block font-bold text-amber-900 mb-1">Diskon Ekstra Bazar Stand (%)</label>
                             <input type="number" id="edit_store_bazar" name="discount_bazar_extra" required min="0" max="90" class="w-full rounded-lg border border-amber-300 bg-white px-2.5 py-1.5 font-extrabold text-amber-800">
                             <span class="text-[10px] text-amber-700 mt-1 block">Potongan ekstra dari toko saat acara bazar berlangsung.</span>
                         </div>
@@ -2240,7 +2346,7 @@ Algoritma:
                 <div>
                     <label class="block font-bold text-[#0F291E] mb-1">Bagian / Section *</label>
                     <select name="section" id="add-cms-section" required class="w-full rounded-xl border border-slate-200 px-3 py-2">
-                        <option value="iklan">⚡ Iklan Mitra Kerjasama (Atas Beranda)</option>
+                        <option value="iklan">Iklan Mitra Kerjasama (Atas Beranda)</option>
                         <option value="custom_banner">Banner / Pengumuman Beranda</option>
                         <option value="hero">Hero Beranda</option>
                         <option value="values">Poin Keunggulan</option>
@@ -2336,7 +2442,7 @@ Algoritma:
                 <div>
                     <label class="block font-bold text-[#0F291E] mb-1">Bagian / Section *</label>
                     <select name="section" id="edit-cms-section" required class="w-full rounded-xl border border-slate-200 px-2.5 py-2">
-                        <option value="iklan">⚡ Iklan Mitra (Atas)</option>
+                        <option value="iklan">Iklan Mitra (Atas)</option>
                         <option value="topbar">Topbar Atas</option>
                         <option value="hero">Hero Beranda</option>
                         <option value="values">Poin Keunggulan</option>
@@ -2771,7 +2877,7 @@ Algoritma:
                 <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
                     <input type="checkbox" name="reset_views" value="1" class="mt-0.5 rounded text-[#0B6E4F] focus:ring-[#0B6E4F]">
                     <div>
-                        <p class="font-bold text-xs text-[#0F291E]">👁️ Reset Dilihat (Views -> 0)</p>
+                        <p class="font-bold text-xs text-[#0F291E]">Reset Dilihat (Views -> 0)</p>
                         <p class="text-[10px] text-slate-400">Set counter dilihat ke 0 & bersihkan log kunjungan terkait.</p>
                     </div>
                 </label>
@@ -2779,7 +2885,7 @@ Algoritma:
                 <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
                     <input type="checkbox" name="reset_likes" value="1" class="mt-0.5 rounded text-rose-600 focus:ring-rose-500">
                     <div>
-                        <p class="font-bold text-xs text-rose-700">❤️ Reset Suka (Likes -> 0)</p>
+                        <p class="font-bold text-xs text-rose-700">Reset Suka (Likes -> 0)</p>
                         <p class="text-[10px] text-slate-400">Set counter suka ke 0 & hapus riwayat likes karya ini.</p>
                     </div>
                 </label>
@@ -2787,7 +2893,7 @@ Algoritma:
                 <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
                     <input type="checkbox" name="reset_comments" value="1" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500">
                     <div>
-                        <p class="font-bold text-xs text-blue-800">💬 Hapus Seluruh Komentar</p>
+                        <p class="font-bold text-xs text-blue-800">Hapus Seluruh Komentar</p>
                         <p class="text-[10px] text-slate-400">Bersihkan seluruh ulasan dan komentar pengunjung pada karya ini.</p>
                     </div>
                 </label>
@@ -2795,7 +2901,7 @@ Algoritma:
                 <label class="flex items-start gap-2.5 p-2.5 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-50 cursor-pointer">
                     <input type="checkbox" name="reset_all" value="1" id="chk-reset-all" onchange="toggleSelectAllProductReset(this)" class="mt-0.5 rounded text-rose-700 focus:ring-rose-500">
                     <div>
-                        <p class="font-bold text-xs text-rose-800">⚠️ Reset Total Semuanya Sekaligus</p>
+                        <p class="font-bold text-xs text-rose-800">Reset Total Semuanya Sekaligus</p>
                         <p class="text-[10px] text-rose-600">Reset Dilihat, Suka, dan Komentar kembali bersih seperti baru.</p>
                     </div>
                 </label>
@@ -2854,13 +2960,13 @@ Algoritma:
         if (badgeEl) {
             if (topStore) {
                 const metricText = {
-                    views: `👁️ ${topStore.views} dilihat`,
-                    likes: `❤️ ${topStore.likes} disukai`,
-                    comments: `💬 ${topStore.comments} komentar`,
-                    ratings: `★ ${topStore.ratings} / 5`,
-                    orders: `🛒 ${topStore.orders} pesanan`,
+                    views: `${topStore.views} dilihat`,
+                    likes: `${topStore.likes} disukai`,
+                    comments: `${topStore.comments} komentar`,
+                    ratings: `${topStore.ratings} / 5 rating`,
+                    orders: `${topStore.orders} pesanan`,
                 }[sortMetric] || '';
-                badgeEl.textContent = `🏆 #1 Teratas: ${topStore.name} (${metricText})`;
+                badgeEl.textContent = `#1 Teratas: ${topStore.name} (${metricText})`;
             } else {
                 badgeEl.textContent = 'Belum ada data toko pada filter ini';
             }
@@ -2872,35 +2978,35 @@ Algoritma:
         const allDatasets = [
             {
                 key: 'views',
-                label: 'Dilihat (👁️)',
+                label: 'Dilihat',
                 data: sliced.map(s => s.views),
                 backgroundColor: '#0B6E4F',
                 borderRadius: 6,
             },
             {
                 key: 'likes',
-                label: 'Disukai (❤️)',
+                label: 'Disukai',
                 data: sliced.map(s => s.likes),
                 backgroundColor: '#F43F5E',
                 borderRadius: 6,
             },
             {
                 key: 'comments',
-                label: 'Komentar (💬)',
+                label: 'Komentar',
                 data: sliced.map(s => s.comments),
                 backgroundColor: '#10B981',
                 borderRadius: 6,
             },
             {
                 key: 'ratings',
-                label: 'Rating Bintang (★)',
+                label: 'Rating Bintang',
                 data: sliced.map(s => s.ratings),
                 backgroundColor: '#F59E0B',
                 borderRadius: 6,
             },
             {
                 key: 'orders',
-                label: 'Pesanan (🛒)',
+                label: 'Pesanan',
                 data: sliced.map(s => s.orders),
                 backgroundColor: '#3B82F6',
                 borderRadius: 6,
@@ -3211,6 +3317,10 @@ Algoritma:
         document.getElementById('edit_bz_max_discount').value = data.max_discount_amount || '';
         document.getElementById('edit_bz_location').value = data.location || '';
         document.getElementById('edit_bz_description').value = data.description || '';
+        document.getElementById('edit_bz_points_checkin').value = data.points_checkin ?? 50;
+        document.getElementById('edit_bz_points_stand_visit').value = data.points_stand_visit ?? 20;
+        document.getElementById('edit_bz_points_transaction').value = data.points_transaction ?? 30;
+        document.getElementById('edit_bz_allow_self_register').checked = data.allow_self_register !== undefined ? !!data.allow_self_register : true;
         document.getElementById('edit_bz_is_active').checked = !!data.is_active;
 
         modal.classList.remove('hidden');

@@ -35,8 +35,8 @@ use Illuminate\View\View;
  *   laporan, bazar diskon SMK, dan analitik untuk Super Admin & Admin:
  *   1. CMS Konten Website (`storeCms`, `updateCms`, `destroyCms`).
  *   2. CMS Karya Siswa / Produk (`storeProduct`, `updateProduct`, `destroyProduct`).
- *   3. Grafik Analitik & Filter Toko Teratas (Pelihat Terbanyak 👁️, Like Terbanyak ❤️,
- *      Komentar Terbanyak 💬, Rating Bintang Teratas ★, Pesanan Terbanyak 🛒).
+ *   3. Grafik Analitik & Filter Toko Teratas (Pelihat Terbanyak, Like Terbanyak,
+ *      Komentar Terbanyak, Rating Bintang Teratas, Pesanan Terbanyak).
  *   4. Skema Bazar & Event Diskon SMK (`storeBazaarEvent`, `updateBazaarEvent`, `destroyBazaarEvent`).
  *   5. Laporan Pengunjung, Penetapan Guru sebagai Admin, CRUD Pengguna, Kategori, Kelas & Jurusan.
  * ============================================================================
@@ -348,6 +348,12 @@ class AdminDashboardController extends Controller
             'bazar_extra' => (int) CmsContent::val('policy_discount_bazar_extra', '5'),
         ];
 
+        $defaultPoints = [
+            'checkin'     => (int) CmsContent::val('policy_bazaar_points_checkin', '50'),
+            'stand_visit' => (int) CmsContent::val('policy_bazaar_points_stand_visit', '20'),
+            'transaction' => (int) CmsContent::val('policy_bazaar_points_transaction', '30'),
+        ];
+
         $allProducts = Product::with(['store.owner'])
             ->withCount('comments')
             ->latest()
@@ -381,6 +387,7 @@ class AdminDashboardController extends Controller
             'cmsContents',
             'bazaarEvents',
             'defaultDiscounts',
+            'defaultPoints',
             'allProducts',
             'stats',
             'availableClasses',
@@ -1038,9 +1045,9 @@ class AdminDashboardController extends Controller
                 'max_discount_amount' => $validated['max_discount_amount'] ?? null,
                 'start_date'          => $validated['start_date'] ?? null,
                 'end_date'            => $validated['end_date'] ?? null,
-                'points_checkin'      => (int) ($validated['points_checkin'] ?? 50),
-                'points_stand_visit'  => (int) ($validated['points_stand_visit'] ?? 20),
-                'points_transaction'  => (int) ($validated['points_transaction'] ?? 30),
+                'points_checkin'      => (int) ($validated['points_checkin'] ?? CmsContent::val('policy_bazaar_points_checkin', '50')),
+                'points_stand_visit'  => (int) ($validated['points_stand_visit'] ?? CmsContent::val('policy_bazaar_points_stand_visit', '20')),
+                'points_transaction'  => (int) ($validated['points_transaction'] ?? CmsContent::val('policy_bazaar_points_transaction', '30')),
                 'allow_self_register' => $request->has('allow_self_register') ? $request->boolean('allow_self_register') : true,
                 'is_active'           => true,
             ]
@@ -1128,24 +1135,51 @@ class AdminDashboardController extends Controller
     public function updateDiscountPolicy(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'policy_discount_pelajar'     => ['required', 'integer', 'min:0', 'max:90'],
-            'policy_discount_keluarga'    => ['required', 'integer', 'min:0', 'max:90'],
-            'policy_discount_alumni'      => ['required', 'integer', 'min:0', 'max:90'],
-            'policy_discount_umum'        => ['required', 'integer', 'min:0', 'max:90'],
-            'policy_discount_bazar_extra' => ['required', 'integer', 'min:0', 'max:90'],
-            'apply_to_all_stores'         => ['nullable', 'boolean'],
+            'policy_discount_pelajar'          => ['required', 'integer', 'min:0', 'max:90'],
+            'policy_discount_keluarga'         => ['required', 'integer', 'min:0', 'max:90'],
+            'policy_discount_alumni'           => ['required', 'integer', 'min:0', 'max:90'],
+            'policy_discount_umum'             => ['required', 'integer', 'min:0', 'max:90'],
+            'policy_discount_bazar_extra'      => ['required', 'integer', 'min:0', 'max:90'],
+            'policy_bazaar_points_checkin'     => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'policy_bazaar_points_stand_visit' => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'policy_bazaar_points_transaction' => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'apply_to_all_stores'              => ['nullable', 'boolean'],
+            'apply_points_to_active_bazaars'   => ['nullable', 'boolean'],
         ]);
 
         foreach (['policy_discount_pelajar', 'policy_discount_keluarga', 'policy_discount_alumni', 'policy_discount_umum', 'policy_discount_bazar_extra'] as $key) {
             CmsContent::updateOrCreate(
                 ['key' => $key],
                 [
-                    'section' => 'discounts',
-                    'title'   => ucwords(str_replace('_', ' ', $key)),
-                    'value_1' => (string) $validated[$key],
+                    'section'   => 'discounts',
+                    'title'     => ucwords(str_replace('_', ' ', $key)),
+                    'content'   => (string) $validated[$key],
+                    'type'      => 'text',
+                    'is_active' => true,
                 ]
             );
         }
+
+        $pointKeys = [
+            'policy_bazaar_points_checkin'     => $validated['policy_bazaar_points_checkin'] ?? null,
+            'policy_bazaar_points_stand_visit' => $validated['policy_bazaar_points_stand_visit'] ?? null,
+            'policy_bazaar_points_transaction' => $validated['policy_bazaar_points_transaction'] ?? null,
+        ];
+        foreach ($pointKeys as $key => $val) {
+            if ($val !== null && $val !== '') {
+                CmsContent::updateOrCreate(
+                    ['key' => $key],
+                    [
+                        'section'   => 'bazaar_policy',
+                        'title'     => ucwords(str_replace('_', ' ', $key)),
+                        'content'   => (string) (int) $val,
+                        'type'      => 'text',
+                        'is_active' => true,
+                    ]
+                );
+            }
+        }
+        CmsContent::clearCache();
 
         if ($request->boolean('apply_to_all_stores')) {
             Store::query()->update([
@@ -1157,8 +1191,19 @@ class AdminDashboardController extends Controller
             ]);
         }
 
+        if ($request->boolean('apply_points_to_active_bazaars') && Schema::hasTable('bazaar_events')) {
+            BazaarEvent::where('is_active', true)->update([
+                'points_checkin'     => (int) ($validated['policy_bazaar_points_checkin'] ?? CmsContent::val('policy_bazaar_points_checkin', '50')),
+                'points_stand_visit' => (int) ($validated['policy_bazaar_points_stand_visit'] ?? CmsContent::val('policy_bazaar_points_stand_visit', '20')),
+                'points_transaction' => (int) ($validated['policy_bazaar_points_transaction'] ?? CmsContent::val('policy_bazaar_points_transaction', '30')),
+            ]);
+        }
+
         return redirect()->to(route('admin.dashboard') . '#sec-diskon-bazar')
-            ->with('success', 'Kebijakan besaran diskon sekolah (Pelajar, Keluarga SMK, Alumni, Umum) berhasil disimpan' . ($request->boolean('apply_to_all_stores') ? ' dan diterapkan ke seluruh toko aktif.' : '.'));
+            ->with('success', 'Kebijakan standar diskon & poin bazar berhasil disimpan'
+                . ($request->boolean('apply_to_all_stores') ? ', diskon diterapkan ke seluruh toko' : '')
+                . ($request->boolean('apply_points_to_active_bazaars') ? ', poin diterapkan ke seluruh bazar aktif' : '')
+                . '.');
     }
 
     /**

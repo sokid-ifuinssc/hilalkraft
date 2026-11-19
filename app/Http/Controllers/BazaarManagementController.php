@@ -69,8 +69,9 @@ class BazaarManagementController extends Controller
             ->orderBy('store_name')
             ->get();
 
-        $storeRankings   = $this->bazaarService->getStoreRankings($bazaarEvent, $sortBy);
-        $visitorRankings = $this->bazaarService->getVisitorRankings($bazaarEvent);
+        $storeRankings      = $this->bazaarService->getStoreRankings($bazaarEvent, $sortBy);
+        $visitorRankings    = $this->bazaarService->getVisitorRankings($bazaarEvent);
+        $selectableVisitors = User::orderBy('name')->get(['id', 'name', 'email', 'role', 'user_subtype']);
 
         $eventCheckinUrl = route('bazaar.scan.token', $bazaarEvent->checkin_token);
         $eventQrSvg = QrCodeSvg::render($eventCheckinUrl, 210);
@@ -97,6 +98,7 @@ class BazaarManagementController extends Controller
             'availableStores',
             'storeRankings',
             'visitorRankings',
+            'selectableVisitors',
             'sortBy',
             'eventCheckinUrl',
             'eventQrSvg',
@@ -278,6 +280,44 @@ class BazaarManagementController extends Controller
         $winner->delete();
 
         return back()->with('success', "Status pemenang doorprize untuk {$name} telah dibatalkan.");
+    }
+
+    public function adjustVisitorPoints(Request $request, BazaarEvent $bazaarEvent): RedirectResponse
+    {
+        $validated = $request->validate([
+            'user_id'     => ['required', 'integer', 'exists:users,id'],
+            'points'      => ['required', 'integer', 'min:-10000', 'max:10000', 'not_in:0'],
+            'description' => ['nullable', 'string', 'max:200'],
+        ]);
+
+        $targetUser = User::findOrFail((int) $validated['user_id']);
+        $actor      = $request->user();
+        $delta      = (int) $validated['points'];
+        $note       = trim((string) ($validated['description'] ?? ''));
+
+        if ($note === '') {
+            $note = $delta > 0 ? "Bonus poin panitia (+{$delta})" : "Koreksi poin panitia ({$delta})";
+        }
+
+        BazaarVisitorPoint::create([
+            'bazaar_event_id' => $bazaarEvent->id,
+            'user_id'         => $targetUser->id,
+            'store_id'        => null,
+            'order_id'        => null,
+            'activity_type'   => 'bonus_admin',
+            'points'          => $delta,
+            'description'     => "{$note} — oleh {$actor->name}",
+        ]);
+
+        ActivityLog::record(
+            'bazaar_points_adjust',
+            'Penyesuaian Poin Pengunjung Bazar',
+            "{$actor->name} mengubah poin {$targetUser->name} sebesar {$delta} poin pada bazar '{$bazaarEvent->title}'."
+        );
+
+        $sign = $delta > 0 ? "+{$delta}" : (string) $delta;
+
+        return back()->with('success', "Berhasil mencatat {$sign} poin untuk {$targetUser->name} ({$note}).");
     }
 
     /* ======================================================================

@@ -45,35 +45,35 @@ Akses:
 
             <nav class="space-y-1 text-xs font-semibold">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>⊞</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
                     <span>Dashboard Utama</span>
                 </a>
                 <a href="{{ route('admin.reports') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>📊</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                     <span>Laporan & Rekap</span>
                 </a>
                 <a href="{{ route('admin.logs') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 bg-[#EBF9F2] text-[#0B6E4F] font-bold shadow-2xs">
-                    <span>📋</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     <span>Log Akses & Aktivitas</span>
                 </a>
                 <a href="{{ route('admin.interactions') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>🔍</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     <span>Audit Interaksi & Reset</span>
                 </a>
                 <a href="{{ route('admin.dashboard') }}#sec-cms" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>✨</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     <span>CMS Konten Website</span>
                 </a>
                 <a href="{{ route('admin.dashboard') }}#sec-manajemen-user" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>👥</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     <span>Manajemen User</span>
                 </a>
                 <a href="{{ route('admin.dashboard') }}#sec-kelola-toko" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>🏪</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 20V14h6v6" /></svg>
                     <span>Kelola & Peringkat Toko</span>
                 </a>
                 <a href="{{ route('admin.dashboard') }}#sec-bazar-event" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>🎪</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
                     <span>Bazar & Diskon SMK</span>
                 </a>
             </nav>
@@ -127,8 +127,9 @@ Akses:
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.logs') }}" class="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs">
-                        🔄 Refresh Data
+                    <a href="{{ route('admin.logs') }}" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs">
+                        <svg class="w-3.5 h-3.5 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        <span>Refresh Data</span>
                     </a>
                 </div>
             </div>
@@ -138,7 +139,7 @@ Akses:
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-1.5 shadow-2xs">
                     <div class="flex items-center justify-between text-xs text-slate-400">
                         <span>Total Seluruh Log</span>
-                        <span class="text-[#0B6E4F] text-base">📋</span>
+                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     </div>
                     <p class="text-2xl sm:text-3xl font-extrabold text-[#0F291E]">{{ number_format($stats['total_logs']) }}</p>
                     <p class="text-[11px] font-semibold text-slate-500">Rekam jejak aktivitas tersimpan</p>
@@ -147,7 +148,7 @@ Akses:
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-1.5 shadow-2xs">
                     <div class="flex items-center justify-between text-xs text-slate-400">
                         <span>Aktivitas Hari Ini</span>
-                        <span class="text-emerald-600 text-base">⚡</span>
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                     </div>
                     <p class="text-2xl sm:text-3xl font-extrabold text-emerald-600">{{ number_format($stats['today_logs']) }}</p>
                     <p class="text-[11px] font-semibold text-emerald-700">{{ date('d M Y') }}</p>
@@ -156,7 +157,7 @@ Akses:
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-1.5 shadow-2xs">
                     <div class="flex items-center justify-between text-xs text-slate-400">
                         <span>Login Masuk Hari Ini</span>
-                        <span class="text-blue-600 text-base">🔑</span>
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                     </div>
                     <p class="text-2xl sm:text-3xl font-extrabold text-blue-600">{{ number_format($stats['logins_today']) }}</p>
                     <p class="text-[11px] font-semibold text-blue-700">Sesi pengguna aktif</p>
@@ -165,7 +166,7 @@ Akses:
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 space-y-1.5 shadow-2xs">
                     <div class="flex items-center justify-between text-xs text-slate-400">
                         <span>Alamat IP Unik Terpantau</span>
-                        <span class="text-purple-600 text-base">🌐</span>
+                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
                     </div>
                     <p class="text-2xl sm:text-3xl font-extrabold text-purple-600">{{ number_format($stats['unique_ips']) }}</p>
                     <p class="text-[11px] font-semibold text-purple-700">{{ number_format($stats['unique_users']) }} Pengguna Unik</p>
@@ -191,18 +192,18 @@ Akses:
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Jenis Aktivitas</label>
                             <select name="type" class="w-full rounded-xl border border-slate-200 bg-[#F8FAFC] px-3 py-2 text-xs text-[#0F291E] focus:bg-white focus:border-[#0B6E4F] focus:outline-none cursor-pointer">
                                 <option value="all" @selected(!request('type') || request('type') === 'all')>Semua Aktivitas</option>
-                                <option value="login" @selected(request('type') === 'login')>🔑 Login Masuk</option>
-                                <option value="logout" @selected(request('type') === 'logout')>🚪 Logout Keluar</option>
-                                <option value="register" @selected(request('type') === 'register')>👤 Registrasi Akun</option>
-                                <option value="store_create" @selected(request('type') === 'store_create')>🏪 Pembuatan Toko</option>
-                                <option value="store_update" @selected(request('type') === 'store_update')>✏️ Edit / Status Toko</option>
-                                <option value="store_delete" @selected(request('type') === 'store_delete')>🗑️ Penghapusan Toko</option>
-                                <option value="store_restore" @selected(request('type') === 'store_restore')>♻️ Pemulihan Toko</option>
-                                <option value="product_create" @selected(request('type') === 'product_create')>🎨 Tambah Produk</option>
-                                <option value="product_update" @selected(request('type') === 'product_update')>✏️ Edit Produk</option>
-                                <option value="product_delete" @selected(request('type') === 'product_delete')>🗑️ Hapus Produk</option>
-                                <option value="order_update" @selected(request('type') === 'order_update')>🚚 Progres Pesanan</option>
-                                <option value="cms_update" @selected(request('type') === 'cms_update')>✨ Kelola CMS</option>
+                                <option value="login" @selected(request('type') === 'login')>Login Masuk</option>
+                                <option value="logout" @selected(request('type') === 'logout')>Logout Keluar</option>
+                                <option value="register" @selected(request('type') === 'register')>Registrasi Akun</option>
+                                <option value="store_create" @selected(request('type') === 'store_create')>Pembuatan Toko</option>
+                                <option value="store_update" @selected(request('type') === 'store_update')>Edit / Status Toko</option>
+                                <option value="store_delete" @selected(request('type') === 'store_delete')>Penghapusan Toko</option>
+                                <option value="store_restore" @selected(request('type') === 'store_restore')>Pemulihan Toko</option>
+                                <option value="product_create" @selected(request('type') === 'product_create')>Tambah Produk</option>
+                                <option value="product_update" @selected(request('type') === 'product_update')>Edit Produk</option>
+                                <option value="product_delete" @selected(request('type') === 'product_delete')>Hapus Produk</option>
+                                <option value="order_update" @selected(request('type') === 'order_update')>Progres Pesanan</option>
+                                <option value="cms_update" @selected(request('type') === 'cms_update')>Kelola CMS</option>
                             </select>
                         </div>
 
@@ -240,8 +241,9 @@ Akses:
                             <a href="{{ route('admin.logs') }}" class="rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
                                 Reset Filter
                             </a>
-                            <button type="submit" class="rounded-xl bg-[#0B6E4F] px-5 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-xs">
-                                🔍 Terapkan Filter
+                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-[#0B6E4F] px-5 py-2 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-xs">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                <span>Terapkan Filter</span>
                             </button>
                         </div>
                     </div>
@@ -328,7 +330,9 @@ Akses:
                             @empty
                                 <tr>
                                     <td colspan="5" class="py-12 text-center text-slate-400">
-                                        <span class="text-2xl block mb-1">📋</span>
+                                        <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                        </div>
                                         <p class="font-bold text-slate-600">Belum ada riwayat aktivitas yang tercatat</p>
                                         <p class="text-xs mt-0.5">Semua aktivitas masuk dan perubahan data akan otomatis tercatat di sini secara realtime.</p>
                                     </td>

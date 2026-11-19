@@ -443,9 +443,40 @@ Halaman manajemen terpadu untuk satu acara bazar tertentu (`/panel-admin/bazar/{
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
                 <h2 class="text-base sm:text-lg font-black text-[#0F291E]">Ranking Poin Pengunjung & Penerima Doorprize</h2>
-                <p class="text-xs text-slate-500">Akumulasi poin dari hadir di bazar (+{{ $bazaarEvent->points_checkin }}), kunjungan stand (+{{ $bazaarEvent->points_stand_visit }}/stand), dan transaksi bazar (+{{ $bazaarEvent->points_transaction }}/transaksi).</p>
+                <p class="text-xs text-slate-500">Akumulasi poin dari hadir di bazar (+{{ $bazaarEvent->points_checkin }}), kunjungan stand (+{{ $bazaarEvent->points_stand_visit }}/stand), transaksi bazar (+{{ $bazaarEvent->points_transaction }}/transaksi), serta bonus panitia.</p>
             </div>
         </div>
+
+        <form action="{{ route('admin.bazaar.points.adjust', $bazaarEvent) }}" method="POST"
+              class="rounded-xl bg-[#F8FAFC] border border-slate-200/80 p-3.5 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end text-xs">
+            @csrf
+            <div class="sm:col-span-4">
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Tambah / Sesuaikan Poin Pengunjung</label>
+                <select name="user_id" required class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold">
+                    <option value="">-- Pilih Akun Pengunjung / Pembeli --</option>
+                    @foreach($selectableVisitors ?? [] as $sv)
+                        <option value="{{ $sv->id }}">{{ $sv->name }} ({{ $sv->subtype_label }})</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="sm:col-span-2">
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Jumlah Poin (+/-)</label>
+                <input type="number" name="points" required value="25" min="-10000" max="10000"
+                       placeholder="Misal: 25 atau -10"
+                       class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-black text-[#0B6E4F]">
+            </div>
+            <div class="sm:col-span-4">
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Keterangan Panitia (Opsional)</label>
+                <input type="text" name="description" maxlength="200"
+                       placeholder="Contoh: Bonus kuis acara bazar / koreksi scan"
+                       class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs">
+            </div>
+            <div class="sm:col-span-2">
+                <button type="submit" class="w-full rounded-lg bg-[#0B6E4F] hover:bg-[#08583F] text-white px-3 py-2 text-xs font-bold transition shadow-xs">
+                    Simpan Poin
+                </button>
+            </div>
+        </form>
 
         <div class="overflow-x-auto border border-slate-100 rounded-xl">
             <table class="w-full text-left border-collapse text-xs">
@@ -487,6 +518,11 @@ Halaman manajemen terpadu untuk satu acara bazar tertentu (`/panel-admin/bazar/{
                                 <span class="inline-block rounded-lg bg-[#EBF9F2] px-2.5 py-1 font-black text-sm text-[#0B6E4F]">
                                     {{ number_format($vRow->total_points) }}
                                 </span>
+                                @if(($vRow->bonus_points ?? 0) !== 0)
+                                    <p class="text-[10px] font-bold mt-0.5 {{ $vRow->bonus_points > 0 ? 'text-indigo-700' : 'text-rose-600' }}">
+                                        {{ $vRow->bonus_points > 0 ? '+' : '' }}{{ $vRow->bonus_points }} panitia
+                                    </p>
+                                @endif
                             </td>
                             <td class="py-3 px-4 text-right">
                                 @if($vRow->doorprize_winner)

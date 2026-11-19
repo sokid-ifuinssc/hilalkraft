@@ -60,6 +60,7 @@ class BazaarVisitorPoint extends Model
             'event_checkin'      => 'Hadir di Acara Bazar',
             'stand_visit'        => 'Kunjungan Stand Toko',
             'bazaar_transaction' => 'Transaksi Belanja Bazar',
+            'bonus_admin'        => 'Bonus / Penyesuaian Panitia',
             default              => ucfirst((string) $this->activity_type),
         };
     }

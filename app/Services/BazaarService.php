@@ -298,9 +298,9 @@ class BazaarService
 
     public function getUserTotalPoints(BazaarEvent $event, User $user): int
     {
-        return (int) BazaarVisitorPoint::where('bazaar_event_id', $event->id)
+        return max(0, (int) BazaarVisitorPoint::where('bazaar_event_id', $event->id)
             ->where('user_id', $user->id)
-            ->sum('points');
+            ->sum('points'));
     }
 
     /**
@@ -432,6 +432,7 @@ class BazaarService
             $checkinLogs = $logs->where('activity_type', 'event_checkin');
             $standLogs   = $logs->where('activity_type', 'stand_visit');
             $trxLogs     = $logs->where('activity_type', 'bazaar_transaction');
+            $bonusLogs   = $logs->where('activity_type', 'bonus_admin');
 
             return (object) [
                 'user'               => $user,
@@ -441,7 +442,8 @@ class BazaarService
                 'stand_visit_points' => (int) $standLogs->sum('points'),
                 'transactions_count' => $trxLogs->count(),
                 'transaction_points' => (int) $trxLogs->sum('points'),
-                'total_points'       => (int) $logs->sum('points'),
+                'bonus_points'       => (int) $bonusLogs->sum('points'),
+                'total_points'       => max(0, (int) $logs->sum('points')),
                 'last_activity_at'   => $logs->max('created_at'),
                 'doorprize_winner'   => $winnersByUser->get($userId),
             ];

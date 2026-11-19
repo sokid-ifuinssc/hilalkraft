@@ -135,6 +135,7 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('panel-admin')->na
         Route::delete('/participants/{participant}', [BazaarManagementController::class, 'removeParticipant'])->name('participants.remove');
         Route::post('/doorprize', [BazaarManagementController::class, 'awardDoorprize'])->name('doorprize.award');
         Route::delete('/doorprize/{winner}', [BazaarManagementController::class, 'revokeDoorprize'])->name('doorprize.revoke');
+        Route::post('/points/adjust', [BazaarManagementController::class, 'adjustVisitorPoints'])->name('points.adjust');
         Route::get('/cetak-qr-acara', [BazaarManagementController::class, 'printEventQr'])->name('print-qr');
         Route::get('/cetak-semua-qr', [BazaarManagementController::class, 'printAllStandsQr'])->name('print-all-qr');
         Route::get('/participants/{participant}/cetak-qr', [BazaarManagementController::class, 'printStandQr'])->name('participants.print-qr');

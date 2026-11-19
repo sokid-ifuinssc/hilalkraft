@@ -75,19 +75,24 @@ Algoritma:
             </div>
 
             <div class="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden max-w-md">
-                <div class="aspect-[16/10] bg-slate-100 overflow-hidden">
+                <div class="aspect-[16/10] bg-gradient-to-br from-[#0B6E4F] via-[#0F4C3A] to-[#0F291E] p-6 flex items-center justify-center gap-5">
                     <img
-                        src="{{ asset('images/products/gantungan-kunci-bunga.jpg') }}"
-                        alt="Karya Siswa SMK Plus Al Hilal"
-                        class="w-full h-full object-cover"
+                        src="{{ asset('images/logo-smk-alhilal.png') }}"
+                        alt="Logo SMK Plus Al Hilal"
+                        class="w-20 h-20 object-contain rounded-xl bg-white/95 p-2 shadow-sm"
+                    >
+                    <img
+                        src="{{ asset('images/logo-hilalkraf.jpg') }}"
+                        alt="Logo hilalkraf"
+                        class="w-20 h-20 object-cover rounded-xl ring-2 ring-white/30 shadow-sm"
                     >
                 </div>
                 <div class="p-5 space-y-2">
                     <p class="text-xs sm:text-sm font-medium text-[#0F291E] leading-relaxed">
-                        "Gantungan Kunci Bunga — Manis, simple, bikin semangat! Teman kecil yang selalu bikin hari lebih berwarna."
+                        "Dari ruang kelas, untuk kehidupan sehari-hari — mendukung kemandirian wirausaha muda SMK Plus Al Hilal secara jujur dan profesional."
                     </p>
                     <p class="text-[11px] font-bold text-[#0B6E4F]">
-                        Khoiriyah Muntazah & Yulianti • Kelas XI TKJT
+                        Unit Produksi &bull; Lembaga Inkubator Bisnis SMK PAL
                     </p>
                 </div>
             </div>
@@ -129,7 +134,9 @@ Algoritma:
                         <input type="radio" name="role" value="buyer" class="peer sr-only" {{ old('role', 'buyer') === 'buyer' ? 'checked' : '' }} onchange="updateRegisterFormState()">
                         <div class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3.5 peer-checked:border-[#0B6E4F] peer-checked:bg-[#EBF9F2] transition">
                             <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-lg bg-white border border-slate-200/80 text-[#0B6E4F] flex items-center justify-center text-sm">🛍️</span>
+                                <span class="w-8 h-8 rounded-lg bg-white border border-slate-200/80 text-[#0B6E4F] flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                                </span>
                                 <div>
                                     <p class="text-xs sm:text-sm font-bold text-[#0F291E]">Daftar sebagai Pembeli</p>
                                     <p class="text-[11px] text-slate-500">Temukan dan belanja karya siswa (Pelajar, Keluarga, Alumni, Umum).</p>
@@ -146,7 +153,9 @@ Algoritma:
                         <input type="radio" name="role" value="seller" class="peer sr-only" {{ old('role') === 'seller' ? 'checked' : '' }} onchange="updateRegisterFormState()">
                         <div class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3.5 peer-checked:border-[#0B6E4F] peer-checked:bg-[#EBF9F2] transition">
                             <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-lg bg-white border border-slate-200/80 text-[#0B6E4F] flex items-center justify-center text-sm">🏪</span>
+                                <span class="w-8 h-8 rounded-lg bg-white border border-slate-200/80 text-[#0B6E4F] flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 20V14h6v6" /></svg>
+                                </span>
                                 <div>
                                     <p class="text-xs sm:text-sm font-bold text-[#0F291E]">Daftar sebagai Pemilik Toko (Siswa / Guru)</p>
                                     <p class="text-[11px] text-slate-500">Tampilkan karya dan mulai berjualan (Satu Toko Satu Akun).</p>
@@ -306,13 +315,13 @@ Algoritma:
                     <div class="pt-1 space-y-1.5">
                         <label class="block text-xs font-bold text-[#0F291E]">Upload Identitas Siswa / Guru (Opsional)</label>
                         <label class="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#0B6E4F]/50 bg-[#EBF9F2]/40 py-5 px-4 text-center cursor-pointer hover:bg-[#EBF9F2] transition">
-                            <span class="text-lg text-[#0B6E4F]">🪪</span>
+                            <svg class="w-6 h-6 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>
                             <span class="text-xs font-bold text-[#0B6E4F] mt-1">Pilih foto kartu pelajar / identitas</span>
                             <span class="text-[10px] text-slate-400 mt-0.5">JPG, PNG, atau PDF • Maks. 5 MB</span>
                             <input type="file" class="hidden" accept=".jpg,.jpeg,.png,.pdf">
                         </label>
-                        <p class="text-[10px] text-slate-500 flex items-center gap-1">
-                            <span class="text-[#0B6E4F] font-bold">✓</span>
+                        <p class="text-[10px] text-slate-500 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                             <span>Identitas hanya digunakan untuk verifikasi sivitas SMK Plus Al Hilal oleh pengelola.</span>
                         </p>
                     </div>
@@ -359,8 +368,9 @@ Algoritma:
                     Sudah punya akun?
                     <a href="{{ route('login') }}" class="font-bold text-[#0B6E4F] hover:underline">Masuk di sini</a>
                 </p>
-                <p class="text-[11px] text-slate-400">
-                    🔒 Data pribadimu aman bersama hilalkraf SMK PAL.
+                <p class="text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    <span>Data pribadimu aman bersama hilalkraf SMK PAL.</span>
                 </p>
             </div>
 

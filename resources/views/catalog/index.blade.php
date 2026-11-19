@@ -12,7 +12,7 @@ Fungsi:
      s/d `contract_end`) yang diatur oleh Super Admin pada CMS.
   2. Hero Banner Ringkas & Kartu Pilihan Minggu Ini.
   3. Filter Kategori Dinamis (dari input Admin/Super Admin) & Katalog Produk
-     lengkap dengan indikator Ikon Lihat (👁️), Suka (❤️), dan Komentar (💬).
+     lengkap dengan indikator Ikon Lihat, Suka, dan Komentar.
 
 Algoritma:
   1. Per-Slide Dynamic Timer Carousel (`initPartnerAdsCarousel()`):
@@ -71,7 +71,7 @@ Algoritma:
                         <div class="relative z-10 space-y-1 min-w-0 flex-1">
                             <div class="flex flex-wrap items-center gap-1.5">
                                 <span class="inline-flex items-center gap-1 rounded-full {{ $accentBadge }} px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider shadow-2xs">
-                                    <span>★</span>
+                                    <svg class="w-2.5 h-2.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                                     <span>{{ $ad->badge_text ?: 'Mitra Resmi' }}</span>
                                 </span>
 
@@ -81,8 +81,9 @@ Algoritma:
                                     </span>
                                 @endif
 
-                                <span class="hidden sm:inline-block rounded-full bg-black/25 px-2 py-0.5 text-[9px] text-white/80">
-                                    ⏱ {{ $durationSec }}s
+                                <span class="hidden sm:inline-flex items-center gap-1 rounded-full bg-black/25 px-2 py-0.5 text-[9px] text-white/80">
+                                    <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <span>{{ $durationSec }}s</span>
                                 </span>
                             </div>
 
@@ -160,7 +161,7 @@ Algoritma:
             <div class="lg:col-span-7 space-y-4">
                 @if($heroBadge !== '')
                     <div class="inline-flex items-center gap-2 rounded-full bg-white border border-emerald-500/20 px-3 py-1 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#0B6E4F] shadow-2xs">
-                        <span>✦</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B6E4F]"></span>
                         <span>{{ $heroBadge }}</span>
                     </div>
                 @endif
@@ -195,13 +196,15 @@ Algoritma:
                 <div class="pt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-semibold text-slate-600">
                     @if(\App\Models\CmsContent::val('value_1', 'Karya siswa asli') !== '')
                         <span class="inline-flex items-center gap-1.5">
-                            <span class="w-4 h-4 rounded-full bg-[#D5F5E6] text-[#0B6E4F] flex items-center justify-center text-[10px]">✓</span>
+                            <span class="w-4 h-4 rounded-full bg-[#D5F5E6] text-[#0B6E4F] flex items-center justify-center">
+                                <svg class="w-2.5 h-2.5 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            </span>
                             {{ \App\Models\CmsContent::val('value_1', 'Karya siswa asli') }}
                         </span>
                     @endif
                     @if(\App\Models\CmsContent::val('value_2', 'Langsung ke kreator') !== '')
                         <span class="inline-flex items-center gap-1.5">
-                            <span class="w-4 h-4 rounded-full bg-[#D5F5E6] text-[#0B6E4F] flex items-center justify-center text-[10px]">
+                            <span class="w-4 h-4 rounded-full bg-[#D5F5E6] text-[#0B6E4F] flex items-center justify-center">
                                 <svg class="w-2.5 h-2.5 text-[#0B6E4F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                             </span>
                             {{ \App\Models\CmsContent::val('value_2', 'Langsung ke kreator') }}
@@ -209,7 +212,9 @@ Algoritma:
                     @endif
                     @if(\App\Models\CmsContent::val('value_3', 'Dukung talenta muda') !== '')
                         <span class="inline-flex items-center gap-1.5">
-                            <span class="w-4 h-4 rounded-full bg-[#D5F5E6] text-[#0B6E4F] flex items-center justify-center text-[10px]">♡</span>
+                            <span class="w-4 h-4 rounded-full bg-[#D5F5E6] text-[#0B6E4F] flex items-center justify-center">
+                                <svg class="w-2.5 h-2.5 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                            </span>
                             {{ \App\Models\CmsContent::val('value_3', 'Dukung talenta muda') }}
                         </span>
                     @endif
@@ -223,30 +228,30 @@ Algoritma:
                         ? (Str::startsWith($featuredProduct->image, 'http')
                             ? $featuredProduct->image
                             : (Str::startsWith($featuredProduct->image, 'images/') ? asset($featuredProduct->image) : asset('storage/' . $featuredProduct->image)))
-                        : asset('images/products/gantungan-kunci-bunga.jpg');
+                        : asset('images/logo-hilalkraf.jpg');
                     $heroLink = $featuredProduct ? route('products.show', $featuredProduct->slug) : '#katalog-produk';
                 @endphp
                 <a href="{{ $heroLink }}" class="group block relative rounded-2xl overflow-hidden shadow-md bg-white border border-slate-200/80 aspect-[16/11]">
                     <img
                         src="{{ $heroImg }}"
                         alt="{{ $featuredProduct->product_name ?? 'Karya Siswa SMK Plus Al Hilal' }}"
-                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        onerror="this.src='{{ asset('images/products/gantungan-kunci-bunga.jpg') }}'"
+                        class="w-full h-full {{ $featuredProduct ? 'object-cover' : 'object-contain bg-emerald-50/70 p-6' }} group-hover:scale-105 transition-transform duration-500"
+                        onerror="this.src='{{ asset('images/logo-hilalkraf.jpg') }}'"
                     >
                     <div class="absolute inset-x-3 bottom-3 rounded-xl bg-white/95 backdrop-blur-md p-3.5 shadow-md border border-slate-100 flex items-center justify-between gap-3">
                         <div class="min-w-0">
                             <span class="block text-[10px] font-extrabold uppercase tracking-wider text-[#0B6E4F]">
-                                KARYA PILIHAN SISWA
+                                {{ $featuredProduct ? 'KARYA PILIHAN SISWA' : 'UNIT WIRAUSAHA SMK PAL' }}
                             </span>
                             <h3 class="text-xs sm:text-sm font-bold text-[#0F291E] truncate group-hover:text-[#0B6E4F] transition">
-                                {{ $featuredProduct->product_name ?? 'Gantungan Kunci Bunga' }}
+                                {{ $featuredProduct->product_name ?? 'Galeri Karya Siswa SMK Plus Al Hilal' }}
                             </h3>
                             <p class="text-[11px] text-slate-500 truncate">
-                                {{ $featuredProduct->store->owner->name ?? 'Khoiriyah Muntazah' }} • {{ $featuredProduct->store->student_class ?? 'XI TKJT' }}
+                                {{ $featuredProduct?->store?->owner?->name ?? 'Inkubator Bisnis SMK PAL' }} &bull; {{ $featuredProduct?->store?->student_class ?? 'Wirausaha Muda' }}
                             </p>
                         </div>
                         <span class="shrink-0 rounded-lg bg-[#EBF9F2] px-2.5 py-1 text-xs font-extrabold text-[#0B6E4F]">
-                            {{ $featuredProduct->formatted_price ?? 'Rp 2.000' }}
+                            {{ $featuredProduct->formatted_price ?? 'Resmi' }}
                         </span>
                     </div>
                 </a>
@@ -323,7 +328,7 @@ Algoritma:
 
 @if($promoCards->count() > 0)
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-1 sm:pt-4 sm:pb-2">
-    <!-- Header Petunjuk: Info & Promo Diskon di Kiri, Geser ➔ di Kanan -->
+    <!-- Header Petunjuk: Info & Promo Diskon di Kiri, Geser ke Kanan -->
     <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-2 px-0.5">
         <div class="flex items-center gap-1.5 text-[#0F291E]">
             <span class="inline-block w-2 h-2 rounded-full bg-[#0B6E4F]"></span>
@@ -331,7 +336,7 @@ Algoritma:
         </div>
         <span class="text-[11px] font-bold text-[#0B6E4F] flex items-center gap-1 cursor-pointer select-none">
             <span>Geser</span>
-            <span class="animate-pulse">➔</span>
+            <svg class="w-3.5 h-3.5 animate-pulse" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
         </span>
     </div>
 
@@ -471,7 +476,7 @@ Algoritma:
     <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-5">
         @forelse($products as $product)
             @php
-                $fallbackImage = asset('images/products/gantungan-kunci-bunga.jpg');
+                $fallbackImage = asset('images/logo-hilalkraf.jpg');
                 $cardImage = Str::startsWith($product->image, 'http')
                     ? $product->image
                     : (Str::startsWith($product->image, 'images/') ? asset($product->image) : asset('storage/' . $product->image));

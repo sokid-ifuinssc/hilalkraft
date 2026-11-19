@@ -58,21 +58,26 @@ Algoritma:
                 </p>
             </div>
 
-            <!-- Kartu Foto & Kutipan Siswa -->
+            <!-- Kartu Identitas Lembaga -->
             <div class="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden max-w-md">
-                <div class="aspect-[16/10] bg-slate-100 overflow-hidden">
+                <div class="aspect-[16/10] bg-gradient-to-br from-[#0B6E4F] via-[#0F4C3A] to-[#0F291E] p-6 flex items-center justify-center gap-5">
                     <img
-                        src="{{ asset('images/products/gantungan-kunci-bunga.jpg') }}"
-                        alt="Karya Siswa SMK Plus Al Hilal"
-                        class="w-full h-full object-cover"
+                        src="{{ asset('images/logo-smk-alhilal.png') }}"
+                        alt="Logo SMK Plus Al Hilal"
+                        class="w-20 h-20 object-contain rounded-xl bg-white/95 p-2 shadow-sm"
+                    >
+                    <img
+                        src="{{ asset('images/logo-hilalkraf.jpg') }}"
+                        alt="Logo hilalkraf"
+                        class="w-20 h-20 object-cover rounded-xl ring-2 ring-white/30 shadow-sm"
                     >
                 </div>
                 <div class="p-5 space-y-2">
                     <p class="text-xs sm:text-sm font-medium text-[#0F291E] leading-relaxed">
-                        "Gantungan Kunci Bunga — Manis, simple, bikin semangat! Teman kecil yang selalu bikin hari lebih berwarna."
+                        "Dari ruang kelas, untuk kehidupan sehari-hari — mendukung kemandirian wirausaha muda SMK Plus Al Hilal secara jujur dan profesional."
                     </p>
                     <p class="text-[11px] font-bold text-[#0B6E4F]">
-                        Khoiriyah Muntazah & Yulianti • Kelas XI TKJT
+                        Unit Produksi &bull; Lembaga Inkubator Bisnis SMK PAL
                     </p>
                 </div>
             </div>
@@ -164,7 +169,7 @@ Algoritma:
                 </p>
 
                 <p class="text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
-                    <span>🔒</span>
+                    <svg class="w-3.5 h-3.5 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                     <span>Data privasimu aman bersama hilalkraf SMK PAL.</span>
                 </p>
             </div>

@@ -39,8 +39,9 @@ Algoritma:
             <button type="button" onclick="copyStoreLink()" class="rounded-xl border border-white/40 bg-white/15 px-4 py-3 text-xs font-bold text-white hover:bg-white/25 transition">
                 ↗ Bagikan Toko
             </button>
-            <a href="{{ $store->whatsapp_url }}" target="_blank" class="rounded-xl bg-white px-5 py-3 text-xs font-extrabold text-[#059669] shadow-md hover:bg-emerald-50 transition">
-                💬 Hubungi WhatsApp Toko
+            <a href="{{ $store->whatsapp_url }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-3 text-xs font-extrabold text-[#059669] shadow-md hover:bg-emerald-50 transition">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                <span>Hubungi WhatsApp Toko</span>
             </a>
         </div>
     </div>
@@ -83,8 +84,9 @@ Algoritma:
                                 <span>Detail</span>
                             </a>
                             <a href="{{ route('products.show', $product->slug) }}"
-                               class="inline-flex items-center justify-center rounded-lg sm:rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white py-1.5 px-2 text-[10px] sm:text-xs font-extrabold transition text-center active:scale-95 shadow-2xs">
-                                <span>💬 Pesan</span>
+                               class="inline-flex items-center justify-center gap-1 rounded-lg sm:rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white py-1.5 px-2 text-[10px] sm:text-xs font-extrabold transition text-center active:scale-95 shadow-2xs">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                                <span>Pesan</span>
                             </a>
                         </div>
                     </div>

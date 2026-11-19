@@ -6,11 +6,11 @@ Fungsi:
   1. Menampilkan rincian siapa saja yang berkomentar, menyukai (like),
      dan melihat (views) produk & toko karya siswa.
   2. Radar Cerdas Deteksi Akun Terhubung:
-     - 🚨 Terhubung: Pemilik Toko Sendiri (Self-Like / Self-Comment)
-     - ⚠️ Terhubung: Alamat IP Sama dengan Toko (Multi-Akun / Perangkat Sama)
-     - 🎓 Terhubung: Teman Sekelas / Sejurusan Siswa (SMK Plus Al Hilal)
-     - 👨‍👩‍👧 Terhubung: Akun Keluarga Siswa
-     - 👨‍🏫 Dewan Guru / Pembimbing SMK
+     - Terhubung: Pemilik Toko Sendiri (Self-Like / Self-Comment)
+     - Terhubung: Alamat IP Sama dengan Toko (Multi-Akun / Perangkat Sama)
+     - Terhubung: Teman Sekelas / Sejurusan Siswa (SMK Plus Al Hilal)
+     - Terhubung: Akun Keluarga Siswa
+     - Dewan Guru / Pembimbing SMK
   3. Menu Reset Interaksi:
      - Hapus individual per-komentar, per-suka, per-kunjungan.
      - Reset interaksi spesifik per-produk (Dilihat, Suka, Komentar).
@@ -52,35 +52,35 @@ Fungsi:
 
             <nav class="space-y-1 text-xs font-semibold">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>⊞</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
                     <span>Dashboard Utama</span>
                 </a>
                 <a href="{{ route('admin.reports') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>📊</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                     <span>Laporan & Rekap</span>
                 </a>
                 <a href="{{ route('admin.logs') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>📋</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     <span>Log Akses & Aktivitas</span>
                 </a>
                 <a href="{{ route('admin.interactions') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 bg-[#EBF9F2] text-[#0B6E4F] font-bold shadow-2xs">
-                    <span>🔍</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     <span>Audit Interaksi & Reset</span>
                 </a>
                 <a href="{{ route('admin.dashboard') }}#sec-cms" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>✨</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     <span>CMS Konten Website</span>
                 </a>
                 <a href="{{ route('admin.dashboard') }}#sec-manajemen-user" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>👥</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     <span>Manajemen User</span>
                 </a>
                 <a href="{{ route('admin.dashboard') }}#sec-kelola-toko" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>🏪</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 20V14h6v6" /></svg>
                     <span>Kelola & Peringkat Toko</span>
                 </a>
                 <a href="{{ route('admin.dashboard') }}#sec-bazar-event" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
-                    <span>🎪</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
                     <span>Bazar & Diskon SMK</span>
                 </a>
             </nav>
@@ -108,7 +108,7 @@ Fungsi:
 
             <div class="flex items-center gap-3">
                 <button type="button" onclick="openBulkResetModal()" class="rounded-xl bg-rose-50 border border-rose-200 px-3.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition shadow-2xs flex items-center gap-1.5">
-                    <span>🔄</span>
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                     <span class="hidden sm:inline">Reset Massal Sistem</span>
                 </button>
 
@@ -129,10 +129,10 @@ Fungsi:
             @if(session('success'))
                 <div class="rounded-2xl bg-[#EBF9F2] border border-[#B8E8D2] p-4 text-xs font-bold text-[#0B6E4F] flex items-center justify-between gap-3 shadow-xs">
                     <div class="flex items-center gap-2.5">
-                        <span class="text-base">✓</span>
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                         <span>{{ session('success') }}</span>
                     </div>
-                    <button type="button" onclick="this.parentElement.remove()" class="text-[#0B6E4F] hover:opacity-70 text-base">✕</button>
+                    <button type="button" onclick="this.parentElement.remove()" class="text-[#0B6E4F] hover:opacity-70 font-bold text-base">&times;</button>
                 </div>
             @endif
 
@@ -140,7 +140,8 @@ Fungsi:
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div class="inline-flex items-center gap-1.5 rounded-full bg-[#EBF9F2] px-3 py-1 text-[11px] font-extrabold text-[#0B6E4F] mb-1">
-                        <span>🔍 AUDIT & DETEKSI AKUN TERHUBUNG</span>
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        <span>AUDIT & DETEKSI AKUN TERHUBUNG</span>
                     </div>
                     <h1 class="text-xl sm:text-2xl font-extrabold text-[#0F291E]">Audit Komentar, Suka & Pengunjung</h1>
                     <p class="text-xs text-slate-400 mt-1 max-w-2xl">
@@ -156,8 +157,9 @@ Fungsi:
                             <p class="text-xs font-extrabold text-[#0F291E] line-clamp-1">{{ $selectedProduct->product_name }}</p>
                             <p class="text-[10px] text-slate-400">{{ $selectedProduct->store->store_name ?? 'Toko' }} ({{ $selectedProduct->store->owner->name ?? '-' }})</p>
                         </div>
-                        <button type="button" onclick="openProductResetModal({{ $selectedProduct->id }}, '{{ addslashes($selectedProduct->product_name) }}', {{ $selectedProduct->views_count }}, {{ $selectedProduct->likes_count }}, {{ $selectedProduct->comments()->count() }})" class="rounded-lg bg-rose-50 border border-rose-200 px-2.5 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition shrink-0 ml-2">
-                            🔄 Reset Produk Ini
+                        <button type="button" onclick="openProductResetModal({{ $selectedProduct->id }}, '{{ addslashes($selectedProduct->product_name) }}', {{ $selectedProduct->views_count }}, {{ $selectedProduct->likes_count }}, {{ $selectedProduct->comments()->count() }})" class="inline-flex items-center gap-1 rounded-lg bg-rose-50 border border-rose-200 px-2.5 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition shrink-0 ml-2">
+                            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            <span>Reset Produk Ini</span>
                         </button>
                     </div>
                 @endif
@@ -169,14 +171,14 @@ Fungsi:
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between">
                     <div class="flex items-center justify-between text-slate-400 mb-2">
                         <span class="text-[10px] font-extrabold uppercase tracking-wider">Total Komentar</span>
-                        <span class="text-lg">💬</span>
+                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                     </div>
                     <div>
                         <p class="text-2xl font-extrabold text-[#0F291E]">{{ number_format($stats['total_comments']) }}</p>
                         <p class="text-[11px] text-slate-400 mt-0.5">Ulasan dari pengunjung berakun</p>
                     </div>
                     <div class="pt-3 border-t border-slate-100 mt-3 flex items-center justify-between text-[11px]">
-                        <a href="{{ route('admin.interactions', ['tab' => 'comments']) }}" class="font-bold text-[#0B6E4F] hover:underline">Lihat Rincian →</a>
+                        <a href="{{ route('admin.interactions', ['tab' => 'comments']) }}" class="font-bold text-[#0B6E4F] hover:underline">Lihat Rincian &rarr;</a>
                     </div>
                 </div>
 
@@ -184,14 +186,14 @@ Fungsi:
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between">
                     <div class="flex items-center justify-between text-slate-400 mb-2">
                         <span class="text-[10px] font-extrabold uppercase tracking-wider">Total Suka (Likes)</span>
-                        <span class="text-lg">❤️</span>
+                        <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                     </div>
                     <div>
                         <p class="text-2xl font-extrabold text-rose-600">{{ number_format($stats['total_likes']) }}</p>
                         <p class="text-[11px] text-slate-400 mt-0.5">Apresiasi suka pada karya</p>
                     </div>
                     <div class="pt-3 border-t border-slate-100 mt-3 flex items-center justify-between text-[11px]">
-                        <a href="{{ route('admin.interactions', ['tab' => 'likes']) }}" class="font-bold text-[#0B6E4F] hover:underline">Lihat Rincian →</a>
+                        <a href="{{ route('admin.interactions', ['tab' => 'likes']) }}" class="font-bold text-[#0B6E4F] hover:underline">Lihat Rincian &rarr;</a>
                     </div>
                 </div>
 
@@ -199,14 +201,14 @@ Fungsi:
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between">
                     <div class="flex items-center justify-between text-slate-400 mb-2">
                         <span class="text-[10px] font-extrabold uppercase tracking-wider">Total Dilihat (Views)</span>
-                        <span class="text-lg">👁️</span>
+                        <svg class="w-4 h-4 text-[#0B6E4F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                     </div>
                     <div>
                         <p class="text-2xl font-extrabold text-[#0B6E4F]">{{ number_format($stats['total_views']) }}</p>
                         <p class="text-[11px] text-slate-400 mt-0.5">Akumulasi produk & toko</p>
                     </div>
                     <div class="pt-3 border-t border-slate-100 mt-3 flex items-center justify-between text-[11px]">
-                        <a href="{{ route('admin.interactions', ['tab' => 'views']) }}" class="font-bold text-[#0B6E4F] hover:underline">Lihat Log Tamu →</a>
+                        <a href="{{ route('admin.interactions', ['tab' => 'views']) }}" class="font-bold text-[#0B6E4F] hover:underline">Lihat Log Tamu &rarr;</a>
                     </div>
                 </div>
 
@@ -214,7 +216,7 @@ Fungsi:
                 <div class="rounded-2xl bg-gradient-to-br from-[#0B6E4F] to-[#08583F] p-5 shadow-xs text-white flex flex-col justify-between">
                     <div class="flex items-center justify-between text-emerald-200 mb-2">
                         <span class="text-[10px] font-extrabold uppercase tracking-wider">Radar Deteksi</span>
-                        <span class="text-lg">🛡️</span>
+                        <svg class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                     </div>
                     <div>
                         <p class="text-sm font-extrabold">Audit Akun Terhubung</p>
@@ -223,8 +225,8 @@ Fungsi:
                         </p>
                     </div>
                     <div class="pt-2 border-t border-emerald-600/60 mt-2">
-                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-200">
-                            <span>●</span>
+                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-300"></span>
                             <span>Sistem Audit Aktif</span>
                         </span>
                     </div>
@@ -237,29 +239,33 @@ Fungsi:
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
                     <div class="flex flex-wrap items-center gap-1.5">
                         <a href="{{ route('admin.interactions', array_merge(request()->except(['tab', 'page', 'comments_page', 'likes_page', 'views_page']), ['tab' => 'all'])) }}"
-                           class="rounded-xl px-3.5 py-2 text-xs font-bold transition {{ $tab === 'all' ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                            📋 Semua Interaksi
+                           class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition {{ $tab === 'all' ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                            <span>Semua Interaksi</span>
                         </a>
                         <a href="{{ route('admin.interactions', array_merge(request()->except(['tab', 'page', 'comments_page', 'likes_page', 'views_page']), ['tab' => 'comments'])) }}"
                            class="rounded-xl px-3.5 py-2 text-xs font-bold transition flex items-center gap-1.5 {{ $tab === 'comments' ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                            <span>💬 Komentar</span>
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                            <span>Komentar</span>
                             <span class="rounded-full bg-black/10 px-1.5 py-0.2 text-[10px]">{{ $stats['total_comments'] }}</span>
                         </a>
                         <a href="{{ route('admin.interactions', array_merge(request()->except(['tab', 'page', 'comments_page', 'likes_page', 'views_page']), ['tab' => 'likes'])) }}"
                            class="rounded-xl px-3.5 py-2 text-xs font-bold transition flex items-center gap-1.5 {{ $tab === 'likes' ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                            <span>❤️ Suka (Likes)</span>
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                            <span>Suka (Likes)</span>
                             <span class="rounded-full bg-black/10 px-1.5 py-0.2 text-[10px]">{{ $stats['total_likes'] }}</span>
                         </a>
                         <a href="{{ route('admin.interactions', array_merge(request()->except(['tab', 'page', 'comments_page', 'likes_page', 'views_page']), ['tab' => 'views'])) }}"
                            class="rounded-xl px-3.5 py-2 text-xs font-bold transition flex items-center gap-1.5 {{ $tab === 'views' ? 'bg-[#0B6E4F] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                            <span>👁️ Riwayat Dilihat</span>
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            <span>Riwayat Dilihat</span>
                             <span class="rounded-full bg-black/10 px-1.5 py-0.2 text-[10px]">{{ $stats['total_visitor_logs'] }}</span>
                         </a>
                     </div>
 
                     @if(request()->filled('product_id') || request()->filled('store_id') || request()->filled('q'))
                         <a href="{{ route('admin.interactions', ['tab' => $tab]) }}" class="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1">
-                            <span>✕</span>
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                             <span>Reset Filter Pencarian</span>
                         </a>
                     @endif
@@ -311,7 +317,7 @@ Fungsi:
                 <div class="rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-xs space-y-0">
                     <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
                         <div class="flex items-center gap-2">
-                            <span class="text-base">💬</span>
+                            <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                             <div>
                                 <h2 class="text-sm font-extrabold text-[#0F291E]">Daftar Komentar & Ulasan Produk</h2>
                                 <p class="text-[11px] text-slate-400">Rincian identitas akun pengomentar, rating bintang, dan deteksi keterhubungan dengan pemilik karya.</p>
@@ -364,7 +370,7 @@ Fungsi:
                                                             {{ $cProd->product_name }}
                                                         </a>
                                                         <p class="text-[10px] text-slate-400">
-                                                            🏪 {{ $cStore->store_name ?? 'Toko' }} ({{ $cOwner->name ?? '-' }})
+                                                            {{ $cStore->store_name ?? 'Toko' }} ({{ $cOwner->name ?? '-' }})
                                                         </p>
                                                     </div>
                                                 </div>
@@ -385,7 +391,7 @@ Fungsi:
                                                     </p>
                                                     <p class="text-[10px] text-slate-400">{{ $cUser->email }}</p>
                                                     @if($cUser->phone)
-                                                        <p class="text-[9px] text-slate-400 font-mono">📱 {{ $cUser->phone }}</p>
+                                                        <p class="text-[9px] text-slate-400 font-mono">{{ $cUser->phone }}</p>
                                                     @endif
                                                 </div>
                                             @else
@@ -397,7 +403,6 @@ Fungsi:
                                         <td class="py-3.5 px-4">
                                             @if($cUser && ($cUser->class_name || $cUser->major_name))
                                                 <span class="inline-flex items-center gap-1 rounded bg-[#EBF9F2] px-2 py-0.5 text-[10px] font-extrabold text-[#0B6E4F]">
-                                                    <span>🎓</span>
                                                     <span>Kelas {{ $cUser->class_name }} {{ $cUser->major_name ? '• ' . $cUser->major_name : '' }}</span>
                                                 </span>
                                                 @if($cUser->nis_nisn)
@@ -405,11 +410,11 @@ Fungsi:
                                                 @endif
                                             @elseif($cUser && $cUser->is_teacher)
                                                 <span class="rounded bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold px-2 py-0.5">
-                                                    👨‍🏫 Guru SMK {{ $cUser->major_name ? '• ' . $cUser->major_name : '' }}
+                                                    Guru SMK {{ $cUser->major_name ? '• ' . $cUser->major_name : '' }}
                                                 </span>
                                             @elseif($cUser && $cUser->user_subtype === 'keluarga')
                                                 <span class="rounded bg-purple-50 text-purple-800 text-[10px] font-bold px-2 py-0.5">
-                                                    👨‍👩‍👧 Keluarga: {{ $cUser->family_student_name ?? '-' }}
+                                                    Keluarga: {{ $cUser->family_student_name ?? '-' }}
                                                 </span>
                                             @else
                                                 <span class="text-slate-400 text-[11px] italic">Umum</span>
@@ -417,7 +422,7 @@ Fungsi:
 
                                             @if($cUser && ($cUser->kabupaten || $cUser->kecamatan))
                                                 <p class="text-[10px] text-slate-500 mt-1">
-                                                    📍 {{ $cUser->kabupaten ? $cUser->kabupaten : '' }}{{ $cUser->kecamatan ? ', Kec. ' . $cUser->kecamatan : '' }}
+                                                    {{ $cUser->kabupaten ? $cUser->kabupaten : '' }}{{ $cUser->kecamatan ? ', Kec. ' . $cUser->kecamatan : '' }}
                                                 </p>
                                             @endif
                                         </td>
@@ -426,33 +431,27 @@ Fungsi:
                                         <td class="py-3.5 px-4">
                                             @if($isSelf)
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-rose-100 border border-rose-300 px-2 py-0.5 text-[10px] font-extrabold text-rose-700 animate-pulse">
-                                                    <span>🚨</span>
                                                     <span>PEMILIK TOKO SENDIRI</span>
                                                 </span>
                                                 <p class="text-[9px] text-rose-600 mt-0.5">Komentar pada dagangannya sendiri</p>
                                             @elseif($isSameMajor)
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[10px] font-bold text-[#0B6E4F]">
-                                                    <span>🎓</span>
                                                     <span>Teman Sekelas & Sejurusan</span>
                                                 </span>
                                             @elseif($isSameClass)
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-teal-100 border border-teal-300 px-2 py-0.5 text-[10px] font-bold text-teal-800">
-                                                    <span>🎓</span>
                                                     <span>Satu Tingkat (Kelas {{ $cUser->class_name }})</span>
                                                 </span>
                                             @elseif($isFamily)
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-purple-100 border border-purple-300 px-2 py-0.5 text-[10px] font-bold text-purple-800">
-                                                    <span>👨‍👩‍👧</span>
                                                     <span>Akun Keluarga Siswa</span>
                                                 </span>
                                             @elseif($isTeacher)
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-blue-100 border border-blue-300 px-2 py-0.5 text-[10px] font-bold text-blue-800">
-                                                    <span>👨‍🏫</span>
                                                     <span>Guru / Pembimbing</span>
                                                 </span>
                                             @else
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 text-slate-600 px-2 py-0.5 text-[10px] font-semibold">
-                                                    <span>🌐</span>
                                                     <span>Pengunjung Netral</span>
                                                 </span>
                                             @endif
@@ -461,9 +460,9 @@ Fungsi:
                                         <!-- Rating & Komentar -->
                                         <td class="py-3.5 px-4 max-w-xs">
                                             <div class="space-y-1">
-                                                <div class="flex items-center text-amber-400 text-xs">
+                                                <div class="flex items-center gap-0.5 text-amber-400 text-xs">
                                                     @for($i = 1; $i <= 5; $i++)
-                                                        <span>{{ $i <= ($c->rating ?? 5) ? '★' : '☆' }}</span>
+                                                        <svg class="w-3.5 h-3.5 {{ $i <= ($c->rating ?? 5) ? 'text-amber-400' : 'text-slate-300' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                                                     @endfor
                                                     <span class="text-slate-400 text-[10px] font-bold ml-1">({{ $c->rating ?? 5 }}/5)</span>
                                                 </div>
@@ -491,14 +490,14 @@ Fungsi:
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="rounded-lg bg-rose-50 border border-rose-200 px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-100 transition">
-                                                    🗑️ Hapus
+                                                    Hapus
                                                 </button>
                                             </form>
 
                                             <!-- Opsi Reset Produk -->
                                             @if($cProd)
                                                 <button type="button" onclick="openProductResetModal({{ $cProd->id }}, '{{ addslashes($cProd->product_name) }}', {{ $cProd->views_count }}, {{ $cProd->likes_count }}, {{ $cProd->comments()->count() }})" class="rounded-lg bg-slate-100 hover:bg-slate-200 px-2 py-1 text-[10px] font-bold text-slate-700 transition" title="Buka menu reset karya ini">
-                                                    🔄 Reset
+                                                    Reset
                                                 </button>
                                             @endif
                                         </td>
@@ -506,7 +505,6 @@ Fungsi:
                                 @empty
                                     <tr>
                                         <td colspan="7" class="py-10 text-center text-slate-400">
-                                            <span class="text-2xl block mb-1">💬</span>
                                             <span>Tidak ada komentar yang sesuai dengan filter pencarian ini.</span>
                                         </td>
                                     </tr>
@@ -530,7 +528,7 @@ Fungsi:
                 <div class="rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-xs space-y-0">
                     <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
                         <div class="flex items-center gap-2">
-                            <span class="text-base">❤️</span>
+                            <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                             <div>
                                 <h2 class="text-sm font-extrabold text-[#0F291E]">Daftar Suka (Likes) Produk Karya Siswa</h2>
                                 <p class="text-[11px] text-slate-400">Audit siapa saja yang menyukai karya siswa beserta radar kecurangan like dari akun pemilik sendiri.</p>
@@ -580,7 +578,7 @@ Fungsi:
                                                             {{ $lProd->product_name }}
                                                         </a>
                                                         <p class="text-[10px] text-slate-400">
-                                                            🏪 {{ $lStore->store_name ?? 'Toko' }} ({{ $lOwner->name ?? '-' }})
+                                                            {{ $lStore->store_name ?? 'Toko' }} ({{ $lOwner->name ?? '-' }})
                                                         </p>
                                                     </div>
                                                 </div>
@@ -604,7 +602,7 @@ Fungsi:
                                             @else
                                                 <div class="space-y-0.5">
                                                     <span class="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                                                        👤 Pengunjung Tamu (Guest)
+                                                        Pengunjung Tamu (Guest)
                                                     </span>
                                                     <p class="text-[10px] text-slate-400 font-mono">IP: {{ $l->ip_address ?? '-' }}</p>
                                                 </div>
@@ -615,12 +613,11 @@ Fungsi:
                                         <td class="py-3.5 px-4">
                                             @if($lUser && ($lUser->class_name || $lUser->major_name))
                                                 <span class="inline-flex items-center gap-1 rounded bg-[#EBF9F2] px-2 py-0.5 text-[10px] font-extrabold text-[#0B6E4F]">
-                                                    <span>🎓</span>
                                                     <span>Kelas {{ $lUser->class_name }} {{ $lUser->major_name ? '• ' . $lUser->major_name : '' }}</span>
                                                 </span>
                                             @elseif($lUser && $lUser->is_teacher)
                                                 <span class="rounded bg-amber-50 text-amber-800 text-[10px] font-bold px-2 py-0.5">
-                                                    👨‍🏫 Guru SMK
+                                                    Guru SMK
                                                 </span>
                                             @else
                                                 <span class="text-slate-400 text-[11px] italic">Umum / Tamu</span>
@@ -628,7 +625,7 @@ Fungsi:
 
                                             @if($lUser && ($lUser->kabupaten || $lUser->kecamatan))
                                                 <p class="text-[10px] text-slate-500 mt-1">
-                                                    📍 {{ $lUser->kabupaten ? $lUser->kabupaten : '' }}{{ $lUser->kecamatan ? ', Kec. ' . $lUser->kecamatan : '' }}
+                                                    {{ $lUser->kabupaten ? $lUser->kabupaten : '' }}{{ $lUser->kecamatan ? ', Kec. ' . $lUser->kecamatan : '' }}
                                                 </p>
                                             @endif
                                         </td>
@@ -637,28 +634,23 @@ Fungsi:
                                         <td class="py-3.5 px-4">
                                             @if($isSelf)
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-rose-100 border border-rose-300 px-2 py-0.5 text-[10px] font-extrabold text-rose-700 animate-pulse">
-                                                    <span>🚨</span>
                                                     <span>SELF-LIKE: PEMILIK TOKO</span>
                                                 </span>
                                                 <p class="text-[9px] text-rose-600 mt-0.5">Menyukai karyanya sendiri</p>
                                             @elseif($isSameMajor)
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[10px] font-bold text-[#0B6E4F]">
-                                                    <span>🎓</span>
                                                     <span>Teman Sekelas & Sejurusan</span>
                                                 </span>
                                             @elseif($isSameClass)
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-teal-100 border border-teal-300 px-2 py-0.5 text-[10px] font-bold text-teal-800">
-                                                    <span>🎓</span>
                                                     <span>Satu Tingkat (Kelas {{ $lUser->class_name }})</span>
                                                 </span>
                                             @elseif($lUser)
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 text-slate-600 px-2 py-0.5 text-[10px] font-semibold">
-                                                    <span>❤️</span>
                                                     <span>Pengguna Terdaftar</span>
                                                 </span>
                                             @else
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-slate-50 text-slate-400 px-2 py-0.5 text-[10px]">
-                                                    <span>🌐</span>
                                                     <span>Tamu Luar (IP Akses)</span>
                                                 </span>
                                             @endif
@@ -679,7 +671,7 @@ Fungsi:
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="rounded-lg bg-rose-50 border border-rose-200 px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-100 transition">
-                                                    🗑️ Batalkan Suka
+                                                    Batalkan Suka
                                                 </button>
                                             </form>
                                         </td>
@@ -687,7 +679,6 @@ Fungsi:
                                 @empty
                                     <tr>
                                         <td colspan="6" class="py-10 text-center text-slate-400">
-                                            <span class="text-2xl block mb-1">❤️</span>
                                             <span>Tidak ada data suka yang sesuai dengan filter pencarian ini.</span>
                                         </td>
                                     </tr>
@@ -711,7 +702,7 @@ Fungsi:
                 <div class="rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-xs space-y-0">
                     <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
                         <div class="flex items-center gap-2">
-                            <span class="text-base">👁️</span>
+                            <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                             <div>
                                 <h2 class="text-sm font-extrabold text-[#0F291E]">Log Kunjungan (Dilihat / Views)</h2>
                                 <p class="text-[11px] text-slate-400">Melacak siapa saja (pengguna berakun maupun pengunjung tamu) yang melihat produk & toko siswa.</p>
@@ -756,13 +747,13 @@ Fungsi:
                                                             {{ $vProd->product_name }}
                                                         </a>
                                                         <p class="text-[10px] text-slate-400">
-                                                            🏪 {{ $vStore->store_name ?? 'Toko' }}
+                                                            {{ $vStore->store_name ?? 'Toko' }}
                                                         </p>
                                                     </div>
                                                 </div>
                                             @elseif($vStore)
                                                 <div>
-                                                    <p class="font-bold text-[#0F291E]">🏪 Profil Toko: {{ $vStore->store_name }}</p>
+                                                    <p class="font-bold text-[#0F291E]">Profil Toko: {{ $vStore->store_name }}</p>
                                                     <p class="text-[10px] text-slate-400">Pemilik: {{ $vStore->owner->name ?? '-' }}</p>
                                                 </div>
                                             @else
@@ -791,7 +782,7 @@ Fungsi:
                                         <!-- Asal Wilayah -->
                                         <td class="py-3.5 px-4">
                                             <p class="text-[11px] font-semibold text-slate-700">
-                                                📍 {{ $v->origin_region ?? ($vUser ? $vUser->full_address : 'Akses Publik') }}
+                                                {{ $v->origin_region ?? ($vUser ? $vUser->full_address : 'Akses Publik') }}
                                             </p>
                                         </td>
 
@@ -799,7 +790,6 @@ Fungsi:
                                         <td class="py-3.5 px-4">
                                             @if($isSelfView)
                                                 <span class="inline-flex items-center gap-1 rounded bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 text-[10px] font-extrabold">
-                                                    <span>⚠️</span>
                                                     <span>Dilihat Pemilik Toko Sendiri</span>
                                                 </span>
                                             @else
@@ -822,7 +812,7 @@ Fungsi:
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="rounded-lg bg-rose-50 border border-rose-200 px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-100 transition">
-                                                    🗑️ Hapus
+                                                    Hapus
                                                 </button>
                                             </form>
                                         </td>
@@ -830,7 +820,6 @@ Fungsi:
                                 @empty
                                     <tr>
                                         <td colspan="6" class="py-10 text-center text-slate-400">
-                                            <span class="text-2xl block mb-1">👁️</span>
                                             <span>Tidak ada log kunjungan yang sesuai dengan filter pencarian ini.</span>
                                         </td>
                                     </tr>
@@ -861,7 +850,7 @@ Fungsi:
                 <span class="rounded-full bg-rose-100 text-rose-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase">Menu Kontrol Admin</span>
                 <h3 class="text-base font-extrabold text-[#0F291E] mt-1">Reset Interaksi Karya Produk</h3>
             </div>
-            <button type="button" onclick="closeProductResetModal()" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+            <button type="button" onclick="closeProductResetModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
         </div>
 
         <form id="product-reset-form" method="POST" action="" class="space-y-4">
@@ -898,7 +887,7 @@ Fungsi:
                 <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
                     <input type="checkbox" name="reset_views" value="1" class="mt-0.5 rounded text-[#0B6E4F] focus:ring-[#0B6E4F]">
                     <div>
-                        <p class="font-bold text-xs text-[#0F291E]">👁️ Reset Jumlah Dilihat (Views)</p>
+                        <p class="font-bold text-xs text-[#0F291E]">Reset Jumlah Dilihat (Views)</p>
                         <p class="text-[10px] text-slate-400">Mengembalikan counter dilihat produk ke angka 0 & membersihkan log kunjungan terkait.</p>
                     </div>
                 </label>
@@ -906,7 +895,7 @@ Fungsi:
                 <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
                     <input type="checkbox" name="reset_likes" value="1" class="mt-0.5 rounded text-rose-600 focus:ring-rose-500">
                     <div>
-                        <p class="font-bold text-xs text-rose-700">❤️ Reset Jumlah Suka (Likes)</p>
+                        <p class="font-bold text-xs text-rose-700">Reset Jumlah Suka (Likes)</p>
                         <p class="text-[10px] text-slate-400">Mengembalikan counter suka ke angka 0 & menghapus data riwayat likes produk ini.</p>
                     </div>
                 </label>
@@ -914,7 +903,7 @@ Fungsi:
                 <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
                     <input type="checkbox" name="reset_comments" value="1" class="mt-0.5 rounded text-blue-600 focus:ring-blue-500">
                     <div>
-                        <p class="font-bold text-xs text-blue-800">💬 Bersihkan Seluruh Komentar</p>
+                        <p class="font-bold text-xs text-blue-800">Bersihkan Seluruh Komentar</p>
                         <p class="text-[10px] text-slate-400">Menghapus seluruh ulasan dan komentar pengunjung pada karya ini.</p>
                     </div>
                 </label>
@@ -922,7 +911,7 @@ Fungsi:
                 <label class="flex items-start gap-2.5 p-3 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-50 cursor-pointer">
                     <input type="checkbox" name="reset_all" value="1" id="chk-reset-all" onchange="toggleSelectAllProductReset(this)" class="mt-0.5 rounded text-rose-700 focus:ring-rose-500">
                     <div>
-                        <p class="font-bold text-xs text-rose-800">⚠️ Reset Total Semuanya Sekaligus</p>
+                        <p class="font-bold text-xs text-rose-800">Reset Total Semuanya Sekaligus</p>
                         <p class="text-[10px] text-rose-600">Reset Dilihat, Suka, dan Komentar kembali bersih seperti baru di-upload.</p>
                     </div>
                 </label>
@@ -950,7 +939,7 @@ Fungsi:
                 <span class="rounded-full bg-rose-100 text-rose-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase">Super Admin & Admin</span>
                 <h3 class="text-base font-extrabold text-[#0F291E] mt-1">Reset Massal Interaksi Sistem</h3>
             </div>
-            <button type="button" onclick="closeBulkResetModal()" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+            <button type="button" onclick="closeBulkResetModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
         </div>
 
         <form action="{{ route('admin.interactions.reset-bulk') }}" method="POST" class="space-y-4">
@@ -958,7 +947,7 @@ Fungsi:
 
             <div class="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-xs text-amber-900 space-y-1">
                 <p class="font-extrabold flex items-center gap-1.5">
-                    <span>⚠️</span>
+                    <svg class="w-4 h-4 text-amber-700 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                     <span>Perhatian Penting</span>
                 </p>
                 <p class="text-[11px] text-amber-800 leading-relaxed">
@@ -971,22 +960,22 @@ Fungsi:
                 <div class="space-y-2">
                     <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
                         <input type="radio" name="reset_type" value="comments" class="text-[#0B6E4F] focus:ring-[#0B6E4F]">
-                        <span class="font-bold text-xs text-[#0F291E]">💬 Reset Seluruh Komentar Saja (Bersihkan Semua Ulasan)</span>
+                        <span class="font-bold text-xs text-[#0F291E]">Reset Seluruh Komentar Saja (Bersihkan Semua Ulasan)</span>
                     </label>
 
                     <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
                         <input type="radio" name="reset_type" value="likes" class="text-rose-600 focus:ring-rose-500">
-                        <span class="font-bold text-xs text-rose-700">❤️ Reset Seluruh Suka (Likes) Saja (Set ke 0)</span>
+                        <span class="font-bold text-xs text-rose-700">Reset Seluruh Suka (Likes) Saja (Set ke 0)</span>
                     </label>
 
                     <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
                         <input type="radio" name="reset_type" value="views" class="text-[#0B6E4F] focus:ring-[#0B6E4F]">
-                        <span class="font-bold text-xs text-[#0B6E4F]">👁️ Reset Seluruh Counter & Log Dilihat (Views) Saja</span>
+                        <span class="font-bold text-xs text-[#0B6E4F]">Reset Seluruh Counter & Log Dilihat (Views) Saja</span>
                     </label>
 
                     <label class="flex items-center gap-2.5 p-3 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 cursor-pointer">
                         <input type="radio" name="reset_type" value="all" checked class="text-rose-700 focus:ring-rose-600">
-                        <span class="font-bold text-xs text-rose-800">🚨 Reset TOTAL Semua Interaksi (Komentar + Suka + Views)</span>
+                        <span class="font-bold text-xs text-rose-800">Reset TOTAL Semua Interaksi (Komentar + Suka + Views)</span>
                     </label>
                 </div>
             </div>
