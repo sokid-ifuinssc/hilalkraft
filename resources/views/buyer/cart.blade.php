@@ -83,7 +83,9 @@ Fungsi:
                     $itemStore = $storesById[$storeId] ?? \App\Models\Store::find($storeId);
                     $storeTitle = $itemStore?->store_name ?? ($storeItems->first()['store_name'] ?? 'Toko Karya Siswa');
                     $buyerDiscPct = $itemStore ? $itemStore->getDiscountPercentForBuyer($buyerSubtype) : 0;
+                    $storeBazaar = ($activeBazaarByStore ?? collect())->get($storeId);
                     $bazarExtraPct = $itemStore ? (int) ($itemStore->discount_bazar_extra ?? 0) : 0;
+                    $combinedBazarPct = $storeBazaar ? min(90, (int) $storeBazaar->discount_percent + $bazarExtraPct) : 0;
                 @endphp
 
                 <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden" data-store-group="{{ $storeId }}">
@@ -122,12 +124,12 @@ Fungsi:
                                     <span>Diskon {{ $user->subtype_label }} {{ $buyerDiscPct }}%</span>
                                 </span>
                             @endif
-                            @if($bazarExtraPct > 0)
+                            @if($storeBazaar)
                                 <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
                                     </svg>
-                                    <span>+{{ $bazarExtraPct }}% Ekstra Saat Bazar</span>
+                                    <span>{{ $storeBazaar->title }}@if($combinedBazarPct > 0) • Diskon Otomatis {{ $combinedBazarPct }}%@endif</span>
                                 </span>
                             @endif
                         </div>
@@ -251,7 +253,11 @@ Fungsi:
                             <svg class="w-4 h-4 text-[#0B6E4F] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
                             </svg>
-                            <span>Status Anda: <strong class="text-[#0B6E4F]">{{ $user->subtype_label }}</strong> — Voucher Bazar & metode pengiriman dipilih pada halaman transaksi berikutnya.</span>
+                            @if($storeBazaar)
+                                <span>Status Anda: <strong class="text-[#0B6E4F]">{{ $user->subtype_label }}</strong> — Promo {{ $storeBazaar->title }} diterapkan otomatis; metode pengiriman dipilih pada halaman transaksi.</span>
+                            @else
+                                <span>Status Anda: <strong class="text-[#0B6E4F]">{{ $user->subtype_label }}</strong> — Metode pengiriman dipilih pada halaman transaksi berikutnya.</span>
+                            @endif
                         </div>
                     </div>
                 </div>

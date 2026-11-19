@@ -77,7 +77,11 @@ class CatalogController extends Controller
             ? \App\Models\BazaarEvent::activeEvents()
             : collect();
 
-        return view('catalog.index', compact('products', 'categories', 'featuredProduct', 'partnerAds', 'customCmsBanners', 'activeBazaarEvents'));
+        $activeBazaarByStore = \Illuminate\Support\Facades\Schema::hasTable('bazaar_events')
+            ? \App\Models\BazaarEvent::activeBazaarMapByStore()
+            : collect();
+
+        return view('catalog.index', compact('products', 'categories', 'featuredProduct', 'partnerAds', 'customCmsBanners', 'activeBazaarEvents', 'activeBazaarByStore'));
     }
 
     /**
@@ -134,7 +138,9 @@ class CatalogController extends Controller
             ? \App\Models\BazaarEvent::activeEvents()
             : collect();
 
-        return view('catalog.show', compact('product', 'relatedProducts', 'activeBazaarEvents'));
+        $storeActiveBazaar = $store ? $store->activeBazaarEvent() : null;
+
+        return view('catalog.show', compact('product', 'relatedProducts', 'activeBazaarEvents', 'storeActiveBazaar'));
     }
 
     /**
@@ -234,7 +240,8 @@ class CatalogController extends Controller
         ]);
 
         $store->load(['owner', 'products' => fn ($q) => $q->withCount('comments')->where('is_active', true)->latest()]);
+        $storeActiveBazaar = $store->activeBazaarEvent();
 
-        return view('catalog.store', compact('store'));
+        return view('catalog.store', compact('store', 'storeActiveBazaar'));
     }
 }

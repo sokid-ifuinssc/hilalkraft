@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * ============================================================================
@@ -171,6 +172,34 @@ class Store extends Model
         return $this->hasMany(BazaarStoreParticipant::class, 'store_id');
     }
 
+    /**
+     * Mengembalikan acara bazar AKTIF saat ini tempat toko berstatus peserta resmi (`approved`).
+     * Mengembalikan null jika tidak ada acara aktif atau toko tidak mengikuti acara aktif.
+     */
+    public function activeBazaarEvent(): ?BazaarEvent
+    {
+        if (! Schema::hasTable('bazaar_events') || ! Schema::hasTable('bazaar_store_participants')) {
+            return null;
+        }
+
+        $activeEvents = BazaarEvent::activeEvents();
+        if ($activeEvents->isEmpty()) {
+            return null;
+        }
+
+        $approvedIds = $this->bazaarParticipations()
+            ->where('status', 'approved')
+            ->whereIn('bazaar_event_id', $activeEvents->pluck('id'))
+            ->pluck('bazaar_event_id')
+            ->all();
+
+        if (empty($approvedIds)) {
+            return null;
+        }
+
+        return $activeEvents->first(fn (BazaarEvent $ev) => in_array($ev->id, $approvedIds, true));
+    }
+
     public function getWhatsappUrlAttribute(): string
     {
         $clean = preg_replace('/[^0-9]/', '', (string) $this->contact_number);
@@ -244,7 +273,7 @@ class Store extends Model
         $buyerPct = $this->getDiscountPercentForBuyer($buyer);
         $buyerDiscAmount = round($subtotal * ($buyerPct / 100));
 
-        // 2. Diskon Acara Bazar / Event SMK (Jika hadir di bazar atau memakai voucher bazar aktif)
+        // 2. Diskon Acara Bazar / Event SMK (Hanya berlaku jika event bazar benar-benar aktif)
         $bazaarPct = 0;
         $bazaarDiscAmount = 0.0;
 
@@ -256,9 +285,6 @@ class Store extends Model
             if ($bazaarEvent->max_discount_amount && $bazaarEvent->max_discount_amount > 0) {
                 $bazaarDiscAmount = min($bazaarDiscAmount, (float) $bazaarEvent->max_discount_amount);
             }
-        } elseif ($attendBazaarOffline && (int) ($this->discount_bazar_extra ?? 0) > 0) {
-            $bazaarPct = max(0, min(90, (int) $this->discount_bazar_extra));
-            $bazaarDiscAmount = round($subtotal * ($bazaarPct / 100));
         }
 
         $totalDiscount = min($subtotal, $buyerDiscAmount + $bazaarDiscAmount);

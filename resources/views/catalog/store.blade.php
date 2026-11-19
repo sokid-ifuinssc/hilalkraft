@@ -21,9 +21,16 @@ Algoritma:
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
     <div class="rounded-3xl bg-gradient-to-r from-[#10B981] to-[#059669] p-6 sm:p-8 text-white flex flex-wrap items-center justify-between gap-4 shadow-lg">
         <div>
-            <span class="inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
-                Etalase Resmi Siswa SMK Plus Al Hilal
-            </span>
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
+                    Etalase Resmi Siswa SMK Plus Al Hilal
+                </span>
+                @if(isset($storeActiveBazaar) && $storeActiveBazaar)
+                    <span class="inline-block rounded-full bg-amber-400 text-amber-950 px-3 py-1 text-xs font-extrabold shadow-xs">
+                        Peserta {{ $storeActiveBazaar->title }} &bull; Diskon Bazar {{ $storeActiveBazaar->discount_percent + ($store->discount_bazar_extra ?? 0) }}%
+                    </span>
+                @endif
+            </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold mt-2">{{ $store->store_name }}</h1>
             <p class="text-sm text-emerald-50 mt-1">
                 Kreator: <strong>{{ $store->owner->name }}</strong>

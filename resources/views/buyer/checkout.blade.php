@@ -31,30 +31,34 @@ Fungsi:
     $defaultCartMethod = $canCartPickup ? 'pickup' : ($canCartDelivery ? 'delivery_lokal' : 'shipping_transfer');
     $cartStores = $checkoutProducts->pluck('store')->unique('id')->filter();
 
-    // Hitung subtotal kotor & estimasi diskon jenis pembeli per toko
+    // Hitung subtotal kotor, diskon jenis pembeli, serta diskon bazar otomatis (khusus toko peserta bazar aktif)
+    $activeBazaarStoreMap = $activeBazaarByStore ?? \App\Models\BazaarEvent::activeBazaarMapByStore();
     $grandGrossSubtotal = 0;
     $totalBuyerDiscount = 0;
     $totalBazarBaseDiscount = 0;
-    $bazarEventPct = $firstActiveBazaar ? (int) $firstActiveBazaar->discount_percent : 0;
+    $participatingCheckoutBazaars = [];
 
     foreach ($groupedCheckout as $sId => $sItems) {
         $stModel = $storesById[$sId] ?? \App\Models\Store::find($sId);
         $storeSub = (float) $sItems->sum(fn($i) => $i['price'] * $i['quantity']);
         $grandGrossSubtotal += $storeSub;
 
-        $bPct = $stModel ? $stModel->getDiscountPercentForBuyer($buyerSubtype) : 0;
-        if ($bPct > 0) {
-            $totalBuyerDiscount += round($storeSub * ($bPct / 100));
+        $storeBazaar = $activeBazaarStoreMap->get($sId);
+        if ($storeBazaar && $storeBazaar->isActiveNow()) {
+            $participatingCheckoutBazaars[$storeBazaar->id] = $storeBazaar;
+        } else {
+            $storeBazaar = null;
         }
 
-        $extraBazarPct = $stModel ? (int) ($stModel->discount_bazar_extra ?? 0) : 0;
-        $combinedBazarPct = min(90, $bazarEventPct + $extraBazarPct);
-        if ($combinedBazarPct > 0) {
-            $totalBazarBaseDiscount += round($storeSub * ($combinedBazarPct / 100));
+        if ($stModel) {
+            $stPricing = $stModel->calculateOrderPricing($storeSub, $user, $storeBazaar, $storeBazaar !== null);
+            $totalBuyerDiscount += (float) $stPricing['buyer_type_discount_amount'];
+            $totalBazarBaseDiscount += (float) $stPricing['bazaar_discount_amount'];
         }
     }
 
     $netBeforeBazar = max(0, $grandGrossSubtotal - $totalBuyerDiscount);
+    $netAfterDiscounts = max(0, $netBeforeBazar - $totalBazarBaseDiscount);
     $directFirstItem = (!empty($isDirectBuy) && $itemsList->isNotEmpty()) ? $itemsList->first() : null;
 @endphp
 
@@ -146,9 +150,15 @@ Fungsi:
                                             Diskon {{ $user->subtype_label }} {{ $buyerDiscPct }}%
                                         </span>
                                     @endif
-                                    @if($bazarExtraPct > 0)
+                                    @php
+                                        $storeBazaarBadge = $itemStore ? $activeBazaarStoreMap->get($itemStore->id) : null;
+                                        $combinedStoreBazarPct = ($storeBazaarBadge && $storeBazaarBadge->isActiveNow())
+                                            ? min(90, (int) $storeBazaarBadge->discount_percent + (int) ($bazarExtraPct ?? 0))
+                                            : 0;
+                                    @endphp
+                                    @if($storeBazaarBadge && $storeBazaarBadge->isActiveNow())
                                         <span class="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800">
-                                            +{{ $bazarExtraPct }}% Ekstra Toko saat Bazar
+                                            {{ $storeBazaarBadge->title }}@if($combinedStoreBazarPct > 0) • Diskon Otomatis {{ $combinedStoreBazarPct }}%@endif
                                         </span>
                                     @endif
                                 </div>
@@ -386,42 +396,29 @@ Fungsi:
         <div class="lg:col-span-5 space-y-5 lg:sticky lg:top-20">
             <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 space-y-5 shadow-sm">
 
-                <!-- Skema Diskon Bazar / Event SMK -->
-                <div class="rounded-2xl bg-amber-50/70 border border-amber-200 p-4 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
-                            </svg>
-                            <span>Promo Bazar & Event SMK</span>
-                        </span>
-                        @if($firstActiveBazaar)
-                            <span class="rounded-full bg-amber-200/80 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
-                                Diskon Event {{ $firstActiveBazaar->discount_percent }}%
+                @if(count($participatingCheckoutBazaars) > 0)
+                    <!-- Info Promo Otomatis Acara Bazar Aktif -->
+                    <div class="rounded-2xl bg-amber-50/70 border border-amber-200 p-4 space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-amber-700 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                                </svg>
+                                <span>Promo Otomatis Acara Bazar</span>
                             </span>
-                        @endif
-                    </div>
-
-                    <label class="flex items-start gap-2.5 cursor-pointer">
-                        <input type="checkbox" name="is_bazaar_offline" id="chk-bazaar-offline" value="1" @checked(!empty($isBazaarClaim)) onchange="calculateLiveOngkir()" class="mt-0.5 rounded border-amber-400 text-[#0B6E4F] focus:ring-[#0B6E4F]">
-                        <span class="text-xs text-amber-950 leading-snug">
-                            <strong>Saya membeli & hadir langsung pada Acara Bazar SMK</strong>
-                            <span class="block text-[11px] text-amber-800/90">Otomatis mendapatkan potongan Diskon Acara Bazar SMK & Diskon Ekstra Stand Toko!</span>
-                        </span>
-                    </label>
-
-                    <div>
-                        <label class="block text-[11px] font-bold text-amber-900 mb-1">Kode Voucher Bazar / Event SMK (Opsional)</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="bazaar-code-input" name="bazaar_voucher_code" value="{{ old('bazaar_voucher_code', !empty($isBazaarClaim) ? $firstActiveBazaar?->voucher_code : '') }}" oninput="calculateLiveOngkir()" placeholder="Contoh: BAZARSMKPAL" class="flex-1 rounded-xl border border-amber-300 bg-white px-3 py-1.5 text-xs font-mono font-bold uppercase text-amber-900 focus:outline-none">
-                            @if($firstActiveBazaar)
-                                <button type="button" onclick="document.getElementById('bazaar-code-input').value='{{ $firstActiveBazaar->voucher_code }}'; calculateLiveOngkir();" class="rounded-xl bg-amber-500/20 border border-amber-400 px-3 py-1.5 text-[11px] font-extrabold text-amber-900 hover:bg-amber-500/30 transition">
-                                    Pakai {{ $firstActiveBazaar->voucher_code }}
-                                </button>
-                            @endif
+                            <span class="rounded-full bg-amber-200/80 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
+                                Aktif
+                            </span>
+                        </div>
+                        <div class="space-y-1 text-[11px] text-amber-900">
+                            @foreach($participatingCheckoutBazaars as $pbEvent)
+                                <p class="font-semibold">
+                                    {{ $pbEvent->title }} — Diskon Acara {{ (int) $pbEvent->discount_percent }}% (diterapkan otomatis untuk produk toko peserta)
+                                </p>
+                            @endforeach
                         </div>
                     </div>
-                </div>
+                @endif
 
                 <!-- Catatan Tambahan -->
                 <div>
@@ -445,10 +442,12 @@ Fungsi:
                         </div>
                     @endif
 
-                    <div id="row-bazar-discount" class="hidden items-center justify-between text-amber-700">
-                        <span>Potongan Promo Bazar SMK</span>
-                        <span class="font-bold">- Rp {{ number_format($totalBazarBaseDiscount, 0, ',', '.') }}</span>
-                    </div>
+                    @if($totalBazarBaseDiscount > 0)
+                        <div id="row-bazar-discount" class="flex items-center justify-between text-amber-700">
+                            <span>Potongan Promo Acara Bazar</span>
+                            <span class="font-bold">- Rp {{ number_format($totalBazarBaseDiscount, 0, ',', '.') }}</span>
+                        </div>
+                    @endif
 
                     <div class="flex items-center justify-between text-slate-500">
                         <span id="ongkir-label-text">Total Ongkos Kirim</span>
@@ -457,7 +456,7 @@ Fungsi:
 
                     <div class="flex items-center justify-between text-sm font-extrabold text-[#0F291E] pt-2.5 border-t border-dashed border-slate-200">
                         <span>Total Pembayaran</span>
-                        <span class="text-lg font-black text-[#0B6E4F]" id="grand-total-text">Rp {{ number_format($netBeforeBazar, 0, ',', '.') }}</span>
+                        <span class="text-lg font-black text-[#0B6E4F]" id="grand-total-text">Rp {{ number_format($netAfterDiscounts, 0, ',', '.') }}</span>
                     </div>
                 </div>
 
@@ -482,7 +481,7 @@ Fungsi:
     const grossSubtotal = {{ (float) $grandGrossSubtotal }};
     const buyerDiscountAmount = {{ (float) $totalBuyerDiscount }};
     const bazarDiscountAmount = {{ (float) $totalBazarBaseDiscount }};
-    const activeVoucherCode = @json(strtoupper((string) ($firstActiveBazaar?->voucher_code ?? '')));
+    const hasParticipatingBazaar = @json(count($participatingCheckoutBazaars) > 0);
     const validLocalDistricts = ['arjawinangun', 'susukan', 'kaliwedi'];
 
     function formatRupiah(amount) {
@@ -525,10 +524,10 @@ Fungsi:
         const bankBox = document.getElementById('cart-transfer-bank-box');
 
         if (method === 'pickup') {
-            if (addressHint) addressHint.textContent = 'Kampus SMK Plus Al Hilal / Bazar';
-            if (addressLabel) addressLabel.textContent = 'Stand / Ruang Penyerahan di Sekolah *';
-            if (addressInput && (!addressInput.value || addressInput.value.includes('Jl.'))) {
-                addressInput.value = 'Stand Bazar / Kampus SMK Plus Al Hilal';
+            if (addressHint) addressHint.textContent = hasParticipatingBazaar ? 'Kampus SMK Plus Al Hilal / Bazar' : 'Kampus SMK Plus Al Hilal';
+            if (addressLabel) addressLabel.textContent = 'Lokasi / Ruang Penyerahan di Sekolah *';
+            if (addressInput && (!addressInput.value || addressInput.value.includes('Jl.') || addressInput.value.includes('Stand Bazar'))) {
+                addressInput.value = hasParticipatingBazaar ? 'Stand Bazar / Kampus SMK Plus Al Hilal' : 'Kampus SMK Plus Al Hilal';
             }
             if (shortcuts) shortcuts.classList.add('hidden');
             if (warning) warning.classList.add('hidden');
@@ -559,9 +558,6 @@ Fungsi:
         const ongkirLabel = document.getElementById('ongkir-label-text');
         const ongkirDisplay = document.getElementById('ongkir-display-text');
         const grandTotalDisplay = document.getElementById('grand-total-text');
-        const chkBazaar = document.getElementById('chk-bazaar-offline');
-        const codeInput = document.getElementById('bazaar-code-input');
-        const rowBazar = document.getElementById('row-bazar-discount');
 
         let ongkir = 0;
 
@@ -601,21 +597,7 @@ Fungsi:
             if (submitBtn) submitBtn.disabled = false;
         }
 
-        const enteredCode = (codeInput ? codeInput.value : '').trim().toUpperCase();
-        const isBazarActive = (chkBazaar && chkBazaar.checked) || (enteredCode !== '' && enteredCode === activeVoucherCode);
-        const appliedBazarDisc = isBazarActive ? bazarDiscountAmount : 0;
-
-        if (rowBazar) {
-            if (appliedBazarDisc > 0) {
-                rowBazar.classList.remove('hidden');
-                rowBazar.classList.add('flex');
-            } else {
-                rowBazar.classList.add('hidden');
-                rowBazar.classList.remove('flex');
-            }
-        }
-
-        const grandTotal = Math.max(0, grossSubtotal - buyerDiscountAmount - appliedBazarDisc + ongkir);
+        const grandTotal = Math.max(0, grossSubtotal - buyerDiscountAmount - bazarDiscountAmount + ongkir);
         if (grandTotalDisplay) {
             grandTotalDisplay.textContent = formatRupiah(grandTotal);
         }

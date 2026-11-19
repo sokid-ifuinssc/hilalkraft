@@ -272,7 +272,6 @@ Algoritma:
     $dKeluarga = (int) \App\Models\CmsContent::val('policy_discount_keluarga', '10');
     $dAlumni = (int) \App\Models\CmsContent::val('policy_discount_alumni', '5');
     $bazarEvent = isset($activeBazaarEvents) ? $activeBazaarEvents->first() : null;
-    $dBazar = $bazarEvent ? (int)$bazarEvent->discount_percent : (int)\App\Models\CmsContent::val('policy_discount_bazar', '15');
 
     // 2. Buat Kartu Promo Terstruktur dengan copy-writing menarik
     $promoCards->push((object)[
@@ -299,11 +298,11 @@ Algoritma:
         'image'    => null,
     ]);
 
-    if ($bazarEvent || $dBazar > 0) {
+    if ($bazarEvent) {
         $promoCards->push((object)[
             'category' => 'Promo Bazar',
-            'title'    => $bazarEvent ? "Bazar {$bazarEvent->discount_percent}% ({$bazarEvent->voucher_code})" : "Promo Bazar s/d {$dBazar}%",
-            'content'  => $bazarEvent ? ($bazarEvent->title . ' • Lokasi: ' . ($bazarEvent->location ?? 'SMK Plus Al Hilal')) : 'Diskon spesial belanja langsung di stand acara bazar sekolah.',
+            'title'    => "Bazar {$bazarEvent->discount_percent}% ({$bazarEvent->voucher_code})",
+            'content'  => $bazarEvent->title . ' • Lokasi: ' . ($bazarEvent->location ?? 'SMK Plus Al Hilal'),
             'link_url' => '#katalog-produk',
             'image'    => null,
         ]);
@@ -535,9 +534,16 @@ Algoritma:
                             {{ $product->description ?: 'Karya kreatif dan inovatif buatan siswa SMK Plus Al Hilal.' }}
                         </p>
 
-                        <p class="text-xs sm:text-base font-extrabold text-[#0B6E4F] pt-0.5">
-                            {{ $product->formatted_price }}
-                        </p>
+                        <div class="flex items-center justify-between gap-2 pt-0.5">
+                            <p class="text-xs sm:text-base font-extrabold text-[#0B6E4F]">
+                                {{ $product->formatted_price }}
+                            </p>
+                            @if(($productBazaar = ($activeBazaarByStore ?? collect())->get($product->store_id)))
+                                <span class="inline-flex items-center rounded-full bg-amber-100 border border-amber-300 px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-amber-900 shrink-0">
+                                    Bazar {{ $productBazaar->discount_percent + ($product->store->discount_bazar_extra ?? 0) }}%
+                                </span>
+                            @endif
+                        </div>
                     </div>
 
                     <!-- Baris Bawah: Tombol Action "Pesan" & "Detail" (Hierarki Visual Jelas) serta Interaksi -->

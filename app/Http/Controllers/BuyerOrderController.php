@@ -103,9 +103,9 @@ class BuyerOrderController extends Controller
      * Mendeteksi acara bazar aktif tempat pembeli sudah melakukan scan hadir / kunjungan stand
      * dan toko termasuk peserta resmi bazar tersebut agar poin transaksi tetap tercatat.
      */
-    private function detectBazaarEventForStoreOrder(Store $store, User $buyer): ?BazaarEvent
+    private function detectBazaarEventForStoreOrder(Store $store, User $buyer, ?string $preferredVoucherCode = null): ?BazaarEvent
     {
-        if (! Schema::hasTable('bazaar_store_participants') || ! Schema::hasTable('bazaar_visitor_points')) {
+        if (! Schema::hasTable('bazaar_store_participants')) {
             return null;
         }
 
@@ -123,17 +123,30 @@ class BuyerOrderController extends Controller
             return null;
         }
 
-        // Prioritaskan event bazar yang sudah dikunjungi pembeli hari ini
-        $visitedEventId = BazaarVisitorPoint::where('user_id', $buyer->id)
-            ->whereIn('bazaar_event_id', $participatingEventIds)
-            ->latest()
-            ->value('bazaar_event_id');
-
-        if ($visitedEventId) {
-            return $activeEvents->firstWhere('id', $visitedEventId);
+        if ($preferredVoucherCode !== null && $preferredVoucherCode !== '') {
+            $matchedVoucherEvent = $activeEvents->first(
+                fn ($ev) => $participatingEventIds->contains($ev->id)
+                    && strtoupper((string) $ev->voucher_code) === strtoupper($preferredVoucherCode)
+            );
+            if ($matchedVoucherEvent) {
+                return $matchedVoucherEvent;
+            }
         }
 
-        return null;
+        // Prioritaskan event bazar yang sudah pernah di-scan pengunjung jika ada
+        if (Schema::hasTable('bazaar_visitor_points')) {
+            $visitedEventId = BazaarVisitorPoint::where('user_id', $buyer->id)
+                ->whereIn('bazaar_event_id', $participatingEventIds)
+                ->latest()
+                ->value('bazaar_event_id');
+
+            if ($visitedEventId) {
+                return $activeEvents->firstWhere('id', $visitedEventId);
+            }
+        }
+
+        // Otomatis terapkan event bazar aktif pertama yang diikuti toko
+        return $activeEvents->first(fn ($ev) => $participatingEventIds->contains($ev->id));
     }
 
     public function addToCart(Request $request, Product $product): RedirectResponse
@@ -195,9 +208,9 @@ class BuyerOrderController extends Controller
 
         $storeIds = collect($cart)->pluck('store_id')->unique()->values()->all();
         $storesById = Store::whereIn('id', $storeIds)->get()->keyBy('id');
-        $activeBazaarEvents = BazaarEvent::activeEvents();
+        $activeBazaarByStore = BazaarEvent::activeBazaarMapByStore();
 
-        return view('buyer.cart', compact('cart', 'storesById', 'activeBazaarEvents'));
+        return view('buyer.cart', compact('cart', 'storesById', 'activeBazaarByStore'));
     }
 
     /**
@@ -267,7 +280,7 @@ class BuyerOrderController extends Controller
      */
     public function showCheckout(Request $request): View|RedirectResponse
     {
-        $activeBazaarEvents = BazaarEvent::activeEvents();
+        $activeBazaarByStore = BazaarEvent::activeBazaarMapByStore();
         $regenciesGrouped = Regency::getGroupedByProvince();
 
         // Mode 1: Beli / Pesan Langsung dari Halaman Detail Produk
@@ -280,7 +293,6 @@ class BuyerOrderController extends Controller
             }
 
             $qty = max(1, min(max(1, (int) $product->stock), (int) $request->input('quantity', 1)));
-            $isBazaarClaim = $request->boolean('is_bazaar_offline');
 
             $checkoutItems = [
                 $product->id => [
@@ -303,10 +315,9 @@ class BuyerOrderController extends Controller
             return view('buyer.checkout', compact(
                 'checkoutItems',
                 'storesById',
-                'activeBazaarEvents',
+                'activeBazaarByStore',
                 'regenciesGrouped',
-                'isDirectBuy',
-                'isBazaarClaim'
+                'isDirectBuy'
             ));
         }
 
@@ -352,15 +363,13 @@ class BuyerOrderController extends Controller
         $storeIds = collect($checkoutItems)->pluck('store_id')->unique()->values()->all();
         $storesById = Store::whereIn('id', $storeIds)->get()->keyBy('id');
         $isDirectBuy = false;
-        $isBazaarClaim = false;
 
         return view('buyer.checkout', compact(
             'checkoutItems',
             'storesById',
-            'activeBazaarEvents',
+            'activeBazaarByStore',
             'regenciesGrouped',
-            'isDirectBuy',
-            'isBazaarClaim'
+            'isDirectBuy'
         ));
     }
 
@@ -464,30 +473,19 @@ class BuyerOrderController extends Controller
             default  => $rawShippingAddr !== '' ? $rawShippingAddr : ($buyer->full_address ?: "Desa {$desa}, Kec. {$kecamatan}, Kab. {$kabupaten}"),
         };
 
-        $isBazaarOffline = $request->boolean('is_bazaar_offline');
         $voucherCode = strtoupper(trim((string) ($validated['bazaar_voucher_code'] ?? '')));
-
-        $bazaarEvent = null;
-        if ($voucherCode !== '') {
-            $bazaarEvent = BazaarEvent::whereRaw('UPPER(voucher_code) = ?', [$voucherCode])->first();
-            if (! $bazaarEvent || ! $bazaarEvent->isActiveNow()) {
-                return back()->withInput()->with('error', "Kode voucher bazar '{$voucherCode}' tidak ditemukan atau sudah tidak aktif.");
-            }
-        } elseif ($isBazaarOffline) {
-            $bazaarEvent = BazaarEvent::activeEvents()->first();
-        }
 
         $groupedByStore = collect($itemsToProcess)->groupBy('store_id');
 
-        DB::transaction(function () use ($groupedByStore, $buyer, $validated, $bazaarEvent, $isBazaarOffline, $deliveryMethod, $shippingCost, $kabupaten, $kecamatan, $desa, $shippingAddress) {
+        DB::transaction(function () use ($groupedByStore, $buyer, $validated, $voucherCode, $deliveryMethod, $shippingCost, $kabupaten, $kecamatan, $desa, $shippingAddress) {
             foreach ($groupedByStore as $storeId => $items) {
                 $store = Store::findOrFail($storeId);
                 $subtotal = (float) $items->sum(fn ($item) => $item['price'] * $item['quantity']);
 
-                $storeBazaarEvent = $bazaarEvent ?: $this->detectBazaarEventForStoreOrder($store, $buyer);
-                $effectiveOffline = $isBazaarOffline || ($storeBazaarEvent !== null && $bazaarEvent === null);
+                $storeBazaarEvent = $this->detectBazaarEventForStoreOrder($store, $buyer, $voucherCode);
+                $isBazaarOrder = $storeBazaarEvent !== null && $storeBazaarEvent->isActiveNow();
 
-                $pricing = $store->calculateOrderPricing($subtotal, $buyer, $storeBazaarEvent, $isBazaarOffline);
+                $pricing = $store->calculateOrderPricing($subtotal, $buyer, $storeBazaarEvent, $isBazaarOrder);
                 $finalTotal = max(0, (float) $pricing['total_price'] + (float) $shippingCost);
 
                 $courierName = match ($deliveryMethod) {
@@ -499,7 +497,9 @@ class BuyerOrderController extends Controller
                 $progressNote = match ($deliveryMethod) {
                     'delivery_lokal'    => 'Pesanan diterima. Akan diantar langsung oleh kurir ke alamat pembeli.',
                     'shipping_transfer' => 'Pesanan diterima. Menunggu koordinasi transfer dan pengiriman ekspedisi.',
-                    default             => 'Pesanan diterima. Silakan datang langsung ke SMK Plus Al Hilal untuk serah terima barang.',
+                    default             => $isBazaarOrder
+                        ? 'Pesanan Stand Bazar SMK diterima. Tunjukkan invoice ini kepada penjaga stand toko.'
+                        : 'Pesanan diterima. Silakan datang langsung ke SMK Plus Al Hilal untuk serah terima barang.',
                 };
 
                 $order = Order::create([
@@ -509,11 +509,11 @@ class BuyerOrderController extends Controller
                     'subtotal_price'              => $pricing['subtotal_price'],
                     'buyer_type_discount_percent' => $pricing['buyer_type_discount_percent'],
                     'buyer_type_discount_amount'  => $pricing['buyer_type_discount_amount'],
-                    'bazaar_event_id'             => $storeBazaarEvent?->id,
-                    'bazaar_voucher_code'         => $bazaarEvent?->voucher_code ?? $storeBazaarEvent?->voucher_code,
+                    'bazaar_event_id'             => $isBazaarOrder ? $storeBazaarEvent->id : null,
+                    'bazaar_voucher_code'         => $isBazaarOrder ? $storeBazaarEvent->voucher_code : null,
                     'bazaar_discount_percent'     => $pricing['bazaar_discount_percent'],
                     'bazaar_discount_amount'      => $pricing['bazaar_discount_amount'],
-                    'is_bazaar_offline'           => $effectiveOffline,
+                    'is_bazaar_offline'           => $isBazaarOrder,
                     'delivery_method'             => $deliveryMethod,
                     'shipping_cost'               => $shippingCost,
                     'destination_kabupaten'       => $kabupaten,
@@ -604,20 +604,13 @@ class BuyerOrderController extends Controller
 
         $shippingCost = Order::calculateEstimatedShipping($deliveryMethod, $kabupaten, $kecamatan);
 
-        $isBazaarOffline = $request->boolean('is_bazaar_offline');
         $voucherCode = strtoupper(trim((string) ($validated['bazaar_voucher_code'] ?? '')));
 
-        $bazaarEvent = null;
-        if ($voucherCode !== '') {
-            $bazaarEvent = BazaarEvent::whereRaw('UPPER(voucher_code) = ?', [$voucherCode])->first();
-        } elseif ($isBazaarOffline) {
-            $bazaarEvent = BazaarEvent::activeEvents()->first();
-        } else {
-            $bazaarEvent = $this->detectBazaarEventForStoreOrder($store, $buyer);
-        }
+        $bazaarEvent = $this->detectBazaarEventForStoreOrder($store, $buyer, $voucherCode);
+        $isBazaarOrder = $bazaarEvent !== null && $bazaarEvent->isActiveNow();
 
         $subtotal = (float) $product->price * $qty;
-        $pricing = $store->calculateOrderPricing($subtotal, $buyer, $bazaarEvent, $isBazaarOffline);
+        $pricing = $store->calculateOrderPricing($subtotal, $buyer, $bazaarEvent, $isBazaarOrder);
         $finalTotal = max(0, (float) $pricing['total_price'] + (float) $shippingCost);
 
         $rawShippingAddr = trim((string) ($validated['shipping_address'] ?? ''));
@@ -635,14 +628,14 @@ class BuyerOrderController extends Controller
         $progressNote = match ($deliveryMethod) {
             'delivery_lokal'    => 'Pesanan langsung dibuat. Akan diantar kurir ke alamat Anda.',
             'shipping_transfer' => 'Pesanan langsung dibuat. Silakan hubungi penjual via WA untuk transfer & pengiriman.',
-            default             => $isBazaarOffline
+            default             => $isBazaarOrder
                 ? 'Pesanan Stand Bazar SMK dibuat. Tunjukkan invoice ini kepada penjaga stand toko.'
                 : 'Pesanan dibuat. Silakan datang ke SMK Plus Al Hilal untuk serah terima barang.',
         };
 
         $notes = $validated['notes'] ?? null;
 
-        $order = DB::transaction(function () use ($product, $store, $buyer, $qty, $pricing, $finalTotal, $shippingCost, $deliveryMethod, $courierName, $kabupaten, $kecamatan, $desa, $progressNote, $bazaarEvent, $isBazaarOffline, $shippingAddress, $notes) {
+        $order = DB::transaction(function () use ($product, $store, $buyer, $qty, $pricing, $finalTotal, $shippingCost, $deliveryMethod, $courierName, $kabupaten, $kecamatan, $desa, $progressNote, $bazaarEvent, $isBazaarOrder, $shippingAddress, $notes) {
             $lockedProduct = Product::lockForUpdate()->findOrFail($product->id);
 
             $order = Order::create([
@@ -652,11 +645,11 @@ class BuyerOrderController extends Controller
                 'subtotal_price'              => $pricing['subtotal_price'],
                 'buyer_type_discount_percent' => $pricing['buyer_type_discount_percent'],
                 'buyer_type_discount_amount'  => $pricing['buyer_type_discount_amount'],
-                'bazaar_event_id'             => $bazaarEvent?->id,
-                'bazaar_voucher_code'         => $bazaarEvent?->voucher_code,
+                'bazaar_event_id'             => $isBazaarOrder ? $bazaarEvent->id : null,
+                'bazaar_voucher_code'         => $isBazaarOrder ? $bazaarEvent->voucher_code : null,
                 'bazaar_discount_percent'     => $pricing['bazaar_discount_percent'],
                 'bazaar_discount_amount'      => $pricing['bazaar_discount_amount'],
-                'is_bazaar_offline'           => $isBazaarOffline,
+                'is_bazaar_offline'           => $isBazaarOrder,
                 'delivery_method'             => $deliveryMethod,
                 'shipping_cost'               => $shippingCost,
                 'destination_kabupaten'       => $kabupaten,

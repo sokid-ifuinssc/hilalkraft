@@ -156,4 +156,38 @@ class BazaarEvent extends Model
             ->filter(fn (BazaarEvent $ev) => $ev->isActiveNow())
             ->values();
     }
+
+    /**
+     * Mengembalikan map `[store_id => BazaarEvent]` untuk seluruh toko yang disetujui
+     * (`status = approved`) pada event bazar yang sedang aktif saat ini.
+     * Jika tidak ada acara aktif atau semua acara nonaktif/berakhir, mengembalikan koleksi kosong.
+     *
+     * @return Collection<int, BazaarEvent>
+     */
+    public static function activeBazaarMapByStore(): Collection
+    {
+        $activeEvents = static::activeEvents();
+        if ($activeEvents->isEmpty() || ! Schema::hasTable('bazaar_store_participants')) {
+            return collect();
+        }
+
+        $eventsById = $activeEvents->keyBy('id');
+        $participants = BazaarStoreParticipant::where('status', 'approved')
+            ->whereIn('bazaar_event_id', $activeEvents->pluck('id'))
+            ->get();
+
+        $map = collect();
+        foreach ($participants as $part) {
+            $ev = $eventsById->get($part->bazaar_event_id);
+            if (! $ev) {
+                continue;
+            }
+            $existing = $map->get($part->store_id);
+            if (! $existing || (int) $ev->discount_percent > (int) $existing->discount_percent) {
+                $map->put($part->store_id, $ev);
+            }
+        }
+
+        return $map;
+    }
 }

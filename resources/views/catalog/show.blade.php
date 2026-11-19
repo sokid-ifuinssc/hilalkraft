@@ -272,10 +272,10 @@ Fungsi:
                             <span>Diskon Alumni {{ $product->store->discount_alumni }}%</span>
                         </span>
                     @endif
-                    @if(isset($activeBazaarEvents) && $activeBazaarEvents->first())
+                    @if(isset($storeActiveBazaar) && $storeActiveBazaar)
                         <span class="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-[11px] font-extrabold text-amber-800">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
-                            <span>Promo Bazar {{ $activeBazaarEvents->first()->discount_percent + ($product->store->discount_bazar_extra ?? 0) }}% ({{ $activeBazaarEvents->first()->voucher_code }})</span>
+                            <span>Promo Bazar {{ $storeActiveBazaar->discount_percent + ($product->store->discount_bazar_extra ?? 0) }}% ({{ $storeActiveBazaar->voucher_code }})</span>
                         </span>
                     @endif
                 </div>
@@ -313,7 +313,6 @@ Fungsi:
                     <form action="{{ route('buyer.checkout.index') }}" method="GET">
                         <input type="hidden" name="direct_product_id" value="{{ $product->id }}">
                         <input type="hidden" name="quantity" id="direct-checkout-qty-input" value="1">
-                        <input type="hidden" name="is_bazaar_offline" id="direct-bazaar-input" value="0">
                         <button type="submit"
                                 class="w-full inline-flex items-center justify-center gap-2.5 rounded-xl sm:rounded-2xl bg-[#0B6E4F] hover:bg-[#08583F] active:scale-[0.99] text-white px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-extrabold shadow-md hover:shadow-lg transition-all duration-200">
                             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
@@ -389,16 +388,6 @@ Fungsi:
                         <span class="truncate">Gratis Ongkir (Ambil di Sekolah)</span>
                     </div>
                 </div>
-
-                @auth
-                    <!-- Pilihan Klaim Diskon Bazar SMK -->
-                    <div class="rounded-xl bg-amber-50/70 border border-amber-200 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
-                        <label class="flex items-center gap-2 cursor-pointer text-amber-950 font-semibold">
-                            <input type="checkbox" onchange="document.getElementById('direct-bazaar-input').value = this.checked ? '1' : '0'" class="rounded border-amber-400 text-[#0B6E4F] focus:ring-[#0B6E4F]">
-                            <span>Beli di Acara Bazar SMK (Klaim Diskon Bazar + Diskon {{ auth()->user()->subtype_label }})</span>
-                        </label>
-                    </div>
-                @endauth
             </div>
         </div>
     </div>
