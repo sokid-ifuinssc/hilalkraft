@@ -167,6 +167,11 @@ class Store extends Model
         return $this->hasManyThrough(ProductLike::class, Product::class);
     }
 
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(StoreConversation::class);
+    }
+
     public function bazaarParticipations(): HasMany
     {
         return $this->hasMany(BazaarStoreParticipant::class, 'store_id');

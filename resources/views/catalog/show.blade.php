@@ -157,14 +157,17 @@ Fungsi:
                         </svg>
                         <span>Lihat Profil Toko</span>
                     </a>
-                    <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
-                       target="_blank"
-                       rel="noopener"
-                       class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] py-2.5 px-3 text-xs font-bold text-white transition">
+                    @php
+                        $inAppChatUrl = route('chat.start.store', ['store' => $product->store, 'product_id' => $product->id]);
+                        $isOwnStore = auth()->check() && (int) auth()->id() === (int) $product->store->user_id;
+                    @endphp
+                    <a href="{{ auth()->check() ? ($isOwnStore ? route('chat.index') : $inAppChatUrl) : route('login', ['redirect' => $inAppChatUrl]) }}"
+                       class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] py-2.5 px-3 text-xs font-bold text-white transition"
+                       title="{{ $isOwnStore ? 'Buka kotak masuk chat toko Anda' : 'Chat langsung dengan penjual di dalam aplikasi' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                         </svg>
-                        <span>Chat Penjual</span>
+                        <span>{{ $isOwnStore ? 'Kotak Masuk Chat' : 'Chat Penjual' }}</span>
                     </a>
                 </div>
             </div>
@@ -370,7 +373,7 @@ Fungsi:
                     <svg class="w-4 h-4 text-[#0B6E4F] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                     </svg>
-                    <span><strong>Transaksi Aman:</strong> WhatsApp digunakan untuk tanya jawab detail karya. Pemesanan transaksi dilakukan melalui aplikasi agar terlindungi sistem (Dipesan → Dikemas → Dikirim → Diterima).</span>
+                    <span><strong>Transaksi Aman:</strong> Gunakan <strong>Chat Penjual</strong> (di aplikasi) atau <strong>Tanya / Konsultasi WA</strong> untuk tanya jawab detail karya. Pemesanan tetap dilakukan melalui aplikasi agar terlindungi sistem (Dipesan → Dikemas → Dikirim → Diterima).</span>
                 </div>
 
                 <!-- Deretan Micro-Badges Visual Nilai Tambah Produk -->
@@ -623,6 +626,14 @@ Fungsi:
                     <span>Beli Sekarang</span>
                 </a>
             @endauth
+
+            <a href="{{ auth()->check() ? ($isOwnStore ? route('chat.index') : $inAppChatUrl) : route('login', ['redirect' => $inAppChatUrl]) }}"
+               class="inline-flex items-center justify-center rounded-xl border border-[#0B6E4F] bg-[#EBF9F2] hover:bg-[#D5F5E6] active:scale-95 text-[#0B6E4F] px-2.5 py-2.5 text-xs font-bold transition"
+               title="{{ $isOwnStore ? 'Kotak Masuk Chat' : 'Chat Penjual di Aplikasi' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+            </a>
 
             <a href="{{ $product->store->whatsapp_url }}?text={{ $waMessage }}"
                target="_blank"

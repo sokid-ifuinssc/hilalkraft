@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BazaarManagementController;
 use App\Http\Controllers\BuyerOrderController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SellerProductController;
 use Illuminate\Support\Facades\Route;
@@ -189,4 +190,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/bazar/scan/{token}', [BazaarManagementController::class, 'handleTokenScan'])->name('bazaar.scan.token');
     Route::get('/pembeli/bazar-poin', [BazaarManagementController::class, 'scanPage'])->name('bazaar.scan.page');
     Route::post('/pembeli/bazar-poin/scan', [BazaarManagementController::class, 'submitManualScan'])->name('bazaar.scan.submit');
+
+    // Chat Penjual <-> Pembeli di Dalam Aplikasi (terpisah dari Tanya/Konsultasi WA)
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::get('/chat/toko/{store}', [ChatController::class, 'startWithStore'])->name('chat.start.store');
+    Route::get('/chat/pembeli/{buyer}', [ChatController::class, 'startWithBuyer'])->name('chat.start.buyer');
+    Route::get('/chat/{conversation}/pesan', [ChatController::class, 'messages'])->name('chat.messages');
+    Route::post('/chat/{conversation}/pesan', [ChatController::class, 'sendMessage'])
+        ->middleware('throttle:30,1')
+        ->name('chat.send');
 });

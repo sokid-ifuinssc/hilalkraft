@@ -108,6 +108,16 @@ class User extends Authenticatable
         return $this->hasMany(ProductComment::class);
     }
 
+    public function storeConversations(): HasMany
+    {
+        return $this->hasMany(StoreConversation::class, 'buyer_id');
+    }
+
+    public function unreadChatCount(): int
+    {
+        return StoreConversation::totalUnreadFor($this);
+    }
+
     public function hasRole(string|array $roles): bool
     {
         return in_array($this->role, (array) $roles, true);

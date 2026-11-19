@@ -99,6 +99,16 @@ Algoritma:
                     </span>
                     <span class="rounded-full bg-[#EBF9F2] px-2 py-0.5 text-[10px] font-bold text-[#0B6E4F]">{{ $orders->count() }}</span>
                 </button>
+                @php $unreadChatsSeller = \App\Models\StoreConversation::totalUnreadFor($user); @endphp
+                <a href="{{ route('chat.index') }}" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
+                    <span class="flex items-center gap-3">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                        <span>Chat Pembeli</span>
+                    </span>
+                    @if($unreadChatsSeller > 0)
+                        <span class="rounded-full bg-rose-600 text-white px-2 py-0.5 text-[10px] font-bold">{{ $unreadChatsSeller }}</span>
+                    @endif
+                </a>
                 <button type="button" onclick="switchSellerTab('diskon')" class="seller-nav-item w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition text-left" data-target="diskon">
                     <span class="flex items-center gap-3">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
@@ -512,12 +522,20 @@ Algoritma:
                                     </p>
                                 </div>
 
-                                <div class="flex items-center gap-2">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    @if($order->buyer)
+                                        <a href="{{ route('chat.start.buyer', $order->buyer) }}"
+                                           class="inline-flex items-center gap-1.5 rounded-xl bg-[#0B6E4F] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#08583F] transition">
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                            <span>Chat Pembeli</span>
+                                        </a>
+                                    @endif
                                     @if($buyerPhoneClean)
                                         <a href="https://wa.me/{{ $buyerPhoneClean }}?text={{ $waBuyerText }}"
                                            target="_blank"
-                                           class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 transition">
-                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                           rel="noopener"
+                                           class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-600 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-600 hover:text-white transition">
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                                             <span>Hubungi WA Pembeli</span>
                                         </a>
                                     @endif

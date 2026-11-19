@@ -42,13 +42,23 @@ Algoritma:
                 <p class="text-xs text-emerald-100 mt-2 max-w-2xl">{{ $store->description }}</p>
             @endif
         </div>
-        <div class="flex items-center gap-2">
-            <button type="button" onclick="copyStoreLink()" class="rounded-xl border border-white/40 bg-white/15 px-4 py-3 text-xs font-bold text-white hover:bg-white/25 transition">
-                ↗ Bagikan Toko
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="copyStoreLink()" class="inline-flex items-center gap-1.5 rounded-xl border border-white/40 bg-white/15 px-4 py-3 text-xs font-bold text-white hover:bg-white/25 transition">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                <span>Bagikan Toko</span>
             </button>
-            <a href="{{ $store->whatsapp_url }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-3 text-xs font-extrabold text-[#059669] shadow-md hover:bg-emerald-50 transition">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                <span>Hubungi WhatsApp Toko</span>
+            @php
+                $storeChatUrl = route('chat.start.store', $store);
+                $isOwnProfile = auth()->check() && (int) auth()->id() === (int) $store->user_id;
+            @endphp
+            <a href="{{ auth()->check() ? ($isOwnProfile ? route('chat.index') : $storeChatUrl) : route('login', ['redirect' => $storeChatUrl]) }}"
+               class="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-3 text-xs font-extrabold text-[#059669] shadow-md hover:bg-emerald-50 transition">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                <span>{{ $isOwnProfile ? 'Kotak Masuk Chat' : 'Chat Penjual' }}</span>
+            </a>
+            <a href="{{ $store->whatsapp_url }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 rounded-xl border border-white/50 bg-[#0F291E]/25 px-4 py-3 text-xs font-extrabold text-white hover:bg-[#0F291E]/40 transition">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                <span>Tanya via WA</span>
             </a>
         </div>
     </div>

@@ -33,12 +33,14 @@ Fungsi:
     $svgCart = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>';
     $svgUser = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>';
     $svgBag = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>';
+    $svgChat = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>';
 
     $menus = match ($panel) {
         'seller' => [
             [$svgGrid,      'Dashboard',         route('seller.dashboard'),                    false],
             [$svgBox,       'Produk Saya',       route('seller.dashboard') . '#section-produk',  false],
             [$svgTruck,     'Progres Pesanan',   route('seller.dashboard') . '#section-pesanan', false],
+            [$svgChat,      'Chat Pembeli',      route('chat.index'),                          request()->routeIs('chat.*')],
             [$svgTag,       'Diskon & Bazar',    route('seller.dashboard') . '#section-diskon',  false],
             [$svgChart,     'Laporan Penjualan', route('seller.reports'),                      request()->routeIs('seller.reports')],
             [$svgStore,     'Profil Toko',       route('seller.dashboard') . '#section-profil',  false],
@@ -57,6 +59,7 @@ Fungsi:
         ],
         default => [
             [$svgTruck,     'Pesanan Saya',         route('buyer.dashboard'),                      request()->routeIs('buyer.dashboard')],
+            [$svgChat,      'Chat Penjual',         route('chat.index'),                           request()->routeIs('chat.*')],
             [$svgTag,       'Scan QR & Poin Bazar', route('bazaar.scan.page'),                     request()->routeIs('bazaar.scan.*')],
             [$svgUser,      'Profil Akun',          route('buyer.dashboard') . '#menu-profil',     false],
             [$svgCart,      'Keranjang',            route('buyer.cart.index'),                     request()->routeIs('buyer.cart.*')],
