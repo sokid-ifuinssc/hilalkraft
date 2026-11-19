@@ -290,9 +290,20 @@ class AdminDashboardController extends Controller
             'student_classes' => $stores->pluck('student_class')->values(),
         ];
 
-        $registeredVisitors = User::whereIn('role', ['buyer', 'seller'])
+        $registeredVisitors = User::with(['store:id,user_id,store_name,slug'])
+            ->withCount(['orders', 'comments'])
+            ->whereIn('role', ['buyer', 'seller', 'admin'])
             ->latest()
             ->get();
+
+        $visitCountsByUser = VisitorLog::whereNotNull('user_id')
+            ->selectRaw('user_id, count(*) as total')
+            ->groupBy('user_id')
+            ->pluck('total', 'user_id');
+
+        $registeredVisitors->each(function (User $rv) use ($visitCountsByUser) {
+            $rv->setAttribute('visit_logs_count', (int) ($visitCountsByUser[$rv->id] ?? 0));
+        });
 
         $visitorByCategory = [
             'Pelajar'                    => User::where('user_subtype', 'pelajar')->count(),
@@ -304,16 +315,130 @@ class AdminDashboardController extends Controller
             'Kunjungan Tamu (Guest)'     => VisitorLog::where('visitor_type', 'guest')->count(),
         ];
 
-        $visitorByRegion = User::whereNotNull('kabupaten')
+        $userRegionRecords = User::whereNotNull('kabupaten')
             ->where('kabupaten', '!=', '')
-            ->select('kabupaten', 'kecamatan', DB::raw('count(*) as total'))
-            ->groupBy('kabupaten', 'kecamatan')
-            ->orderByDesc('total')
-            ->get();
+            ->get(['kabupaten', 'kecamatan', 'desa', 'user_subtype', 'is_teacher']);
+
+        $regionGroups = [];
+        foreach ($userRegionRecords as $ur) {
+            $kabClean = mb_convert_case(preg_replace('/\s+/', ' ', trim((string) $ur->kabupaten)), MB_CASE_TITLE, 'UTF-8');
+            if (in_array(strtolower($kabClean), ['cirebon', 'kab cirebon', 'kab. cirebon'], true)) {
+                $kabClean = 'Kabupaten Cirebon';
+            }
+
+            $kecRaw = preg_replace('/\s+/', ' ', trim((string) ($ur->kecamatan ?? '')));
+            $kecClean = $kecRaw !== '' ? mb_convert_case($kecRaw, MB_CASE_TITLE, 'UTF-8') : '-';
+
+            $key = $kabClean . '|' . $kecClean;
+            if (! isset($regionGroups[$key])) {
+                $regionGroups[$key] = [
+                    'kabupaten' => $kabClean,
+                    'kecamatan' => $kecClean,
+                    'total'     => 0,
+                    'desa_set'  => [],
+                    'breakdown' => [
+                        'pelajar'  => 0,
+                        'keluarga' => 0,
+                        'alumni'   => 0,
+                        'umum'     => 0,
+                        'siswa'    => 0,
+                        'guru'     => 0,
+                    ],
+                ];
+            }
+
+            $regionGroups[$key]['total']++;
+
+            $desaRaw = preg_replace('/\s+/', ' ', trim((string) ($ur->desa ?? '')));
+            if ($desaRaw !== '') {
+                $desaClean = mb_convert_case($desaRaw, MB_CASE_TITLE, 'UTF-8');
+                $regionGroups[$key]['desa_set'][$desaClean] = true;
+            }
+
+            $catKey = ($ur->is_teacher || $ur->user_subtype === 'guru')
+                ? 'guru'
+                : (in_array($ur->user_subtype, ['pelajar', 'keluarga', 'alumni', 'umum', 'siswa'], true) ? $ur->user_subtype : 'umum');
+            $regionGroups[$key]['breakdown'][$catKey]++;
+        }
+
+        $visitorByRegion = collect($regionGroups)
+            ->map(function (array $g) {
+                return (object) [
+                    'kabupaten' => $g['kabupaten'],
+                    'kecamatan' => $g['kecamatan'],
+                    'total'     => $g['total'],
+                    'desa_list' => array_keys($g['desa_set']),
+                    'breakdown' => $g['breakdown'],
+                ];
+            })
+            ->sortByDesc('total')
+            ->values();
+
+        $trendStart = \Illuminate\Support\Carbon::now()->subDays(13)->startOfDay();
+        $trendLogs = VisitorLog::where('created_at', '>=', $trendStart)->get(['created_at', 'visitor_type']);
+        $trendByDate = [];
+        for ($i = 13; $i >= 0; $i--) {
+            $d = \Illuminate\Support\Carbon::now()->subDays($i);
+            $trendByDate[$d->format('Y-m-d')] = [
+                'label'      => $d->format('d M'),
+                'registered' => 0,
+                'guest'      => 0,
+            ];
+        }
+        foreach ($trendLogs as $tl) {
+            if (! $tl->created_at) {
+                continue;
+            }
+            $dk = $tl->created_at->format('Y-m-d');
+            if (! isset($trendByDate[$dk])) {
+                continue;
+            }
+            if ($tl->visitor_type === 'guest') {
+                $trendByDate[$dk]['guest']++;
+            } else {
+                $trendByDate[$dk]['registered']++;
+            }
+        }
+
+        $userVisitsTotal = VisitorLog::where('visitor_type', '!=', 'guest')->count();
+
+        $visitorChartData = [
+            'categories' => [
+                'labels' => [
+                    'Pelajar',
+                    'Keluarga SMK',
+                    'Alumni',
+                    'Pengunjung Umum',
+                    'Siswa Pemilik Toko',
+                    'Guru SMK PAL',
+                ],
+                'values' => [
+                    $visitorByCategory['Pelajar'],
+                    $visitorByCategory['Keluarga SMK Plus Al Hilal'],
+                    $visitorByCategory['Alumni'],
+                    $visitorByCategory['Pengunjung Umum'],
+                    $visitorByCategory['Siswa Pemilik Toko'],
+                    $visitorByCategory['Guru SMK Plus Al Hilal'],
+                ],
+            ],
+            'guest_visits' => $visitorByCategory['Kunjungan Tamu (Guest)'],
+            'user_visits'  => $userVisitsTotal,
+            'regions'      => [
+                'labels' => $visitorByRegion->take(10)->map(
+                    fn ($r) => ($r->kecamatan !== '-' ? 'Kec. ' . $r->kecamatan . ', ' : '') . $r->kabupaten
+                )->values()->all(),
+                'totals' => $visitorByRegion->take(10)->pluck('total')->values()->all(),
+            ],
+            'trend'        => [
+                'labels'     => array_column($trendByDate, 'label'),
+                'registered' => array_column($trendByDate, 'registered'),
+                'guest'      => array_column($trendByDate, 'guest'),
+            ],
+        ];
 
         $recentVisitorLogs = VisitorLog::with(['product', 'store', 'user'])
             ->latest()
-            ->take(15)
+            ->take(30)
             ->get();
 
         $teachers = User::with('store')
@@ -380,6 +505,7 @@ class AdminDashboardController extends Controller
             'registeredVisitors',
             'visitorByCategory',
             'visitorByRegion',
+            'visitorChartData',
             'recentVisitorLogs',
             'teachers',
             'categories',

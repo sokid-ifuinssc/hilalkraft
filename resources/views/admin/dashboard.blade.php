@@ -2273,46 +2273,337 @@ Algoritma:
             </div>
 
             <!-- =================================================================
-                 6. LAPORAN PENGUNJUNG (SIAPA SAJA & DARI MANA SAJA)
+                 6. LAPORAN PENGUNJUNG (GRAFIK & DETAIL SIAPA SAJA / DARI MANA SAJA)
                  ================================================================= -->
-            <div id="sec-laporan-pengunjung" class="rounded-2xl bg-white border border-slate-200/80 p-6 space-y-5">
-                <div>
-                    <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Laporan Pengunjung (Siapa Saja & Dari Mana Saja)</h2>
-                    <p class="text-xs text-slate-400">Rekapitulasi kategori pengunjung (Pelajar, Keluarga, Alumni, Umum) dan asal wilayah.</p>
+            @php
+                $vcData = $visitorChartData ?? [
+                    'categories'   => ['labels' => [], 'values' => []],
+                    'guest_visits' => 0,
+                    'user_visits'  => 0,
+                    'regions'      => ['labels' => [], 'totals' => []],
+                    'trend'        => ['labels' => [], 'registered' => [], 'guest' => []],
+                ];
+                $totalRegCount = $registeredVisitors->count();
+                $totalUserVisits = (int) ($vcData['user_visits'] ?? 0);
+                $totalGuestVisits = (int) ($vcData['guest_visits'] ?? 0);
+                $totalAllVisits = $totalUserVisits + $totalGuestVisits;
+                $uniqueKabCount = $visitorByRegion->pluck('kabupaten')->unique()->count();
+                $topRegionRow = $visitorByRegion->first();
+                $regionTotalSum = max(1, (int) $visitorByRegion->sum('total'));
+            @endphp
+            <div id="sec-laporan-pengunjung" class="rounded-2xl bg-white border border-slate-200/80 p-5 sm:p-6 space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-base sm:text-lg font-extrabold text-[#0F291E]">Laporan Pengunjung (Grafik &amp; Detail Lengkap)</h2>
+                        <p class="text-xs text-slate-500">Visualisasi kategori pengunjung, sebaran wilayah asal yang ternormalisasi, tren kunjungan 14 hari, serta rincian identitas pengunjung.</p>
+                    </div>
+                    <a href="{{ route('admin.reports') }}" class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-[#EBF9F2] px-3.5 py-2 text-xs font-bold text-[#0B6E4F] hover:bg-[#D5F5E6] transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        <span>Lihat Laporan Lengkap</span>
+                    </a>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                    <div class="lg:col-span-5 rounded-xl bg-[#F8FAFC] p-4 border border-slate-100 space-y-2">
-                        <h3 class="text-xs font-bold text-[#0F291E]">Siapa Saja Pengunjung</h3>
-                        @foreach($visitorByCategory as $label => $total)
-                            <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 border border-slate-100 text-xs">
-                                <span class="text-slate-600">{{ $label }}</span>
-                                <span class="font-bold text-[#0B6E4F]">{{ number_format($total) }}</span>
-                            </div>
-                        @endforeach
+                <!-- 4 Kartu KPI Ringkasan Pengunjung -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="rounded-xl bg-[#F8FAFC] border border-slate-200/70 p-4 space-y-1">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Akun Terdaftar</p>
+                        <p class="text-2xl font-black text-[#0F291E]">{{ number_format($totalRegCount) }}</p>
+                        <p class="text-[11px] text-slate-500">Pembeli, Siswa Toko &amp; Guru</p>
+                    </div>
+                    <div class="rounded-xl bg-[#EBF9F2]/70 border border-emerald-200/80 p-4 space-y-1">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-[#0B6E4F]">Total Kunjungan Katalog</p>
+                        <p class="text-2xl font-black text-[#0B6E4F]">{{ number_format($totalAllVisits) }}</p>
+                        <p class="text-[11px] text-slate-600">{{ number_format($totalUserVisits) }} akun &bull; {{ number_format($totalGuestVisits) }} tamu (guest)</p>
+                    </div>
+                    <div class="rounded-xl bg-blue-50/60 border border-blue-200/70 p-4 space-y-1">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-blue-700">Cakupan Wilayah Asal</p>
+                        <p class="text-2xl font-black text-blue-900">{{ number_format($visitorByRegion->count()) }} <span class="text-xs font-bold">Kec.</span></p>
+                        <p class="text-[11px] text-slate-600">Dari {{ number_format($uniqueKabCount) }} Kab/Kota</p>
+                    </div>
+                    <div class="rounded-xl bg-amber-50/70 border border-amber-200/80 p-4 space-y-1">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-amber-800">Wilayah Terpadat</p>
+                        <p class="text-sm sm:text-base font-black text-amber-950 truncate mt-1">
+                            {{ $topRegionRow ? ($topRegionRow->kecamatan !== '-' ? 'Kec. ' . $topRegionRow->kecamatan : $topRegionRow->kabupaten) : 'Belum ada data' }}
+                        </p>
+                        <p class="text-[11px] text-amber-900/80 truncate">
+                            {{ $topRegionRow ? $topRegionRow->kabupaten . ' (' . number_format($topRegionRow->total) . ' orang)' : '-' }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 3 Grafik Visual Interaktif Pengunjung -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    <!-- Grafik 1: Komposisi Kategori Pengunjung -->
+                    <div class="lg:col-span-4 rounded-2xl border border-slate-200/80 bg-[#F8FAFC]/70 p-4 flex flex-col justify-between space-y-3">
+                        <div>
+                            <h3 class="text-xs font-black uppercase tracking-wider text-[#0F291E]">Siapa Saja Pengunjung</h3>
+                            <p class="text-[11px] text-slate-400">Komposisi kategori akun pengunjung &amp; sivita.</p>
+                        </div>
+                        <div class="relative h-56 bg-white rounded-xl border border-slate-100 p-3">
+                            <canvas id="visitorCategoryChart"></canvas>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+                            @foreach($visitorByCategory as $catLabel => $catTotal)
+                                <div class="flex items-center justify-between rounded-lg bg-white px-2.5 py-1.5 border border-slate-100">
+                                    <span class="text-slate-600 truncate pr-1" title="{{ $catLabel }}">{{ \Illuminate\Support\Str::limit($catLabel, 18) }}</span>
+                                    <span class="font-extrabold text-[#0B6E4F] shrink-0">{{ number_format($catTotal) }}</span>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
 
-                    <div class="lg:col-span-7 rounded-xl bg-[#F8FAFC] p-4 border border-slate-100 space-y-2">
-                        <h3 class="text-xs font-bold text-[#0F291E]">Dari Mana Saja (Kabupaten & Kecamatan)</h3>
-                        <div class="overflow-x-auto max-h-48 overflow-y-auto bg-white rounded-lg border border-slate-100">
+                    <!-- Grafik 2: Top 10 Wilayah Asal Pengunjung -->
+                    <div class="lg:col-span-4 rounded-2xl border border-slate-200/80 bg-[#F8FAFC]/70 p-4 flex flex-col space-y-3">
+                        <div>
+                            <h3 class="text-xs font-black uppercase tracking-wider text-[#0F291E]">Sebaran Wilayah Asal (Top 10)</h3>
+                            <p class="text-[11px] text-slate-400">Gabungan otomatis per Kabupaten/Kota &amp; Kecamatan.</p>
+                        </div>
+                        <div class="relative flex-1 min-h-[260px] bg-white rounded-xl border border-slate-100 p-3">
+                            <canvas id="visitorRegionChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Grafik 3: Tren Kunjungan 14 Hari Terakhir -->
+                    <div class="lg:col-span-4 rounded-2xl border border-slate-200/80 bg-[#F8FAFC]/70 p-4 flex flex-col space-y-3">
+                        <div>
+                            <h3 class="text-xs font-black uppercase tracking-wider text-[#0F291E]">Tren Kunjungan 14 Hari Terakhir</h3>
+                            <p class="text-[11px] text-slate-400">Perbandingan kunjungan pengguna terdaftar vs tamu.</p>
+                        </div>
+                        <div class="relative flex-1 min-h-[260px] bg-white rounded-xl border border-slate-100 p-3">
+                            <canvas id="visitorTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Tab Detail Pengunjung, Wilayah, & Riwayat Kunjungan -->
+                <div class="rounded-2xl border border-slate-200/80 bg-[#F8FAFC]/50 p-4 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 pb-3">
+                        <div class="flex flex-wrap items-center gap-1.5 text-xs font-bold">
+                            <button type="button" onclick="switchVisitorReportTab('dir')" id="vrep-btn-dir"
+                                    class="vrep-tab-btn rounded-xl px-3.5 py-2 bg-[#0B6E4F] text-white shadow-2xs transition">
+                                Direktori Detail Pengunjung ({{ number_format($totalRegCount) }})
+                            </button>
+                            <button type="button" onclick="switchVisitorReportTab('region')" id="vrep-btn-region"
+                                    class="vrep-tab-btn rounded-xl px-3.5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-[#0B6E4F] transition">
+                                Detail Wilayah Asal ({{ number_format($visitorByRegion->count()) }})
+                            </button>
+                            <button type="button" onclick="switchVisitorReportTab('logs')" id="vrep-btn-logs"
+                                    class="vrep-tab-btn rounded-xl px-3.5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-[#0B6E4F] transition">
+                                Riwayat Kunjungan Terbaru ({{ $recentVisitorLogs->count() }})
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 1: DIREKTORI DETAIL PENGUNJUNG -->
+                    <div id="vrep-panel-dir" class="vrep-panel space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div class="relative w-full sm:w-80">
+                                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <input type="search" id="vdir-search-input" oninput="filterVisitorDirectory()"
+                                       placeholder="Cari nama, sekolah, kelas, desa, kec/kab..."
+                                       class="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-2 text-xs text-[#0F291E] focus:border-[#0B6E4F] focus:outline-none">
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 text-[11px] font-bold">
+                                <button type="button" onclick="setVisitorCategoryFilter('all', this)" class="vdir-cat-btn rounded-lg px-2.5 py-1 bg-[#0B6E4F] text-white transition">Semua</button>
+                                <button type="button" onclick="setVisitorCategoryFilter('pelajar', this)" class="vdir-cat-btn rounded-lg px-2.5 py-1 bg-white border border-slate-200 text-slate-600 hover:border-[#0B6E4F] transition">Pelajar</button>
+                                <button type="button" onclick="setVisitorCategoryFilter('keluarga', this)" class="vdir-cat-btn rounded-lg px-2.5 py-1 bg-white border border-slate-200 text-slate-600 hover:border-[#0B6E4F] transition">Keluarga SMK</button>
+                                <button type="button" onclick="setVisitorCategoryFilter('alumni', this)" class="vdir-cat-btn rounded-lg px-2.5 py-1 bg-white border border-slate-200 text-slate-600 hover:border-[#0B6E4F] transition">Alumni</button>
+                                <button type="button" onclick="setVisitorCategoryFilter('umum', this)" class="vdir-cat-btn rounded-lg px-2.5 py-1 bg-white border border-slate-200 text-slate-600 hover:border-[#0B6E4F] transition">Umum</button>
+                                <button type="button" onclick="setVisitorCategoryFilter('siswa', this)" class="vdir-cat-btn rounded-lg px-2.5 py-1 bg-white border border-slate-200 text-slate-600 hover:border-[#0B6E4F] transition">Siswa Toko</button>
+                                <button type="button" onclick="setVisitorCategoryFilter('guru', this)" class="vdir-cat-btn rounded-lg px-2.5 py-1 bg-white border border-slate-200 text-slate-600 hover:border-[#0B6E4F] transition">Guru</button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto max-h-96 overflow-y-auto bg-white rounded-xl border border-slate-200/80">
                             <table class="w-full text-left border-collapse text-xs">
-                                <thead>
-                                    <tr class="border-b border-slate-100 text-[10px] uppercase text-slate-400">
-                                        <th class="py-2 px-3">Kabupaten / Kota</th>
-                                        <th class="py-2 px-3">Kecamatan</th>
-                                        <th class="py-2 px-3 text-right">Jumlah</th>
+                                <thead class="sticky top-0 z-10 bg-[#F8FAFC] border-b border-slate-200 text-[10px] font-bold uppercase text-slate-400">
+                                    <tr>
+                                        <th class="py-2.5 px-3.5">Pengunjung &amp; Kontak</th>
+                                        <th class="py-2.5 px-3.5">Kategori &amp; Detail Identitas</th>
+                                        <th class="py-2.5 px-3.5">Asal Wilayah Lengkap</th>
+                                        <th class="py-2.5 px-3.5 text-center">Aktivitas</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    @forelse($visitorByRegion as $reg)
-                                        <tr>
-                                            <td class="py-2 px-3 font-bold text-[#0F291E]">{{ $reg->kabupaten }}</td>
-                                            <td class="py-2 px-3 text-slate-500">{{ $reg->kecamatan ?? '-' }}</td>
-                                            <td class="py-2 px-3 text-right font-bold text-[#0B6E4F]">{{ $reg->total }} orang</td>
+                                <tbody id="vdir-tbody" class="divide-y divide-slate-100">
+                                    @forelse($registeredVisitors as $rv)
+                                        @php
+                                            $rvCatKey = ($rv->is_teacher || $rv->user_subtype === 'guru')
+                                                ? 'guru'
+                                                : (in_array($rv->user_subtype, ['pelajar', 'keluarga', 'alumni', 'umum', 'siswa'], true) ? $rv->user_subtype : 'umum');
+                                            $rvCatBadge = match($rvCatKey) {
+                                                'pelajar'  => 'bg-emerald-50 text-[#0B6E4F] border-emerald-200',
+                                                'keluarga' => 'bg-blue-50 text-blue-700 border-blue-200',
+                                                'alumni'   => 'bg-purple-50 text-purple-700 border-purple-200',
+                                                'siswa'    => 'bg-teal-50 text-teal-800 border-teal-200',
+                                                'guru'     => 'bg-amber-50 text-amber-800 border-amber-200',
+                                                default    => 'bg-slate-100 text-slate-700 border-slate-200',
+                                            };
+                                            $detailIdentitas = match($rvCatKey) {
+                                                'pelajar'  => collect([$rv->school_origin, $rv->class_name ? 'Kelas ' . $rv->class_name : null, $rv->nis_nisn ? 'NIS/NISN: ' . $rv->nis_nisn : null])->filter()->implode(' • '),
+                                                'keluarga' => collect([$rv->family_student_name ? 'Wali/Keluarga dari: ' . $rv->family_student_name : null, $rv->family_student_class, $rv->family_student_major])->filter()->implode(' • '),
+                                                'alumni'   => collect([$rv->graduation_year ? 'Lulus Tahun ' . $rv->graduation_year : null, $rv->major_name])->filter()->implode(' • '),
+                                                'siswa'    => collect([$rv->store?->store_name ? 'Toko: ' . $rv->store->store_name : null, $rv->class_name, $rv->major_name])->filter()->implode(' • '),
+                                                'guru'     => collect([$rv->nuptk ? 'NUPTK: ' . $rv->nuptk : null, $rv->store?->store_name ? 'Toko: ' . $rv->store->store_name : null])->filter()->implode(' • '),
+                                                default    => $rv->nik ? 'NIK terdata' : 'Pengunjung umum terdaftar',
+                                            };
+                                            $searchHaystack = strtolower(implode(' ', array_filter([
+                                                $rv->name,
+                                                $rv->email,
+                                                $rv->phone,
+                                                $rv->subtype_label,
+                                                $detailIdentitas,
+                                                $rv->desa,
+                                                $rv->kecamatan,
+                                                $rv->kabupaten,
+                                                $rv->address_detail,
+                                            ])));
+                                        @endphp
+                                        <tr class="vdir-row hover:bg-slate-50/70" data-cat="{{ $rvCatKey }}" data-search="{{ $searchHaystack }}">
+                                            <td class="py-2.5 px-3.5 align-top">
+                                                <p class="font-bold text-[#0F291E]">{{ $rv->name }}</p>
+                                                <p class="text-[11px] text-slate-500">{{ $rv->email }}</p>
+                                                @if($rv->phone)
+                                                    <p class="text-[10px] font-semibold text-[#0B6E4F] mt-0.5">{{ $rv->phone }}</p>
+                                                @endif
+                                            </td>
+                                            <td class="py-2.5 px-3.5 align-top space-y-1">
+                                                <span class="inline-block rounded-md border px-2 py-0.5 text-[10px] font-bold {{ $rvCatBadge }}">
+                                                    {{ $rv->subtype_label }}
+                                                </span>
+                                                <p class="text-[11px] text-slate-600">{{ $detailIdentitas ?: '-' }}</p>
+                                            </td>
+                                            <td class="py-2.5 px-3.5 align-top">
+                                                <p class="font-semibold text-[#0F291E]">
+                                                    {{ collect([$rv->kecamatan ? 'Kec. ' . $rv->kecamatan : null, $rv->kabupaten])->filter()->implode(', ') ?: 'Wilayah belum dilengkapi' }}
+                                                </p>
+                                                <p class="text-[11px] text-slate-500">
+                                                    {{ collect([$rv->desa ? 'Desa ' . $rv->desa : null, $rv->address_detail, $rv->kode_pos])->filter()->implode(' • ') }}
+                                                </p>
+                                            </td>
+                                            <td class="py-2.5 px-3.5 align-top text-center">
+                                                <div class="inline-flex flex-wrap items-center justify-center gap-1 text-[10px]">
+                                                    <span class="rounded bg-slate-100 px-1.5 py-0.5 font-bold text-slate-700">{{ (int) ($rv->visit_logs_count ?? 0) }} lihat</span>
+                                                    <span class="rounded bg-emerald-50 px-1.5 py-0.5 font-bold text-[#0B6E4F]">{{ (int) ($rv->orders_count ?? 0) }} trx</span>
+                                                    <span class="rounded bg-blue-50 px-1.5 py-0.5 font-bold text-blue-700">{{ (int) ($rv->comments_count ?? 0) }} ulasan</span>
+                                                </div>
+                                                <p class="text-[10px] text-slate-400 mt-1">Gabung: {{ $rv->created_at?->format('d M Y') ?? '-' }}</p>
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="py-4 text-center text-slate-400">Belum ada data wilayah.</td>
+                                            <td colspan="4" class="py-6 text-center text-slate-400">Belum ada pengunjung terdaftar.</td>
+                                        </tr>
+                                    @endforelse
+                                    <tr id="vdir-empty-row" class="hidden">
+                                        <td colspan="4" class="py-6 text-center text-slate-400">Tidak ada pengunjung yang cocok dengan pencarian / filter.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: DETAIL WILAYAH ASAL (TERNORMALISASI) -->
+                    <div id="vrep-panel-region" class="vrep-panel hidden">
+                        <div class="overflow-x-auto max-h-96 overflow-y-auto bg-white rounded-xl border border-slate-200/80">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead class="sticky top-0 z-10 bg-[#F8FAFC] border-b border-slate-200 text-[10px] font-bold uppercase text-slate-400">
+                                    <tr>
+                                        <th class="py-2.5 px-3.5 w-12">No</th>
+                                        <th class="py-2.5 px-3.5">Kabupaten / Kota</th>
+                                        <th class="py-2.5 px-3.5">Kecamatan</th>
+                                        <th class="py-2.5 px-3.5">Desa / Kelurahan Tercatat</th>
+                                        <th class="py-2.5 px-3.5">Rincian Kategori</th>
+                                        <th class="py-2.5 px-3.5 text-right">Jumlah &amp; Proporsi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @forelse($visitorByRegion as $idx => $reg)
+                                        @php
+                                            $regPct = round(($reg->total / $regionTotalSum) * 100, 1);
+                                            $bd = $reg->breakdown ?? [];
+                                            $catPills = collect([
+                                                ($bd['pelajar'] ?? 0) > 0 ? $bd['pelajar'] . ' Pelajar' : null,
+                                                ($bd['keluarga'] ?? 0) > 0 ? $bd['keluarga'] . ' Keluarga' : null,
+                                                ($bd['alumni'] ?? 0) > 0 ? $bd['alumni'] . ' Alumni' : null,
+                                                ($bd['umum'] ?? 0) > 0 ? $bd['umum'] . ' Umum' : null,
+                                                ($bd['siswa'] ?? 0) > 0 ? $bd['siswa'] . ' Siswa Toko' : null,
+                                                ($bd['guru'] ?? 0) > 0 ? $bd['guru'] . ' Guru' : null,
+                                            ])->filter();
+                                            $desaPreview = count($reg->desa_list ?? []) > 0
+                                                ? implode(', ', array_slice($reg->desa_list, 0, 5)) . (count($reg->desa_list) > 5 ? ' (+' . (count($reg->desa_list) - 5) . ' lainnya)' : '')
+                                                : '-';
+                                        @endphp
+                                        <tr class="hover:bg-slate-50/70">
+                                            <td class="py-2.5 px-3.5 text-slate-400 font-bold">#{{ $idx + 1 }}</td>
+                                            <td class="py-2.5 px-3.5 font-bold text-[#0F291E]">{{ $reg->kabupaten }}</td>
+                                            <td class="py-2.5 px-3.5 font-semibold text-slate-700">{{ $reg->kecamatan }}</td>
+                                            <td class="py-2.5 px-3.5 text-[11px] text-slate-500 max-w-xs">{{ $desaPreview }}</td>
+                                            <td class="py-2.5 px-3.5">
+                                                <div class="flex flex-wrap gap-1">
+                                                    @foreach($catPills as $cpText)
+                                                        <span class="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">{{ $cpText }}</span>
+                                                    @endforeach
+                                                </div>
+                                            </td>
+                                            <td class="py-2.5 px-3.5 text-right min-w-[130px]">
+                                                <div class="font-extrabold text-[#0B6E4F]">{{ number_format($reg->total) }} orang <span class="text-[10px] text-slate-400 font-normal">({{ $regPct }}%)</span></div>
+                                                <div class="w-full h-1.5 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                                                    <div class="h-full bg-[#0B6E4F] rounded-full" style="width: {{ min(100, $regPct) }}%"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="py-6 text-center text-slate-400">Belum ada data wilayah pengunjung.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: RIWAYAT KUNJUNGAN KATALOG TERBARU (TERMASUK GUEST) -->
+                    <div id="vrep-panel-logs" class="vrep-panel hidden">
+                        <div class="overflow-x-auto max-h-96 overflow-y-auto bg-white rounded-xl border border-slate-200/80">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead class="sticky top-0 z-10 bg-[#F8FAFC] border-b border-slate-200 text-[10px] font-bold uppercase text-slate-400">
+                                    <tr>
+                                        <th class="py-2.5 px-3.5">Waktu</th>
+                                        <th class="py-2.5 px-3.5">Pengunjung / Tamu</th>
+                                        <th class="py-2.5 px-3.5">Kategori &amp; Wilayah Asal</th>
+                                        <th class="py-2.5 px-3.5">Karya Produk / Toko Dikunjungi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @forelse($recentVisitorLogs as $vLog)
+                                        <tr class="hover:bg-slate-50/70">
+                                            <td class="py-2.5 px-3.5 text-slate-400 whitespace-nowrap">{{ $vLog->created_at?->format('d M Y, H:i') ?? '-' }}</td>
+                                            <td class="py-2.5 px-3.5">
+                                                <p class="font-bold text-[#0F291E]">{{ $vLog->user?->name ?? ($vLog->visitor_name ?: 'Tamu (Guest)') }}</p>
+                                                @if($vLog->ip_address)
+                                                    <p class="text-[10px] font-mono text-slate-400">IP: {{ $vLog->ip_address }}</p>
+                                                @endif
+                                            </td>
+                                            <td class="py-2.5 px-3.5">
+                                                <span class="inline-block rounded px-2 py-0.5 text-[10px] font-bold {{ $vLog->visitor_type === 'guest' ? 'bg-slate-100 text-slate-600' : 'bg-[#EBF9F2] text-[#0B6E4F]' }}">
+                                                    {{ $vLog->visitor_type === 'guest' ? 'Tamu (Guest)' : ($vLog->user?->subtype_label ?? ucfirst((string) $vLog->visitor_type)) }}
+                                                </span>
+                                                <p class="text-[11px] text-slate-500 mt-0.5">{{ $vLog->origin_region ?: ($vLog->user?->kecamatan ?: '-') }}</p>
+                                            </td>
+                                            <td class="py-2.5 px-3.5">
+                                                @if($vLog->product)
+                                                    <a href="{{ route('products.show', $vLog->product->slug) }}" target="_blank" class="font-bold text-[#0B6E4F] hover:underline">
+                                                        {{ $vLog->product->product_name }}
+                                                    </a>
+                                                @endif
+                                                @if($vLog->store)
+                                                    <p class="text-[11px] text-slate-500">Toko: {{ $vLog->store->store_name }}</p>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="py-6 text-center text-slate-400">Belum ada catatan kunjungan terbaru.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -3387,6 +3678,159 @@ Algoritma:
                 sessionStorage.setItem('admin_last_scroll_y', window.scrollY);
             });
         });
+
+        // 4. Inisialisasi Grafik Laporan Pengunjung
+        initVisitorReportCharts();
     });
+
+    const _visitorChartPayload = @json($vcData ?? []);
+    window._vdirActiveCat = 'all';
+
+    function switchVisitorReportTab(tab) {
+        document.querySelectorAll('.vrep-panel').forEach(p => p.classList.add('hidden'));
+        const panel = document.getElementById('vrep-panel-' + tab);
+        if (panel) panel.classList.remove('hidden');
+
+        document.querySelectorAll('.vrep-tab-btn').forEach(b => {
+            b.classList.remove('bg-[#0B6E4F]', 'text-white', 'shadow-2xs');
+            b.classList.add('bg-white', 'border', 'border-slate-200', 'text-slate-600');
+        });
+        const btn = document.getElementById('vrep-btn-' + tab);
+        if (btn) {
+            btn.classList.add('bg-[#0B6E4F]', 'text-white', 'shadow-2xs');
+            btn.classList.remove('bg-white', 'border', 'border-slate-200', 'text-slate-600');
+        }
+    }
+
+    function setVisitorCategoryFilter(cat, btnEl) {
+        window._vdirActiveCat = cat || 'all';
+        document.querySelectorAll('.vdir-cat-btn').forEach(b => {
+            b.classList.remove('bg-[#0B6E4F]', 'text-white');
+            b.classList.add('bg-white', 'border', 'border-slate-200', 'text-slate-600');
+        });
+        if (btnEl) {
+            btnEl.classList.add('bg-[#0B6E4F]', 'text-white');
+            btnEl.classList.remove('bg-white', 'border', 'border-slate-200', 'text-slate-600');
+        }
+        filterVisitorDirectory();
+    }
+
+    function filterVisitorDirectory() {
+        const q = (document.getElementById('vdir-search-input')?.value || '').trim().toLowerCase();
+        const cat = window._vdirActiveCat || 'all';
+        const rows = document.querySelectorAll('#vdir-tbody .vdir-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const matchCat = (cat === 'all') || (row.dataset.cat === cat);
+            const matchSearch = !q || (row.dataset.search || '').includes(q);
+            const show = matchCat && matchSearch;
+            row.classList.toggle('hidden', !show);
+            if (show) visibleCount++;
+        });
+
+        const emptyRow = document.getElementById('vdir-empty-row');
+        if (emptyRow) emptyRow.classList.toggle('hidden', visibleCount > 0 || rows.length === 0);
+    }
+
+    function initVisitorReportCharts() {
+        if (typeof Chart === 'undefined' || !_visitorChartPayload) return;
+
+        // 1. Doughnut: Kategori Pengunjung
+        const catCanvas = document.getElementById('visitorCategoryChart');
+        if (catCanvas && _visitorChartPayload.categories) {
+            const labels = _visitorChartPayload.categories.labels || [];
+            const vals = _visitorChartPayload.categories.values || [];
+            const hasData = vals.some(v => Number(v) > 0);
+            new Chart(catCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: hasData ? labels : ['Belum ada data'],
+                    datasets: [{
+                        data: hasData ? vals : [1],
+                        backgroundColor: hasData
+                            ? ['#0B6E4F', '#2563EB', '#7C3AED', '#64748B', '#10B981', '#D97706']
+                            : ['#E2E8F0'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '58%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                    },
+                },
+            });
+        }
+
+        // 2. Horizontal Bar: Top 10 Wilayah Asal
+        const regCanvas = document.getElementById('visitorRegionChart');
+        if (regCanvas && _visitorChartPayload.regions) {
+            const rLabels = _visitorChartPayload.regions.labels || [];
+            const rTotals = _visitorChartPayload.regions.totals || [];
+            new Chart(regCanvas, {
+                type: 'bar',
+                data: {
+                    labels: rLabels.length ? rLabels : ['Belum ada data wilayah'],
+                    datasets: [{
+                        label: 'Jumlah Pengunjung (Orang)',
+                        data: rLabels.length ? rTotals : [0],
+                        backgroundColor: '#2563EB',
+                        borderRadius: 6,
+                    }],
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { precision: 0, font: { size: 10 } } },
+                        y: { ticks: { font: { size: 10 } } },
+                    },
+                },
+            });
+        }
+
+        // 3. Stacked Bar: Tren Kunjungan 14 Hari Terakhir
+        const trCanvas = document.getElementById('visitorTrendChart');
+        if (trCanvas && _visitorChartPayload.trend) {
+            new Chart(trCanvas, {
+                type: 'bar',
+                data: {
+                    labels: _visitorChartPayload.trend.labels || [],
+                    datasets: [
+                        {
+                            label: 'Pengguna Terdaftar',
+                            data: _visitorChartPayload.trend.registered || [],
+                            backgroundColor: '#0B6E4F',
+                            borderRadius: 4,
+                        },
+                        {
+                            label: 'Tamu (Guest)',
+                            data: _visitorChartPayload.trend.guest || [],
+                            backgroundColor: '#F59E0B',
+                            borderRadius: 4,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                        tooltip: { mode: 'index', intersect: false },
+                    },
+                    scales: {
+                        x: { stacked: true, ticks: { font: { size: 9 } } },
+                        y: { stacked: true, beginAtZero: true, ticks: { precision: 0, font: { size: 10 } } },
+                    },
+                },
+            });
+        }
+    }
 </script>
 @endsection
