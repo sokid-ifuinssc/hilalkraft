@@ -40,6 +40,7 @@ class BazaarEvent extends Model
         'points_stand_visit',
         'points_transaction',
         'allow_self_register',
+        'prize_tiers',
     ];
 
     protected function casts(): array
@@ -54,6 +55,7 @@ class BazaarEvent extends Model
             'points_stand_visit'  => 'integer',
             'points_transaction'  => 'integer',
             'allow_self_register' => 'boolean',
+            'prize_tiers'         => 'array',
         ];
     }
 
@@ -189,5 +191,72 @@ class BazaarEvent extends Model
         }
 
         return $map;
+    }
+
+    /**
+     * Auto-healing kolom `prize_tiers` jika aplikasi dijalankan di server sebelum `php artisan migrate`.
+     */
+    public static function ensurePrizeTiersColumn(): void
+    {
+        try {
+            if (Schema::hasTable('bazaar_events') && ! Schema::hasColumn('bazaar_events', 'prize_tiers')) {
+                Schema::table('bazaar_events', function ($table) {
+                    $table->json('prize_tiers')->nullable();
+                });
+            }
+        } catch (\Throwable $e) {
+            // Abaikan bila skema sedang terkunci oleh proses migrasi
+        }
+    }
+
+    /**
+     * Normalisasi dan urutkan daftar target hadiah berdasarkan minimal poin (terkecil -> terbesar).
+     */
+    public static function normalizePrizeTiers(array $rawTiers): array
+    {
+        $clean = [];
+        foreach ($rawTiers as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $minPoints = (int) ($item['min_points'] ?? 0);
+            $prizeName = trim((string) ($item['prize_name'] ?? ''));
+            $notes     = trim((string) ($item['notes'] ?? ''));
+
+            if ($minPoints > 0 && $prizeName !== '') {
+                $clean[] = [
+                    'min_points' => $minPoints,
+                    'prize_name' => $prizeName,
+                    'notes'      => $notes,
+                ];
+            }
+        }
+
+        usort($clean, fn (array $a, array $b) => $a['min_points'] <=> $b['min_points']);
+
+        return array_values($clean);
+    }
+
+    public function getNormalizedPrizeTiersAttribute(): array
+    {
+        $raw = $this->prize_tiers;
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            $raw = is_array($decoded) ? $decoded : [];
+        }
+
+        return is_array($raw) ? static::normalizePrizeTiers($raw) : [];
+    }
+
+    public function getHighestMatchedPrize(int $points): ?array
+    {
+        $matched = null;
+        foreach ($this->normalized_prize_tiers as $tier) {
+            if ($points >= $tier['min_points']) {
+                $matched = $tier;
+            }
+        }
+
+        return $matched;
     }
 }

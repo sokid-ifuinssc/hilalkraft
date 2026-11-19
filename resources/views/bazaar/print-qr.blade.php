@@ -88,6 +88,18 @@ Fungsi:
                         <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
                         <span>Hadiah +{{ $card['points'] }} Poin Pengunjung (Doorprize)</span>
                     </div>
+                    @if(!empty($card['prizeTiers']))
+                        <div class="rounded-xl bg-[#F8FAFC] border border-slate-200 p-2.5 text-left space-y-1">
+                            <p class="text-[10px] font-black uppercase tracking-wider text-[#0B6E4F] text-center">Informasi Hadiah Poin Pengunjung:</p>
+                            <div class="flex flex-wrap items-center justify-center gap-1.5">
+                                @foreach($card['prizeTiers'] as $pt)
+                                    <span class="rounded-lg bg-white border border-amber-300 px-2 py-0.5 text-[10px] font-extrabold text-[#0F291E]">
+                                        {{ number_format($pt['min_points']) }} Poin = {{ $pt['prize_name'] }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                     <p class="text-[11px] text-slate-500 leading-relaxed">
                         {{ $card['footer'] }}
                     </p>

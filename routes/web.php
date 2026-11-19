@@ -129,6 +129,7 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('panel-admin')->na
     Route::prefix('bazar/{bazaarEvent}')->name('bazaar.')->group(function () {
         Route::get('/', [BazaarManagementController::class, 'show'])->name('show');
         Route::patch('/settings', [BazaarManagementController::class, 'updateSettings'])->name('settings');
+        Route::put('/prize-tiers', [BazaarManagementController::class, 'updatePrizeTiers'])->name('prize-tiers.update');
         Route::post('/participants', [BazaarManagementController::class, 'addStoreParticipants'])->name('participants.add');
         Route::patch('/participants/{participant}/approve', [BazaarManagementController::class, 'approveParticipant'])->name('participants.approve');
         Route::patch('/participants/{participant}/reject', [BazaarManagementController::class, 'rejectParticipant'])->name('participants.reject');

@@ -50,6 +50,7 @@ class BazaarManagementController extends Controller
 
     public function show(Request $request, BazaarEvent $bazaarEvent): View
     {
+        BazaarEvent::ensurePrizeTiersColumn();
         $bazaarEvent->ensureTokensExist();
 
         $sortBy = (string) $request->query('sort', 'score');
@@ -81,6 +82,33 @@ class BazaarManagementController extends Controller
             $standQrSvgs[$part->id] = QrCodeSvg::render(route('bazaar.scan.token', $part->stand_token), 120);
         }
 
+        $topStoresChartRows = $storeRankings->take(10)->values();
+        $storeChartData = [
+            'labels'           => $topStoresChartRows->map(fn ($r) => '#' . $r->rank . ' ' . ($r->stand_number !== '-' ? "[{$r->stand_number}] " : '') . Str::limit($r->store->store_name, 18))->all(),
+            'composite_scores' => $topStoresChartRows->map(fn ($r) => (float) $r->composite_score)->all(),
+            'stand_visits'     => $topStoresChartRows->map(fn ($r) => (int) $r->stand_visits_count)->all(),
+            'orders'           => $topStoresChartRows->map(fn ($r) => (int) $r->orders_count)->all(),
+            'catalog_views'    => $topStoresChartRows->map(fn ($r) => (int) $r->catalog_views_count)->all(),
+            'revenues'         => $topStoresChartRows->map(fn ($r) => (float) $r->revenue)->all(),
+            'ratings'          => $topStoresChartRows->map(fn ($r) => (float) $r->avg_rating)->all(),
+        ];
+
+        $topVisitorsChartRows = $visitorRankings->take(10)->values();
+        $visitorChartData = [
+            'labels'             => $topVisitorsChartRows->map(fn ($r) => '#' . $r->rank . ' ' . Str::limit($r->user->name, 18))->all(),
+            'checkin_points'     => $topVisitorsChartRows->map(fn ($r) => max(0, (int) $r->checkin_points))->all(),
+            'stand_visit_points' => $topVisitorsChartRows->map(fn ($r) => max(0, (int) $r->stand_visit_points))->all(),
+            'transaction_points' => $topVisitorsChartRows->map(fn ($r) => max(0, (int) $r->transaction_points))->all(),
+            'bonus_points'       => $topVisitorsChartRows->map(fn ($r) => max(0, (int) ($r->bonus_points ?? 0)))->all(),
+            'total_points'       => $topVisitorsChartRows->map(fn ($r) => (int) $r->total_points)->all(),
+            'breakdown_totals'   => [
+                'checkin'     => max(0, (int) $visitorRankings->sum('checkin_points')),
+                'stand'       => max(0, (int) $visitorRankings->sum('stand_visit_points')),
+                'transaction' => max(0, (int) $visitorRankings->sum('transaction_points')),
+                'bonus'       => max(0, (int) $visitorRankings->sum('bonus_points')),
+            ],
+        ];
+
         $summary = [
             'approved_stores' => $participants->where('status', 'approved')->count(),
             'pending_stores'  => $participants->where('status', 'pending')->count(),
@@ -99,12 +127,41 @@ class BazaarManagementController extends Controller
             'storeRankings',
             'visitorRankings',
             'selectableVisitors',
+            'storeChartData',
+            'visitorChartData',
             'sortBy',
             'eventCheckinUrl',
             'eventQrSvg',
             'standQrSvgs',
             'summary'
         ));
+    }
+
+    public function updatePrizeTiers(Request $request, BazaarEvent $bazaarEvent): RedirectResponse
+    {
+        BazaarEvent::ensurePrizeTiersColumn();
+
+        $validated = $request->validate([
+            'tiers'              => ['nullable', 'array', 'max:30'],
+            'tiers.*.min_points' => ['nullable', 'integer', 'min:1', 'max:1000000'],
+            'tiers.*.prize_name' => ['nullable', 'string', 'max:120'],
+            'tiers.*.notes'      => ['nullable', 'string', 'max:200'],
+        ]);
+
+        $normalized = BazaarEvent::normalizePrizeTiers($validated['tiers'] ?? []);
+        $bazaarEvent->update(['prize_tiers' => $normalized]);
+
+        ActivityLog::record(
+            'bazaar_prize_tiers_update',
+            'Pembaruan Daftar Hadiah Poin Bazar',
+            $request->user()->name . " mengatur " . count($normalized) . " tier hadiah poin untuk acara '{$bazaarEvent->title}'."
+        );
+
+        $msg = count($normalized) > 0
+            ? 'Daftar informasi hadiah poin (' . count($normalized) . ' hadiah) berhasil disimpan dan langsung ditampilkan ke pengunjung.'
+            : 'Daftar hadiah poin dikosongkan.';
+
+        return back()->with('success', $msg);
     }
 
     public function updateSettings(Request $request, BazaarEvent $bazaarEvent): RedirectResponse
@@ -326,6 +383,7 @@ class BazaarManagementController extends Controller
 
     public function printEventQr(BazaarEvent $bazaarEvent): View
     {
+        BazaarEvent::ensurePrizeTiersColumn();
         $bazaarEvent->ensureTokensExist();
         $scanUrl = route('bazaar.scan.token', $bazaarEvent->checkin_token);
         $qrSvg   = QrCodeSvg::render($scanUrl, 320, 4);
@@ -335,14 +393,15 @@ class BazaarManagementController extends Controller
             'bazaarEvent' => $bazaarEvent,
             'cards'       => [
                 [
-                    'badge'     => 'CHECK-IN KEHADIRAN BAZAR',
-                    'title'     => $bazaarEvent->title,
-                    'subtitle'  => $bazaarEvent->location ?: 'SMK Plus Al Hilal',
-                    'points'    => $bazaarEvent->points_checkin ?? 50,
-                    'shortCode' => $bazaarEvent->short_code,
-                    'scanUrl'   => $scanUrl,
-                    'qrSvg'     => $qrSvg,
-                    'footer'    => 'Scan barcode ini saat tiba di area acara bazar menggunakan kamera HP atau menu Scan & Poin Bazar di akun Hilalkraf Anda.',
+                    'badge'      => 'CHECK-IN KEHADIRAN BAZAR',
+                    'title'      => $bazaarEvent->title,
+                    'subtitle'   => $bazaarEvent->location ?: 'SMK Plus Al Hilal',
+                    'points'     => $bazaarEvent->points_checkin ?? 50,
+                    'shortCode'  => $bazaarEvent->short_code,
+                    'scanUrl'    => $scanUrl,
+                    'qrSvg'      => $qrSvg,
+                    'prizeTiers' => $bazaarEvent->normalized_prize_tiers,
+                    'footer'     => 'Scan barcode ini saat tiba di area acara bazar menggunakan kamera HP atau menu Scan & Poin Bazar di akun Hilalkraf Anda.',
                 ],
             ],
         ]);
@@ -388,14 +447,15 @@ class BazaarManagementController extends Controller
         // Kartu Pertama: QR Kehadiran Utama
         $eventUrl = route('bazaar.scan.token', $bazaarEvent->checkin_token);
         $cards[] = [
-            'badge'     => 'QR PINTU MASUK ACARA',
-            'title'     => $bazaarEvent->title,
-            'subtitle'  => $bazaarEvent->location ?: 'SMK Plus Al Hilal',
-            'points'    => $bazaarEvent->points_checkin ?? 50,
-            'shortCode' => $bazaarEvent->short_code,
-            'scanUrl'   => $eventUrl,
-            'qrSvg'     => QrCodeSvg::render($eventUrl, 220, 3),
-            'footer'    => 'Scan sekali saat hadir di acara bazar untuk klaim poin kehadiran.',
+            'badge'      => 'QR PINTU MASUK ACARA',
+            'title'      => $bazaarEvent->title,
+            'subtitle'   => $bazaarEvent->location ?: 'SMK Plus Al Hilal',
+            'points'     => $bazaarEvent->points_checkin ?? 50,
+            'shortCode'  => $bazaarEvent->short_code,
+            'scanUrl'    => $eventUrl,
+            'qrSvg'      => QrCodeSvg::render($eventUrl, 220, 3),
+            'prizeTiers' => $bazaarEvent->normalized_prize_tiers,
+            'footer'     => 'Scan sekali saat hadir di acara bazar untuk klaim poin kehadiran.',
         ];
 
         foreach ($approved as $part) {
@@ -540,6 +600,7 @@ class BazaarManagementController extends Controller
 
     public function scanPage(Request $request): View
     {
+        BazaarEvent::ensurePrizeTiersColumn();
         $user = $request->user();
         $activeEvents = BazaarEvent::activeEvents();
 
@@ -565,6 +626,7 @@ class BazaarManagementController extends Controller
                 : collect();
 
             $myRankRow = $rankings->first(fn ($r) => $r->user->id === $user->id);
+            $top10 = $rankings->take(10)->values();
 
             return (object) [
                 'event'           => $ev,
@@ -573,8 +635,13 @@ class BazaarManagementController extends Controller
                 'hasCheckedIn'    => ($myRankRow?->checkin_count ?? 0) > 0,
                 'totalPoints'     => $myRankRow?->total_points ?? 0,
                 'myRank'          => $myRankRow?->rank ?? null,
-                'topVisitors'     => $rankings->take(10),
+                'topVisitors'     => $top10,
                 'doorprizeWinner' => $myRankRow?->doorprize_winner ?? null,
+                'chartData'       => [
+                    'labels' => $top10->map(fn ($r) => '#' . $r->rank . ' ' . Str::limit($r->user->name, 16))->all(),
+                    'points' => $top10->map(fn ($r) => (int) $r->total_points)->all(),
+                    'isMe'   => $top10->map(fn ($r) => (int) $r->user->id === (int) $user->id)->all(),
+                ],
             ];
         });
 

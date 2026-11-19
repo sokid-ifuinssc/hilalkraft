@@ -300,10 +300,15 @@ Algoritma:
 
     $hasActiveBazaarStores = isset($activeBazaarByStore) && $activeBazaarByStore->isNotEmpty();
     if ($bazarEvent && $hasActiveBazaarStores) {
+        $bazarTiers = $bazarEvent->normalized_prize_tiers;
+        $tierSummary = collect($bazarTiers)->take(2)->map(fn ($t) => $t['min_points'] . ' pts: ' . $t['prize_name'])->implode(', ');
+        $bazarContent = $bazarEvent->title . ' • Lokasi: ' . ($bazarEvent->location ?? 'SMK Plus Al Hilal')
+            . ($tierSummary !== '' ? ' • Hadiah Poin (' . $tierSummary . ')' : '');
+
         $promoCards->push((object)[
             'category' => 'Promo Bazar',
             'title'    => "Bazar {$bazarEvent->discount_percent}% (Otomatis)",
-            'content'  => $bazarEvent->title . ' • Lokasi: ' . ($bazarEvent->location ?? 'SMK Plus Al Hilal'),
+            'content'  => $bazarContent,
             'link_url' => '#katalog-produk',
             'image'    => null,
         ]);

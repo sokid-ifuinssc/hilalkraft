@@ -143,6 +143,58 @@ Halaman untuk Pembeli / Pengunjung berakun (`/pembeli/bazar-poin`):
                 </div>
             </div>
 
+            <!-- Informasi Hadiah Poin Pengunjung (Target Poin -> Hadiah Doorprize) -->
+            @php
+                $eventPrizeTiers = $sum->event->normalized_prize_tiers;
+            @endphp
+            @if(count($eventPrizeTiers) > 0)
+                <div class="rounded-2xl bg-amber-50/60 border border-amber-200/90 p-4 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-amber-700 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+                            <span>Informasi Hadiah Poin Pengunjung</span>
+                        </h3>
+                        <span class="text-[11px] font-semibold text-amber-800">Kumpulkan poin dari hadir, scan stand &amp; belanja</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                        @foreach($eventPrizeTiers as $tier)
+                            @php
+                                $targetPts = max(1, (int) $tier['min_points']);
+                                $reached = $sum->totalPoints >= $targetPts;
+                                $pct = min(100, (int) round(($sum->totalPoints / $targetPts) * 100));
+                                $remaining = max(0, $targetPts - $sum->totalPoints);
+                            @endphp
+                            <div class="rounded-xl border p-3 space-y-2 {{ $reached ? 'bg-emerald-50/90 border-emerald-300' : 'bg-white border-amber-200/80' }}">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <span class="inline-block rounded-md px-2 py-0.5 text-[10px] font-black {{ $reached ? 'bg-[#0B6E4F] text-white' : 'bg-amber-100 text-amber-900' }}">
+                                            {{ number_format($targetPts) }} Poin
+                                        </span>
+                                        <p class="text-xs sm:text-sm font-black text-[#0F291E] mt-1">{{ $tier['prize_name'] }}</p>
+                                        @if(!empty($tier['notes']))
+                                            <p class="text-[10px] text-slate-500 mt-0.5">{{ $tier['notes'] }}</p>
+                                        @endif
+                                    </div>
+                                    @if($reached)
+                                        <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-[#0B6E4F] shrink-0">
+                                            Tercapai
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                        <div class="h-full rounded-full {{ $reached ? 'bg-[#0B6E4F]' : 'bg-amber-500' }}" style="width: {{ $pct }}%"></div>
+                                    </div>
+                                    <p class="text-[10px] font-semibold {{ $reached ? 'text-[#0B6E4F]' : 'text-slate-500' }}">
+                                        {{ $reached ? 'Target poin terpenuhi! Silakan konfirmasi ke panitia bazar.' : 'Kurang ' . number_format($remaining) . ' poin lagi (' . $pct . '%)' }}
+                                    </p>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <!-- Grid Stand Peserta & Top 10 Leaderboard -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <!-- Daftar Stand Peserta -->
@@ -186,9 +238,14 @@ Halaman untuk Pembeli / Pengunjung berakun (`/pembeli/bazar-poin`):
                     </div>
                 </div>
 
-                <!-- Top 10 Peringkat Doorprize -->
+                <!-- Top 10 Peringkat Doorprize + Grafik -->
                 <div class="lg:col-span-5 space-y-3">
-                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Top 10 Peringkat Doorprize</h3>
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Grafik &amp; Top 10 Peringkat Doorprize</h3>
+                    @if($sum->topVisitors->isNotEmpty())
+                        <div class="rounded-xl border border-slate-100 bg-[#F8FAFC] p-3 h-48">
+                            <canvas class="buyer-bazaar-chart" data-chart='@json($sum->chartData)'></canvas>
+                        </div>
+                    @endif
                     <div class="rounded-xl border border-slate-100 divide-y divide-slate-100 overflow-hidden">
                         @forelse($sum->topVisitors as $topRow)
                             <div class="px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs {{ $topRow->user->id === auth()->id() ? 'bg-emerald-50/70' : 'bg-white' }}">
@@ -330,5 +387,38 @@ Halaman untuk Pembeli / Pengunjung berakun (`/pembeli/bazar-poin`):
             if (startBtn) startBtn.classList.remove('hidden');
             if (stopBtn) stopBtn.classList.add('hidden');
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof Chart === 'undefined') return;
+            document.querySelectorAll('.buyer-bazaar-chart').forEach(canvas => {
+                try {
+                    const cfg = JSON.parse(canvas.getAttribute('data-chart') || '{}');
+                    if (!cfg.labels || !cfg.labels.length) return;
+                    const colors = (cfg.isMe || []).map(me => me ? '#D97706' : '#0B6E4F');
+                    new Chart(canvas, {
+                        type: 'bar',
+                        data: {
+                            labels: cfg.labels,
+                            datasets: [{
+                                label: 'Total Poin',
+                                data: cfg.points,
+                                backgroundColor: colors,
+                                borderRadius: 5,
+                            }],
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                                y: { ticks: { font: { size: 10 } } },
+                            },
+                        },
+                    });
+                } catch (e) {}
+            });
+        });
     </script>
 @endsection

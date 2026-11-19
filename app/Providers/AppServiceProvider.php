@@ -224,6 +224,7 @@ class AppServiceProvider extends ServiceProvider
                 ! Schema::hasTable('regencies') ||
                 ! Schema::hasTable('bazaar_doorprize_winners') ||
                 ! Schema::hasColumn('bazaar_events', 'points_checkin') ||
+                ! Schema::hasColumn('bazaar_events', 'prize_tiers') ||
                 ! Schema::hasTable('store_conversations') ||
                 ! Schema::hasTable('store_messages')
             ) {
@@ -233,6 +234,7 @@ class AppServiceProvider extends ServiceProvider
             // Abaikan jika migrasi sedang berjalan
         }
 
+        \App\Models\BazaarEvent::ensurePrizeTiersColumn();
         \App\Models\StoreConversation::ensureTablesExist();
 
         // Lengkapi token QR & kode pendek pada acara bazar yang belum memilikinya
