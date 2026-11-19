@@ -56,11 +56,12 @@ Fungsi:
             [$svgUser,      'Laporan Pengunjung', route('admin.dashboard') . '#sec-laporan-pengunjung',   false],
         ],
         default => [
-            [$svgTruck,     'Pesanan Saya',    route('buyer.dashboard'),                      request()->routeIs('buyer.dashboard')],
-            [$svgUser,      'Profil Akun',     route('buyer.dashboard') . '#menu-profil',     false],
-            [$svgCart,      'Keranjang',       route('buyer.cart.index'),                     request()->routeIs('buyer.cart.*')],
-            [$svgChart,     'Laporan Belanja', route('buyer.reports'),                        request()->routeIs('buyer.reports')],
-            [$svgBag,       'Belanja Lagi',    route('home'),                                 false],
+            [$svgTruck,     'Pesanan Saya',         route('buyer.dashboard'),                      request()->routeIs('buyer.dashboard')],
+            [$svgTag,       'Scan QR & Poin Bazar', route('bazaar.scan.page'),                     request()->routeIs('bazaar.scan.*')],
+            [$svgUser,      'Profil Akun',          route('buyer.dashboard') . '#menu-profil',     false],
+            [$svgCart,      'Keranjang',            route('buyer.cart.index'),                     request()->routeIs('buyer.cart.*')],
+            [$svgChart,     'Laporan Belanja',      route('buyer.reports'),                        request()->routeIs('buyer.reports')],
+            [$svgBag,       'Belanja Lagi',         route('home'),                                 false],
         ],
     };
 

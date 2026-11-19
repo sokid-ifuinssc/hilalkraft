@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\BazaarEvent;
+use App\Models\BazaarStoreParticipant;
 use App\Models\Category;
 use App\Models\ClassMajor;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -56,11 +58,28 @@ class SellerProductController extends Controller
         $orders = $store->orders()->with(['buyer', 'items.product', 'bazaarEvent'])->latest()->get();
         $activeBazaarEvents = BazaarEvent::activeEvents();
 
+        $manageableBazaars = Schema::hasTable('bazaar_events')
+            ? BazaarEvent::where('is_active', true)->latest()->get()
+            : collect();
+        $bazaarParticipations = Schema::hasTable('bazaar_store_participants')
+            ? BazaarStoreParticipant::where('store_id', $store->id)->get()->keyBy('bazaar_event_id')
+            : collect();
+
         $classMajors = ClassMajor::where('is_active', true)->orderBy('class_name')->orderBy('major_name')->get();
         $classList = $classMajors->pluck('class_name')->unique()->values();
         $majorList = $classMajors->pluck('major_name')->unique()->values();
 
-        return view('seller.dashboard', compact('user', 'store', 'products', 'orders', 'classList', 'majorList', 'activeBazaarEvents'));
+        return view('seller.dashboard', compact(
+            'user',
+            'store',
+            'products',
+            'orders',
+            'classList',
+            'majorList',
+            'activeBazaarEvents',
+            'manageableBazaars',
+            'bazaarParticipations'
+        ));
     }
 
     /**

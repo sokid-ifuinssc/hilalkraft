@@ -1838,15 +1838,41 @@ Algoritma:
                             <input type="number" name="max_discount_amount" min="0" placeholder="Kosongkan jika tanpa batas" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
                         </div>
                         <div>
-                            <button type="submit" class="w-full rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 transition shadow-xs flex items-center justify-center gap-1.5">
-                                <span>🎪</span>
-                                <span>Simpan Acara Bazar</span>
-                            </button>
+                            <label class="block font-bold text-slate-600 mb-1">Poin Hadir / Stand / Trx</label>
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <input type="number" name="points_checkin" value="50" min="0" title="Poin scan hadir acara bazar" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-center text-[#0B6E4F]">
+                                <input type="number" name="points_stand_visit" value="20" min="0" title="Poin scan kunjungan stand toko" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-center text-blue-700">
+                                <input type="number" name="points_transaction" value="30" min="0" title="Poin per transaksi bazar" class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-center text-amber-700">
+                            </div>
                         </div>
+                    </div>
+
+                    @if(isset($stores) && $stores->where('deleted_at', null)->count() > 0)
+                        <div class="rounded-xl bg-white border border-slate-200 p-3 space-y-2">
+                            <p class="text-[11px] font-bold text-[#0F291E]">Pilih Toko Peserta Awal (Opsional — bisa juga dipilih nanti atau lewat pengajuan toko):</p>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-32 overflow-y-auto pr-1">
+                                @foreach($stores->where('deleted_at', null) as $stItem)
+                                    <label class="flex items-center gap-2 text-[11px] text-slate-700 cursor-pointer truncate">
+                                        <input type="checkbox" name="store_ids[]" value="{{ $stItem->id }}" class="rounded text-[#0B6E4F]">
+                                        <span class="truncate">{{ $stItem->store_name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                        <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-700 cursor-pointer">
+                            <input type="checkbox" name="allow_self_register" value="1" checked class="rounded text-[#0B6E4F]">
+                            <span>Izinkan toko mengajukan diri mengikuti event bazar ini</span>
+                        </label>
+                        <button type="submit" class="rounded-xl bg-amber-600 px-5 py-2 text-xs font-bold text-white hover:bg-amber-700 transition shadow-xs flex items-center justify-center gap-1.5">
+                            <span>Simpan & Buka Kelola Acara Bazar</span>
+                        </button>
                     </div>
                 </form>
 
-                <!-- 3. TABEL ACARA BAZAR SMK DENGAN TOMBOL EDIT LENGKAP -->
+                <!-- 3. TABEL ACARA BAZAR SMK DENGAN KELOLA PESERTA, BARCODE & RANKING -->
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
                         <p class="font-extrabold text-[#0F291E] text-xs">Daftar Acara Bazar & Event Diskon Terdaftar</p>
@@ -1858,11 +1884,11 @@ Algoritma:
                             <thead>
                                 <tr class="bg-[#F8FAFC] border-b border-slate-100 text-[10px] font-bold uppercase text-slate-400">
                                     <th class="py-3 px-4">NAMA ACARA BAZAR / EVENT</th>
-                                    <th class="py-3 px-4">KODE VOUCHER</th>
-                                    <th class="py-3 px-4">DISKON EVENT</th>
+                                    <th class="py-3 px-4">KODE & POIN</th>
+                                    <th class="py-3 px-4">PESERTA TOKO</th>
                                     <th class="py-3 px-4">PERIODE ACARA</th>
                                     <th class="py-3 px-4">STATUS</th>
-                                    <th class="py-3 px-4 text-right">AKSI</th>
+                                    <th class="py-3 px-4 text-right">AKSI & KELOLA BAZAR</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
@@ -1870,17 +1896,20 @@ Algoritma:
                                     <tr class="hover:bg-slate-50/70">
                                         <td class="py-3 px-4">
                                             <p class="font-bold text-[#0F291E]">{{ $bz->title }}</p>
-                                            <p class="text-[11px] text-slate-400">📍 {{ $bz->location ?: 'SMK Plus Al Hilal' }}</p>
+                                            <p class="text-[11px] text-slate-400">{{ $bz->location ?: 'SMK Plus Al Hilal' }}</p>
                                         </td>
-                                        <td class="py-3 px-4">
-                                            <span class="font-mono font-extrabold bg-amber-50 border border-amber-200 text-amber-900 px-2.5 py-1 rounded-lg">
-                                                {{ $bz->voucher_code }}
+                                        <td class="py-3 px-4 space-y-1">
+                                            <span class="font-mono font-extrabold bg-amber-50 border border-amber-200 text-amber-900 px-2 py-0.5 rounded-lg inline-block">
+                                                {{ $bz->voucher_code }} ({{ $bz->discount_percent }}%)
+                                            </span>
+                                            <span class="block text-[10px] text-slate-500">
+                                                Hadir +{{ $bz->points_checkin ?? 50 }} &bull; Stand +{{ $bz->points_stand_visit ?? 20 }} &bull; Trx +{{ $bz->points_transaction ?? 30 }}
                                             </span>
                                         </td>
-                                        <td class="py-3 px-4 font-extrabold text-[#0B6E4F]">
-                                            {{ $bz->discount_percent }}%
-                                            @if($bz->max_discount_amount)
-                                                <span class="block text-[10px] font-normal text-slate-400">Maks. Rp {{ number_format($bz->max_discount_amount, 0, ',', '.') }}</span>
+                                        <td class="py-3 px-4">
+                                            <span class="font-bold text-[#0B6E4F]">{{ $bz->approved_participants_count ?? 0 }} Toko</span>
+                                            @if(($bz->pending_participants_count ?? 0) > 0)
+                                                <span class="block text-[10px] font-extrabold text-amber-700">{{ $bz->pending_participants_count }} menunggu ACC</span>
                                             @endif
                                         </td>
                                         <td class="py-3 px-4 text-slate-500">
@@ -1888,10 +1917,18 @@ Algoritma:
                                         </td>
                                         <td class="py-3 px-4">
                                             <span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold {{ $bz->isActiveNow() ? 'bg-[#EBF9F2] text-[#0B6E4F]' : 'bg-slate-100 text-slate-500' }}">
-                                                {{ $bz->isActiveNow() ? '● Aktif Berlangsung' : 'Nonaktif / Selesai' }}
+                                                {{ $bz->isActiveNow() ? 'Aktif Berlangsung' : 'Nonaktif / Selesai' }}
                                             </span>
                                         </td>
-                                        <td class="py-3 px-4 text-right space-x-2">
+                                        <td class="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+                                            <a href="{{ route('admin.bazaar.show', $bz) }}"
+                                               class="inline-flex items-center gap-1 font-bold text-white bg-[#0B6E4F] hover:bg-[#08583F] px-2.5 py-1 rounded-lg transition">
+                                                <span>Kelola, QR & Ranking</span>
+                                            </a>
+                                            <a href="{{ route('admin.bazaar.print-qr', $bz) }}" target="_blank"
+                                               class="inline-flex items-center gap-1 font-bold text-amber-800 bg-amber-50 border border-amber-200 hover:bg-amber-100 px-2.5 py-1 rounded-lg transition">
+                                                <span>Cetak QR</span>
+                                            </a>
                                             <!-- Tombol Edit Acara Bazar -->
                                             <button type="button"
                                                     onclick="openEditBazaarModal({
@@ -1907,7 +1944,7 @@ Algoritma:
                                                         is_active: {{ $bz->is_active ? 1 : 0 }}
                                                     })"
                                                     class="font-bold text-[#0B6E4F] hover:underline bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                                                ✏️ Edit
+                                                Edit
                                             </button>
 
                                             <!-- Tombol Hapus Acara Bazar -->
@@ -1915,7 +1952,7 @@ Algoritma:
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="font-bold text-rose-600 hover:underline bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">
-                                                    🗑️ Hapus
+                                                    Hapus
                                                 </button>
                                             </form>
                                         </td>

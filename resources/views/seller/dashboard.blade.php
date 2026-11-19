@@ -793,6 +793,81 @@ Algoritma:
                         </button>
                     </div>
                 </form>
+
+                <!-- Kepesertaan Event Bazar & Pengajuan Toko + Cetak QR Stand -->
+                @if(isset($manageableBazaars) && $manageableBazaars->count() > 0)
+                    <div class="pt-6 border-t border-slate-100 space-y-4">
+                        <div>
+                            <h3 class="text-sm sm:text-base font-extrabold text-[#0F291E]">Kepesertaan Event Bazar & Cetak Barcode Stand Toko</h3>
+                            <p class="text-xs text-slate-500">Ajukan toko Anda mengikuti event bazar sekolah agar mendapat persetujuan Admin/Super Admin serta QR Code kunjungan stand.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @foreach($manageableBazaars as $bzEv)
+                                @php
+                                    $part = $bazaarParticipations->get($bzEv->id);
+                                @endphp
+                                <div class="rounded-2xl border border-slate-200 bg-[#F8FAFC] p-4 space-y-3 flex flex-col justify-between">
+                                    <div class="space-y-1.5">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <h4 class="text-xs sm:text-sm font-black text-[#0F291E]">{{ $bzEv->title }}</h4>
+                                            @if($part)
+                                                @php
+                                                    $badgeCss = match($part->status) {
+                                                        'approved' => 'bg-emerald-100 text-[#0B6E4F]',
+                                                        'rejected' => 'bg-rose-100 text-rose-700',
+                                                        default    => 'bg-amber-100 text-amber-800',
+                                                    };
+                                                @endphp
+                                                <span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold shrink-0 {{ $badgeCss }}">
+                                                    {{ $part->status === 'approved' ? 'Peserta Resmi' : ($part->status === 'rejected' ? 'Ditolak' : 'Menunggu ACC') }}
+                                                </span>
+                                            @else
+                                                <span class="rounded-full bg-slate-200/70 text-slate-600 px-2.5 py-0.5 text-[10px] font-bold shrink-0">
+                                                    Belum Terdaftar
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <p class="text-[11px] text-slate-500">
+                                            Lokasi: {{ $bzEv->location ?: 'SMK Plus Al Hilal' }} &bull;
+                                            {{ $bzEv->start_date?->format('d M Y') ?? 'Aktif' }} – {{ $bzEv->end_date?->format('d M Y') ?? 'Selesai' }}
+                                        </p>
+                                    </div>
+
+                                    @if($part && $part->status === 'approved')
+                                        <div class="rounded-xl bg-white border border-emerald-200 p-3 flex flex-wrap items-center justify-between gap-2">
+                                            <div class="text-xs">
+                                                <span class="text-slate-500">Nomor Stand:</span>
+                                                <strong class="font-mono text-[#0B6E4F]">{{ $part->stand_number ?: 'Peserta Resmi' }}</strong>
+                                                <span class="block text-[10px] text-slate-400 font-mono">Kode Stand: {{ $part->stand_code }}</span>
+                                            </div>
+                                            <a href="{{ route('seller.bazaar.print-qr', $bzEv) }}" target="_blank"
+                                               class="inline-flex items-center gap-1.5 rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white px-3 py-1.5 text-xs font-bold shadow-2xs transition">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                                <span>Cetak QR Stand</span>
+                                            </a>
+                                        </div>
+                                    @elseif($part && $part->status === 'pending')
+                                        <div class="rounded-xl bg-amber-50 border border-amber-200 p-3 text-[11px] font-semibold text-amber-800">
+                                            Pengajuan Anda sedang ditinjau Admin / Super Admin. QR Stand tersedia setelah disetujui.
+                                        </div>
+                                    @elseif($bzEv->allow_self_register)
+                                        <form action="{{ route('seller.bazaar.request', $bzEv) }}" method="POST" class="flex flex-col sm:flex-row gap-2">
+                                            @csrf
+                                            <input type="text" name="notes" placeholder="Catatan / produk bazar (opsional)..."
+                                                   class="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs focus:border-[#0B6E4F] focus:outline-none">
+                                            <button type="submit" class="rounded-xl bg-[#0B6E4F] hover:bg-[#08583F] text-white px-3.5 py-1.5 text-xs font-bold transition shrink-0">
+                                                Ajukan Ikut Bazar
+                                            </button>
+                                        </form>
+                                    @else
+                                        <p class="text-[11px] text-slate-400 italic">Pendaftaran mandiri ditutup (hanya berdasarkan pilihan panitia).</p>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- Bagian Profil Toko & Edit Profil Lengkap Pemilik Toko (Satu Toko Satu Akun) -->

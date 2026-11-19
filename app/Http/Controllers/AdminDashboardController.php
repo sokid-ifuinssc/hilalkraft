@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\BazaarEvent;
+use App\Models\BazaarStoreParticipant;
 use App\Models\Category;
 use App\Models\ClassMajor;
 use App\Models\CmsContent;
@@ -331,7 +332,12 @@ class AdminDashboardController extends Controller
             : collect();
 
         $bazaarEvents = Schema::hasTable('bazaar_events')
-            ? BazaarEvent::latest()->get()
+            ? BazaarEvent::when(
+                Schema::hasTable('bazaar_store_participants') && Schema::hasTable('bazaar_doorprize_winners'),
+                fn ($q) => $q->withCount(['approvedParticipants', 'pendingParticipants', 'doorprizeWinners'])
+            )
+            ->latest()
+            ->get()
             : collect();
 
         $defaultDiscounts = [
@@ -1014,9 +1020,15 @@ class AdminDashboardController extends Controller
             'max_discount_amount' => ['nullable', 'numeric', 'min:0'],
             'start_date'          => ['nullable', 'date'],
             'end_date'            => ['nullable', 'date'],
+            'points_checkin'      => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'points_stand_visit'  => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'points_transaction'  => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'allow_self_register' => ['nullable', 'boolean'],
+            'store_ids'           => ['nullable', 'array'],
+            'store_ids.*'         => ['integer', 'exists:stores,id'],
         ]);
 
-        BazaarEvent::updateOrCreate(
+        $event = BazaarEvent::updateOrCreate(
             ['voucher_code' => strtoupper(trim($validated['voucher_code']))],
             [
                 'title'               => $validated['title'],
@@ -1026,11 +1038,33 @@ class AdminDashboardController extends Controller
                 'max_discount_amount' => $validated['max_discount_amount'] ?? null,
                 'start_date'          => $validated['start_date'] ?? null,
                 'end_date'            => $validated['end_date'] ?? null,
+                'points_checkin'      => (int) ($validated['points_checkin'] ?? 50),
+                'points_stand_visit'  => (int) ($validated['points_stand_visit'] ?? 20),
+                'points_transaction'  => (int) ($validated['points_transaction'] ?? 30),
+                'allow_self_register' => $request->has('allow_self_register') ? $request->boolean('allow_self_register') : true,
                 'is_active'           => true,
             ]
         );
+        $event->ensureTokensExist();
 
-        return redirect()->to(route('admin.dashboard') . '#sec-bazar-event')->with('success', "Acara Bazar / Event '{$validated['title']}' (Kode: " . strtoupper(trim($validated['voucher_code'])) . ") berhasil disimpan!");
+        // Daftarkan toko yang dipilih langsung oleh Admin/Super Admin sebagai peserta resmi (approved)
+        if (! empty($validated['store_ids']) && Schema::hasTable('bazaar_store_participants')) {
+            $actorId = $request->user()?->id;
+            foreach (array_values(array_unique(array_map('intval', $validated['store_ids']))) as $idx => $storeId) {
+                BazaarStoreParticipant::updateOrCreate(
+                    ['bazaar_event_id' => $event->id, 'store_id' => $storeId],
+                    [
+                        'status'       => 'approved',
+                        'stand_number' => 'ST-' . str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT),
+                        'approved_by'  => $actorId,
+                        'approved_at'  => now(),
+                    ]
+                );
+            }
+        }
+
+        return redirect()->route('admin.bazaar.show', $event)
+            ->with('success', "Acara Bazar '{$event->title}' (Kode: {$event->voucher_code}) berhasil dibuat! Anda dapat mengatur peserta toko, mencetak QR kehadiran, & memantau ranking bazar di halaman ini.");
     }
 
     /**
@@ -1049,6 +1083,10 @@ class AdminDashboardController extends Controller
             'start_date'          => ['nullable', 'date'],
             'end_date'            => ['nullable', 'date'],
             'is_active'           => ['nullable', 'boolean'],
+            'points_checkin'      => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'points_stand_visit'  => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'points_transaction'  => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'allow_self_register' => ['nullable', 'boolean'],
         ]);
 
         $bazaarEvent->update([
@@ -1061,9 +1099,13 @@ class AdminDashboardController extends Controller
             'start_date'          => $validated['start_date'] ?? null,
             'end_date'            => $validated['end_date'] ?? null,
             'is_active'           => $request->has('is_active') ? $request->boolean('is_active') : $bazaarEvent->is_active,
+            'points_checkin'      => $validated['points_checkin'] ?? $bazaarEvent->points_checkin ?? 50,
+            'points_stand_visit'  => $validated['points_stand_visit'] ?? $bazaarEvent->points_stand_visit ?? 20,
+            'points_transaction'  => $validated['points_transaction'] ?? $bazaarEvent->points_transaction ?? 30,
+            'allow_self_register' => $request->has('allow_self_register') ? $request->boolean('allow_self_register') : $bazaarEvent->allow_self_register,
         ]);
 
-        return redirect()->to(route('admin.dashboard') . '#sec-bazar-event')->with('success', "Acara Bazar '{$bazaarEvent->title}' berhasil disimpan.");
+        return back()->with('success', "Acara Bazar '{$bazaarEvent->title}' berhasil diperbarui.");
     }
 
     /**

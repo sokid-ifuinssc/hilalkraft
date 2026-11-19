@@ -166,6 +166,11 @@ class Store extends Model
         return $this->hasManyThrough(ProductLike::class, Product::class);
     }
 
+    public function bazaarParticipations(): HasMany
+    {
+        return $this->hasMany(BazaarStoreParticipant::class, 'store_id');
+    }
+
     public function getWhatsappUrlAttribute(): string
     {
         $clean = preg_replace('/[^0-9]/', '', (string) $this->contact_number);

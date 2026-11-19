@@ -85,6 +85,34 @@ class Order extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::created(function (Order $order) {
+            try {
+                if ($order->bazaar_event_id && \Illuminate\Support\Facades\Schema::hasTable('bazaar_visitor_points')) {
+                    app(\App\Services\BazaarService::class)->recordOrderTransactionPoints($order);
+                }
+            } catch (\Throwable $e) {
+                // Abaikan agar pembuatan pesanan tidak gagal jika tabel bazar belum siap
+            }
+        });
+
+        static::updated(function (Order $order) {
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('bazaar_visitor_points')) {
+                    $svc = app(\App\Services\BazaarService::class);
+                    if ($order->effective_progress === 'dibatalkan') {
+                        $svc->syncCancelledOrderPoints($order);
+                    } elseif ($order->bazaar_event_id) {
+                        $svc->recordOrderTransactionPoints($order);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Abaikan
+            }
+        });
+    }
+
     public function buyer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id');

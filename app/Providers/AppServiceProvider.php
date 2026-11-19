@@ -260,7 +260,11 @@ class AppServiceProvider extends ServiceProvider
             ! Schema::hasTable('visitor_logs') ||
             ! Schema::hasTable('cms_contents') ||
             ! Schema::hasTable('bazaar_events') ||
+            ! Schema::hasTable('bazaar_store_participants') ||
+            ! Schema::hasTable('bazaar_visitor_points') ||
+            ! Schema::hasTable('bazaar_doorprize_winners') ||
             ! Schema::hasTable('activity_logs') ||
+            ! Schema::hasColumn('bazaar_events', 'checkin_token') ||
             ! Schema::hasColumn('cms_contents', 'duration_seconds') ||
             ! Schema::hasColumn('orders', 'progress_status') ||
             ! Schema::hasColumn('orders', 'delivery_method') ||
@@ -269,6 +273,20 @@ class AppServiceProvider extends ServiceProvider
             ! Schema::hasColumn('products', 'views_count')
         ) {
             Artisan::call('migrate', ['--force' => true]);
+        }
+
+        // Lengkapi token QR & kode pendek pada acara bazar yang belum memilikinya
+        try {
+            if (Schema::hasTable('bazaar_events') && Schema::hasColumn('bazaar_events', 'checkin_token')) {
+                \App\Models\BazaarEvent::whereNull('checkin_token')
+                    ->orWhereNull('short_code')
+                    ->get()
+                    ->each(function (\App\Models\BazaarEvent $ev) {
+                        $ev->ensureTokensExist();
+                    });
+            }
+        } catch (Throwable $e) {
+            // Abaikan
         }
 
         // Pastikan minimal 1 contoh Acara Bazar SMK aktif tersedia jika tabel bazaar_events masih kosong

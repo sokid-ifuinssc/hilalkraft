@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BazaarManagementController;
 use App\Http\Controllers\BuyerOrderController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ReportController;
@@ -95,6 +96,10 @@ Route::middleware(['auth', 'role:seller,admin,super_admin'])->prefix('toko-saya'
     Route::put('/produk/{product}', [SellerProductController::class, 'update'])->name('products.update');
     Route::delete('/produk/{product}', [SellerProductController::class, 'destroy'])->name('products.destroy');
     Route::patch('/pesanan/{order}/status', [SellerProductController::class, 'updateOrderStatus'])->name('orders.status');
+
+    // Kepesertaan Event Bazar & Cetak QR Stand Toko
+    Route::post('/bazar/{bazaarEvent}/ajukan', [BazaarManagementController::class, 'sellerRequestJoin'])->name('bazaar.request');
+    Route::get('/bazar/{bazaarEvent}/cetak-qr-stand', [BazaarManagementController::class, 'sellerPrintStandQr'])->name('bazaar.print-qr');
 });
 
 /*
@@ -118,6 +123,23 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('panel-admin')->na
     Route::post('/bazaar-events', [AdminDashboardController::class, 'storeBazaarEvent'])->name('bazaar.store');
     Route::put('/bazaar-events/{bazaarEvent}', [AdminDashboardController::class, 'updateBazaarEvent'])->name('bazaar.update');
     Route::delete('/bazaar-events/{bazaarEvent}', [AdminDashboardController::class, 'destroyBazaarEvent'])->name('bazaar.destroy');
+
+    // Kelola Detail Event Bazar: Peserta Toko, Approval, Cetak QR, Ranking Toko & Poin Doorprize
+    Route::prefix('bazar/{bazaarEvent}')->name('bazaar.')->group(function () {
+        Route::get('/', [BazaarManagementController::class, 'show'])->name('show');
+        Route::patch('/settings', [BazaarManagementController::class, 'updateSettings'])->name('settings');
+        Route::post('/participants', [BazaarManagementController::class, 'addStoreParticipants'])->name('participants.add');
+        Route::patch('/participants/{participant}/approve', [BazaarManagementController::class, 'approveParticipant'])->name('participants.approve');
+        Route::patch('/participants/{participant}/reject', [BazaarManagementController::class, 'rejectParticipant'])->name('participants.reject');
+        Route::patch('/participants/{participant}/stand', [BazaarManagementController::class, 'updateStandNumber'])->name('participants.stand');
+        Route::delete('/participants/{participant}', [BazaarManagementController::class, 'removeParticipant'])->name('participants.remove');
+        Route::post('/doorprize', [BazaarManagementController::class, 'awardDoorprize'])->name('doorprize.award');
+        Route::delete('/doorprize/{winner}', [BazaarManagementController::class, 'revokeDoorprize'])->name('doorprize.revoke');
+        Route::get('/cetak-qr-acara', [BazaarManagementController::class, 'printEventQr'])->name('print-qr');
+        Route::get('/cetak-semua-qr', [BazaarManagementController::class, 'printAllStandsQr'])->name('print-all-qr');
+        Route::get('/participants/{participant}/cetak-qr', [BazaarManagementController::class, 'printStandQr'])->name('participants.print-qr');
+        Route::get('/export', [BazaarManagementController::class, 'exportCsv'])->name('export');
+    });
 
     // CMS Karya Siswa / Produk & Kelola Status/Hapus Toko
     Route::patch('/stores/{store}/verify', [AdminDashboardController::class, 'toggleVerifyStore'])->name('stores.verify');
@@ -161,4 +183,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/panel-admin/impersonate/{user}', [AdminDashboardController::class, 'impersonate'])->name('admin.impersonate');
     Route::post('/panel-admin/impersonate-role/{role}', [AdminDashboardController::class, 'impersonateRole'])->name('admin.impersonate.role');
     Route::post('/kembali-ke-super-admin', [AdminDashboardController::class, 'leaveImpersonate'])->name('admin.impersonate.leave');
+
+    // Scan Barcode / QR Kehadiran Bazar, Stand Toko & Poin Doorprize (Pembeli / Akun Terdaftar)
+    Route::get('/bazar/scan/{token}', [BazaarManagementController::class, 'handleTokenScan'])->name('bazaar.scan.token');
+    Route::get('/pembeli/bazar-poin', [BazaarManagementController::class, 'scanPage'])->name('bazaar.scan.page');
+    Route::post('/pembeli/bazar-poin/scan', [BazaarManagementController::class, 'submitManualScan'])->name('bazaar.scan.submit');
 });

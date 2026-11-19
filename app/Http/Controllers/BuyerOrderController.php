@@ -2,16 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BazaarDoorprizeWinner;
 use App\Models\BazaarEvent;
+use App\Models\BazaarStoreParticipant;
+use App\Models\BazaarVisitorPoint;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductComment;
 use App\Models\Regency;
 use App\Models\Store;
+use App\Models\User;
+use App\Services\BazaarService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -39,7 +45,8 @@ class BuyerOrderController extends Controller
 {
     public function index(Request $request): View
     {
-        $orders = $request->user()
+        $user = $request->user();
+        $orders = $user
             ->orders()
             ->with(['store.owner', 'items.product', 'bazaarEvent'])
             ->latest()
@@ -47,7 +54,86 @@ class BuyerOrderController extends Controller
 
         $activeBazaarEvents = BazaarEvent::activeEvents();
 
-        return view('buyer.dashboard', compact('orders', 'activeBazaarEvents'));
+        $buyerBazaarSummaries = collect();
+        $buyerPointLogs = collect();
+        $buyerDoorprizeWins = collect();
+
+        if (Schema::hasTable('bazaar_visitor_points')) {
+            $bazaarService = app(BazaarService::class);
+            $buyerPointLogs = BazaarVisitorPoint::with(['bazaarEvent', 'store'])
+                ->where('user_id', $user->id)
+                ->latest()
+                ->take(20)
+                ->get();
+
+            $buyerBazaarSummaries = $activeBazaarEvents->map(function (BazaarEvent $ev) use ($user, $bazaarService) {
+                $rankings = $bazaarService->getVisitorRankings($ev);
+                $myRow = $rankings->first(fn ($r) => $r->user->id === $user->id);
+
+                return (object) [
+                    'event'        => $ev,
+                    'total_points' => $myRow?->total_points ?? 0,
+                    'rank'         => $myRow?->rank ?? null,
+                    'total_voters' => $rankings->count(),
+                    'has_checkin'  => ($myRow?->checkin_count ?? 0) > 0,
+                    'stands_count' => $myRow?->stand_visits_count ?? 0,
+                    'trx_count'    => $myRow?->transactions_count ?? 0,
+                    'doorprize'    => $myRow?->doorprize_winner ?? null,
+                ];
+            });
+
+            if (Schema::hasTable('bazaar_doorprize_winners')) {
+                $buyerDoorprizeWins = BazaarDoorprizeWinner::with('bazaarEvent')
+                    ->where('user_id', $user->id)
+                    ->latest()
+                    ->get();
+            }
+        }
+
+        return view('buyer.dashboard', compact(
+            'orders',
+            'activeBazaarEvents',
+            'buyerBazaarSummaries',
+            'buyerPointLogs',
+            'buyerDoorprizeWins'
+        ));
+    }
+
+    /**
+     * Mendeteksi acara bazar aktif tempat pembeli sudah melakukan scan hadir / kunjungan stand
+     * dan toko termasuk peserta resmi bazar tersebut agar poin transaksi tetap tercatat.
+     */
+    private function detectBazaarEventForStoreOrder(Store $store, User $buyer): ?BazaarEvent
+    {
+        if (! Schema::hasTable('bazaar_store_participants') || ! Schema::hasTable('bazaar_visitor_points')) {
+            return null;
+        }
+
+        $activeEvents = BazaarEvent::activeEvents();
+        if ($activeEvents->isEmpty()) {
+            return null;
+        }
+
+        $participatingEventIds = BazaarStoreParticipant::where('store_id', $store->id)
+            ->where('status', 'approved')
+            ->whereIn('bazaar_event_id', $activeEvents->pluck('id'))
+            ->pluck('bazaar_event_id');
+
+        if ($participatingEventIds->isEmpty()) {
+            return null;
+        }
+
+        // Prioritaskan event bazar yang sudah dikunjungi pembeli hari ini
+        $visitedEventId = BazaarVisitorPoint::where('user_id', $buyer->id)
+            ->whereIn('bazaar_event_id', $participatingEventIds)
+            ->latest()
+            ->value('bazaar_event_id');
+
+        if ($visitedEventId) {
+            return $activeEvents->firstWhere('id', $visitedEventId);
+        }
+
+        return null;
     }
 
     public function addToCart(Request $request, Product $product): RedirectResponse
@@ -398,7 +484,10 @@ class BuyerOrderController extends Controller
                 $store = Store::findOrFail($storeId);
                 $subtotal = (float) $items->sum(fn ($item) => $item['price'] * $item['quantity']);
 
-                $pricing = $store->calculateOrderPricing($subtotal, $buyer, $bazaarEvent, $isBazaarOffline);
+                $storeBazaarEvent = $bazaarEvent ?: $this->detectBazaarEventForStoreOrder($store, $buyer);
+                $effectiveOffline = $isBazaarOffline || ($storeBazaarEvent !== null && $bazaarEvent === null);
+
+                $pricing = $store->calculateOrderPricing($subtotal, $buyer, $storeBazaarEvent, $isBazaarOffline);
                 $finalTotal = max(0, (float) $pricing['total_price'] + (float) $shippingCost);
 
                 $courierName = match ($deliveryMethod) {
@@ -420,11 +509,11 @@ class BuyerOrderController extends Controller
                     'subtotal_price'              => $pricing['subtotal_price'],
                     'buyer_type_discount_percent' => $pricing['buyer_type_discount_percent'],
                     'buyer_type_discount_amount'  => $pricing['buyer_type_discount_amount'],
-                    'bazaar_event_id'             => $bazaarEvent?->id,
-                    'bazaar_voucher_code'         => $bazaarEvent?->voucher_code,
+                    'bazaar_event_id'             => $storeBazaarEvent?->id,
+                    'bazaar_voucher_code'         => $bazaarEvent?->voucher_code ?? $storeBazaarEvent?->voucher_code,
                     'bazaar_discount_percent'     => $pricing['bazaar_discount_percent'],
                     'bazaar_discount_amount'      => $pricing['bazaar_discount_amount'],
-                    'is_bazaar_offline'           => $isBazaarOffline,
+                    'is_bazaar_offline'           => $effectiveOffline,
                     'delivery_method'             => $deliveryMethod,
                     'shipping_cost'               => $shippingCost,
                     'destination_kabupaten'       => $kabupaten,
@@ -523,6 +612,8 @@ class BuyerOrderController extends Controller
             $bazaarEvent = BazaarEvent::whereRaw('UPPER(voucher_code) = ?', [$voucherCode])->first();
         } elseif ($isBazaarOffline) {
             $bazaarEvent = BazaarEvent::activeEvents()->first();
+        } else {
+            $bazaarEvent = $this->detectBazaarEventForStoreOrder($store, $buyer);
         }
 
         $subtotal = (float) $product->price * $qty;

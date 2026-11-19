@@ -3,22 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 /**
  * ============================================================================
- * MODEL: BAZAAR EVENT (SKEMA DISKON ACARA BAZAR & EVENT SMK PLUS AL HILAL)
+ * MODEL: BAZAAR EVENT (ACARA BAZAR, PESERTA TOKO, QR KEHADIRAN & POIN DOORPRIZE)
  * ============================================================================
  * Fungsi:
- *   Merepresentasikan tabel `bazaar_events` untuk mengelola program diskon
- *   khusus apabila pembeli berbelanja dan datang langsung pada acara Bazar
- *   SMK Plus Al Hilal atau event resmi sekolah lainnya.
- *
- * Algoritma:
- *   Method `isActiveNow()` memvalidasi status `is_active = true` serta
- *   memastikan tanggal hari ini berada dalam rentang `start_date` s/d `end_date`.
+ *   Merepresentasikan tabel `bazaar_events` untuk mengelola:
+ *   1. Diskon & voucher acara bazar.
+ *   2. Token QR Code & kode singkat kehadiran pintu masuk bazar (`checkin_token`, `short_code`).
+ *   3. Konfigurasi poin pengunjung: Hadir di bazar (+50), Scan stand toko (+20),
+ *      Transaksi di bazar (+30).
+ *   4. Kebijakan pendaftaran mandiri toko peserta (`allow_self_register`).
  * ============================================================================
  */
 class BazaarEvent extends Model
@@ -33,6 +34,12 @@ class BazaarEvent extends Model
         'start_date',
         'end_date',
         'is_active',
+        'checkin_token',
+        'short_code',
+        'points_checkin',
+        'points_stand_visit',
+        'points_transaction',
+        'allow_self_register',
     ];
 
     protected function casts(): array
@@ -43,7 +50,74 @@ class BazaarEvent extends Model
             'start_date'          => 'date',
             'end_date'            => 'date',
             'is_active'           => 'boolean',
+            'points_checkin'      => 'integer',
+            'points_stand_visit'  => 'integer',
+            'points_transaction'  => 'integer',
+            'allow_self_register' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (BazaarEvent $event) {
+            if (empty($event->checkin_token)) {
+                $event->checkin_token = Str::random(20);
+            }
+            if (empty($event->short_code)) {
+                $event->short_code = 'BZ-' . Str::upper(Str::random(6));
+            }
+            $event->points_checkin     ??= 50;
+            $event->points_stand_visit ??= 20;
+            $event->points_transaction ??= 30;
+            $event->allow_self_register ??= true;
+        });
+    }
+
+    public function ensureTokensExist(): self
+    {
+        $dirty = false;
+        if (empty($this->checkin_token)) {
+            $this->checkin_token = Str::random(20);
+            $dirty = true;
+        }
+        if (empty($this->short_code)) {
+            $this->short_code = 'BZ-' . Str::upper(Str::random(6));
+            $dirty = true;
+        }
+        if ($dirty) {
+            $this->save();
+        }
+        return $this;
+    }
+
+    public function participants(): HasMany
+    {
+        return $this->hasMany(BazaarStoreParticipant::class, 'bazaar_event_id');
+    }
+
+    public function approvedParticipants(): HasMany
+    {
+        return $this->participants()->where('status', 'approved');
+    }
+
+    public function pendingParticipants(): HasMany
+    {
+        return $this->participants()->where('status', 'pending');
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'bazaar_event_id');
+    }
+
+    public function visitorPoints(): HasMany
+    {
+        return $this->hasMany(BazaarVisitorPoint::class, 'bazaar_event_id');
+    }
+
+    public function doorprizeWinners(): HasMany
+    {
+        return $this->hasMany(BazaarDoorprizeWinner::class, 'bazaar_event_id');
     }
 
     public function isActiveNow(): bool
@@ -83,4 +157,3 @@ class BazaarEvent extends Model
             ->values();
     }
 }
-

@@ -92,6 +92,14 @@ Fungsi:
                     @endif
                 </a>
 
+                <a href="{{ route('bazaar.scan.page') }}" class="flex items-center justify-between rounded-xl px-3.5 py-2.5 text-[#0B6E4F] bg-amber-50/80 border border-amber-200 hover:bg-amber-100 transition font-bold">
+                    <span class="flex items-center gap-3">
+                        <svg class="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                        <span>Scan QR & Poin Bazar</span>
+                    </span>
+                    <span class="rounded-full bg-amber-500 text-white px-2 py-0.5 text-[10px] font-black">Poin</span>
+                </a>
+
                 <a href="{{ route('buyer.reports') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-slate-600 hover:bg-slate-50 transition">
                     <span>📊</span>
                     <span>Laporan Belanja</span>
@@ -225,31 +233,77 @@ Fungsi:
                         </p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
+                        <a href="{{ route('bazaar.scan.page') }}" class="rounded-xl bg-amber-500 hover:bg-amber-600 px-4 py-2.5 text-xs font-extrabold text-white transition shadow-xs flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                            <span>Scan QR & Poin Bazar</span>
+                        </a>
                         <a href="{{ route('home') }}" class="rounded-xl bg-[#0B6E4F] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#08583F] transition shadow-xs">
                             + Belanja Karya Lainnya
                         </a>
                     </div>
                 </div>
 
-                <!-- Info Acara Bazar SMK yang Sedang Aktif -->
-                @if(isset($activeBazaarEvents) && $activeBazaarEvents->count() > 0)
-                    <div class="rounded-2xl bg-gradient-to-r from-[#0F291E] via-[#0B6E4F] to-emerald-700 text-white p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
-                        <div class="space-y-1">
-                            <span class="inline-block rounded-full bg-amber-400 text-slate-950 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
-                                🎪 Promo Bazar & Event SMK Plus Al Hilal
-                            </span>
-                            @foreach($activeBazaarEvents as $ev)
-                                <p class="text-sm font-extrabold">
-                                    {{ $ev->title }} — Diskon Event {{ $ev->discount_percent }}% ({{ $ev->location ?? 'SMK Plus Al Hilal' }})
-                                </p>
-                                <p class="text-xs text-emerald-100">
-                                    Gunakan Kode Voucher <span class="font-mono font-extrabold bg-white/20 px-2 py-0.5 rounded text-white">{{ $ev->voucher_code }}</span> saat checkout!
-                                </p>
-                            @endforeach
+                <!-- Notifikasi Pemenang Doorprize (Jika Terpilih) -->
+                @if(isset($buyerDoorprizeWins) && $buyerDoorprizeWins->count() > 0)
+                    @foreach($buyerDoorprizeWins as $win)
+                        <div class="rounded-2xl bg-amber-50 border-2 border-amber-300 p-4 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+                            <div class="space-y-0.5">
+                                <span class="text-[10px] font-black uppercase text-amber-800">SELAMAT! PEMENANG DOORPRIZE BAZAR</span>
+                                <p class="text-sm font-black text-[#0F291E]">{{ $win->prize_name }} — {{ $win->bazaarEvent?->title }}</p>
+                                <p class="text-xs text-slate-600">Total Poin: <strong>{{ number_format($win->total_points_at_award) }} pts</strong> (Peringkat #{{ $win->rank_at_award ?? '-' }}). Silakan tunjukkan akun Anda kepada panitia bazar.</p>
+                            </div>
+                            <a href="{{ route('bazaar.scan.page') }}" class="rounded-xl bg-amber-600 text-white px-3.5 py-2 text-xs font-bold hover:bg-amber-700 transition">
+                                Lihat Detail Poin &rarr;
+                            </a>
                         </div>
-                        <a href="{{ route('buyer.cart.index') }}" class="rounded-xl bg-white text-[#0F291E] px-4 py-2 text-xs font-extrabold hover:bg-emerald-50 transition">
-                            Lihat Keranjang →
-                        </a>
+                    @endforeach
+                @endif
+
+                <!-- Info Acara Bazar SMK & Poin Doorprize Pembeli -->
+                @if(isset($activeBazaarEvents) && $activeBazaarEvents->count() > 0)
+                    <div class="rounded-2xl bg-gradient-to-r from-[#0F291E] via-[#0B6E4F] to-emerald-700 text-white p-5 space-y-4 shadow-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <div class="space-y-1">
+                                <span class="inline-block rounded-full bg-amber-400 text-slate-950 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
+                                    Acara Bazar & Poin Doorprize Aktif
+                                </span>
+                                @foreach($activeBazaarEvents as $ev)
+                                    <p class="text-sm font-extrabold">
+                                        {{ $ev->title }} — Diskon {{ $ev->discount_percent }}% ({{ $ev->location ?? 'SMK Plus Al Hilal' }})
+                                    </p>
+                                    <p class="text-xs text-emerald-100">
+                                        Kode Voucher <span class="font-mono font-extrabold bg-white/20 px-2 py-0.5 rounded text-white">{{ $ev->voucher_code }}</span>
+                                        &bull; Hadir +{{ $ev->points_checkin ?? 50 }} pts &bull; Stand +{{ $ev->points_stand_visit ?? 20 }} pts &bull; Belanja +{{ $ev->points_transaction ?? 30 }} pts
+                                    </p>
+                                @endforeach
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <a href="{{ route('bazaar.scan.page') }}" class="rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2 text-xs font-black transition shadow-xs">
+                                    Scan QR / Klaim Poin &rarr;
+                                </a>
+                                <a href="{{ route('buyer.cart.index') }}" class="rounded-xl bg-white text-[#0F291E] px-4 py-2 text-xs font-extrabold hover:bg-emerald-50 transition">
+                                    Lihat Keranjang
+                                </a>
+                            </div>
+                        </div>
+
+                        @if(isset($buyerBazaarSummaries) && $buyerBazaarSummaries->count() > 0)
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 border-t border-white/15">
+                                @foreach($buyerBazaarSummaries as $bzSum)
+                                    <div class="rounded-xl bg-white/10 backdrop-blur-xs border border-white/15 px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs">
+                                        <div>
+                                            <p class="font-bold text-white line-clamp-1">{{ $bzSum->event->title }}</p>
+                                            <p class="text-[11px] text-emerald-100">
+                                                {{ $bzSum->stands_count }} stand &bull; {{ $bzSum->trx_count }} transaksi &bull; Peringkat: <strong>{{ $bzSum->rank ? '#' . $bzSum->rank : 'Belum' }}</strong>
+                                            </p>
+                                        </div>
+                                        <span class="rounded-lg bg-amber-400 text-slate-950 px-2.5 py-1 font-black shrink-0">
+                                            {{ number_format($bzSum->total_points) }} pts
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 @endif
 
