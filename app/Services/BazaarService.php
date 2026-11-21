@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ActivityLog;
 use App\Models\BazaarDoorprizeWinner;
 use App\Models\BazaarEvent;
 use App\Models\BazaarStoreParticipant;
@@ -11,6 +12,7 @@ use App\Models\User;
 use App\Models\VisitorLog;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * ============================================================================
@@ -45,42 +47,55 @@ class BazaarService
             ];
         }
 
-        $existing = BazaarVisitorPoint::where('bazaar_event_id', $event->id)
-            ->where('user_id', $user->id)
-            ->where('activity_type', 'event_checkin')
-            ->first();
+        // Gunakan transaksi database dan pesimistik lock untuk mencegah race condition (double claim poin)
+        return DB::transaction(function () use ($event, $user) {
+            $existing = BazaarVisitorPoint::where('bazaar_event_id', $event->id)
+                ->where('user_id', $user->id)
+                ->where('activity_type', 'event_checkin')
+                ->lockForUpdate()
+                ->first();
 
-        if ($existing) {
+            if ($existing) {
+                return [
+                    'ok'           => true,
+                    'status'       => 'already_claimed',
+                    'points'       => 0,
+                    'total_points' => $this->getUserTotalPoints($event, $user),
+                    'message'      => "Anda sudah melakukan check-in kehadiran di '{$event->title}' (+{$existing->points} poin sudah tercatat). Lanjutkan kunjungi stand toko peserta untuk menambah poin!",
+                    'event'        => $event,
+                ];
+            }
+
+            $pts = max(0, (int) ($event->points_checkin ?? 50));
+
+            $point = BazaarVisitorPoint::create([
+                'bazaar_event_id' => $event->id,
+                'user_id'         => $user->id,
+                'store_id'        => null,
+                'order_id'        => null,
+                'activity_type'   => 'event_checkin',
+                'points'          => $pts,
+                'description'     => "Hadir di acara bazar: {$event->title}",
+            ]);
+
+            // Catat log audit aktivitas keamanan sistem
+            ActivityLog::record(
+                'bazaar_checkin',
+                'Check-In Hadir Bazar',
+                "Pengguna '{$user->name}' berhasil check-in kehadiran pada acara '{$event->title}' (+{$pts} poin).",
+                $user,
+                ['bazaar_event_id' => $event->id, 'points' => $pts]
+            );
+
             return [
                 'ok'           => true,
-                'status'       => 'already_claimed',
-                'points'       => 0,
+                'status'       => 'awarded',
+                'points'       => $pts,
                 'total_points' => $this->getUserTotalPoints($event, $user),
-                'message'      => "Anda sudah melakukan check-in kehadiran di '{$event->title}' (+{$existing->points} poin sudah tercatat). Lanjutkan kunjungi stand toko peserta untuk menambah poin!",
+                'message'      => "Selamat! Check-in kehadiran di '{$event->title}' berhasil. Anda memperoleh +{$pts} poin!",
                 'event'        => $event,
             ];
-        }
-
-        $pts = max(0, (int) ($event->points_checkin ?? 50));
-
-        BazaarVisitorPoint::create([
-            'bazaar_event_id' => $event->id,
-            'user_id'         => $user->id,
-            'store_id'        => null,
-            'order_id'        => null,
-            'activity_type'   => 'event_checkin',
-            'points'          => $pts,
-            'description'     => "Hadir di acara bazar: {$event->title}",
-        ]);
-
-        return [
-            'ok'           => true,
-            'status'       => 'awarded',
-            'points'       => $pts,
-            'total_points' => $this->getUserTotalPoints($event, $user),
-            'message'      => "Selamat! Check-in kehadiran di '{$event->title}' berhasil. Anda memperoleh +{$pts} poin!",
-            'event'        => $event,
-        ];
+        });
     }
 
     /**
@@ -119,6 +134,14 @@ class BazaarService
         }
 
         if ($store && $store->user_id === $user->id) {
+            ActivityLog::record(
+                'bazaar_scan_violation',
+                'Peringatan Scan Toko Sendiri',
+                "Pemilik toko '{$user->name}' mencoba memindai barcode stand tokonya sendiri '{$store->store_name}'.",
+                $user,
+                ['bazaar_event_id' => $event->id, 'store_id' => $store->id]
+            );
+
             return [
                 'ok'           => false,
                 'status'       => 'own_store',
@@ -130,62 +153,75 @@ class BazaarService
             ];
         }
 
-        $existing = BazaarVisitorPoint::where('bazaar_event_id', $event->id)
-            ->where('user_id', $user->id)
-            ->where('store_id', $participant->store_id)
-            ->where('activity_type', 'stand_visit')
-            ->first();
+        // Gunakan transaksi database dan pesimistik lock untuk mencegah race condition (double claim per stand)
+        return DB::transaction(function () use ($participant, $event, $store, $user) {
+            $existing = BazaarVisitorPoint::where('bazaar_event_id', $event->id)
+                ->where('user_id', $user->id)
+                ->where('store_id', $participant->store_id)
+                ->where('activity_type', 'stand_visit')
+                ->lockForUpdate()
+                ->first();
 
-        if ($existing) {
             $storeName = $store?->store_name ?? 'Stand Toko';
+
+            if ($existing) {
+                return [
+                    'ok'           => true,
+                    'status'       => 'already_claimed',
+                    'points'       => 0,
+                    'total_points' => $this->getUserTotalPoints($event, $user),
+                    'message'      => "Anda sudah mencatat kunjungan di stand '{$storeName}'. Yuk kunjungi stand peserta lain atau bertransaksi untuk poin tambahan!",
+                    'participant'  => $participant,
+                    'event'        => $event,
+                ];
+            }
+
+            $pts = max(0, (int) ($event->points_stand_visit ?? 20));
+            $standLabel = $participant->stand_number ? "Stand {$participant->stand_number} — " : '';
+
+            BazaarVisitorPoint::create([
+                'bazaar_event_id' => $event->id,
+                'user_id'         => $user->id,
+                'store_id'        => $participant->store_id,
+                'order_id'        => null,
+                'activity_type'   => 'stand_visit',
+                'points'          => $pts,
+                'description'     => "Kunjungan {$standLabel}{$storeName}",
+            ]);
+
+            // Sekalian catat ke VisitorLog toko agar statistik kunjungan toko tetap terintegrasi
+            if ($store) {
+                VisitorLog::create([
+                    'user_id'       => $user->id,
+                    'store_id'      => $store->id,
+                    'product_id'    => null,
+                    'visitor_type'  => $user->user_subtype ?? $user->role ?? 'buyer',
+                    'visitor_name'  => $user->name,
+                    'origin_region' => $user->kabupaten ?? 'Bazar SMK Plus Al Hilal',
+                    'ip_address'    => request()?->ip(),
+                ]);
+                $store->increment('views_count');
+            }
+
+            // Catat log audit aktivitas keamanan sistem
+            ActivityLog::record(
+                'bazaar_stand_visit',
+                'Kunjungan Stand Toko Bazar',
+                "Pengguna '{$user->name}' mengunjungi {$standLabel}{$storeName} (+{$pts} poin).",
+                $user,
+                ['bazaar_event_id' => $event->id, 'store_id' => $participant->store_id, 'points' => $pts]
+            );
+
             return [
                 'ok'           => true,
-                'status'       => 'already_claimed',
-                'points'       => 0,
+                'status'       => 'awarded',
+                'points'       => $pts,
                 'total_points' => $this->getUserTotalPoints($event, $user),
-                'message'      => "Anda sudah mencatat kunjungan di stand '{$storeName}'. Yuk kunjungi stand peserta lain atau bertransaksi untuk poin tambahan!",
+                'message'      => "Berhasil mengunjungi {$standLabel}{$storeName}! Anda mendapat +{$pts} poin kunjungan stand.",
                 'participant'  => $participant,
                 'event'        => $event,
             ];
-        }
-
-        $pts = max(0, (int) ($event->points_stand_visit ?? 20));
-        $standLabel = $participant->stand_number ? "Stand {$participant->stand_number} — " : '';
-        $storeName = $store?->store_name ?? 'Toko Peserta';
-
-        BazaarVisitorPoint::create([
-            'bazaar_event_id' => $event->id,
-            'user_id'         => $user->id,
-            'store_id'        => $participant->store_id,
-            'order_id'        => null,
-            'activity_type'   => 'stand_visit',
-            'points'          => $pts,
-            'description'     => "Kunjungan {$standLabel}{$storeName}",
-        ]);
-
-        // Sekalian catat ke VisitorLog toko agar statistik kunjungan toko tetap terintegrasi
-        if ($store) {
-            VisitorLog::create([
-                'user_id'       => $user->id,
-                'store_id'      => $store->id,
-                'product_id'    => null,
-                'visitor_type'  => $user->user_subtype ?? $user->role ?? 'buyer',
-                'visitor_name'  => $user->name,
-                'origin_region' => $user->kabupaten ?? 'Bazar SMK Plus Al Hilal',
-                'ip_address'    => request()?->ip(),
-            ]);
-            $store->increment('views_count');
-        }
-
-        return [
-            'ok'           => true,
-            'status'       => 'awarded',
-            'points'       => $pts,
-            'total_points' => $this->getUserTotalPoints($event, $user),
-            'message'      => "Berhasil mengunjungi {$standLabel}{$storeName}! Anda mendapat +{$pts} poin kunjungan stand.",
-            'participant'  => $participant,
-            'event'        => $event,
-        ];
+        });
     }
 
     /**
@@ -258,13 +294,45 @@ class BazaarService
             return ['ok' => false, 'status' => 'invalid', 'points' => 0, 'total_points' => 0, 'message' => 'Kode atau QR tidak boleh kosong.'];
         }
 
-        // Ekstrak segmen terakhir apabila input berupa URL lengkap (hasil scan kamera)
+        // Pengamanan ketat: batasi panjang input maksimum (mencegah payload serangan)
+        if (strlen($clean) > 255) {
+            ActivityLog::record(
+                'bazaar_scan_blocked',
+                'Blokir Input Scan Berbahaya',
+                "Percobaan scan dengan panjang payload tidak wajar (" . strlen($clean) . " karakter) oleh '{$user->name}'.",
+                $user
+            );
+            return ['ok' => false, 'status' => 'invalid', 'points' => 0, 'total_points' => 0, 'message' => 'Format kode QR tidak valid atau terlalu panjang.'];
+        }
+
+        // Ekstrak segmen terakhir apabila input berupa URL lengkap (hasil scan kamera Chrome / Google Lens)
         if (str_contains($clean, '/')) {
             $path = parse_url($clean, PHP_URL_PATH) ?: $clean;
             $segments = array_values(array_filter(explode('/', trim($path, '/'))));
             if (! empty($segments)) {
                 $clean = end($segments);
             }
+        }
+
+        // Hilangkan parameter query (?...) atau anchor (#...) jika terbawa dalam pembacaan URL
+        $clean = preg_replace('/[?#].*$/', '', $clean);
+        $clean = trim($clean);
+
+        // Validasi format karakter: hanya izinkan alfanumerik, strip (-), dan garis bawah (_)
+        if (! preg_match('/^[A-Za-z0-9_-]{3,80}$/', $clean)) {
+            ActivityLog::record(
+                'bazaar_scan_invalid',
+                'Format Kode Tidak Valid',
+                "Percobaan scan dengan karakter ilegal oleh '{$user->name}': '{$clean}'.",
+                $user
+            );
+            return [
+                'ok'           => false,
+                'status'       => 'invalid_format',
+                'points'       => 0,
+                'total_points' => 0,
+                'message'      => 'Kode barcode/QR mengandung karakter yang tidak sah.',
+            ];
         }
 
         $upper = strtoupper($clean);
@@ -287,12 +355,19 @@ class BazaarService
             return $this->recordStandVisit($participant, $user);
         }
 
+        ActivityLog::record(
+            'bazaar_scan_not_found',
+            'Kode QR Tidak Ditemukan',
+            "Pengguna '{$user->name}' memindai kode yang tidak terdaftar: '{$clean}'.",
+            $user
+        );
+
         return [
             'ok'           => false,
             'status'       => 'not_found',
             'points'       => 0,
             'total_points' => 0,
-            'message'      => "Kode QR / kode check-in '{$clean}' tidak dikenali atau sudah kedaluwarsa.",
+            'message'      => "Kode QR / barcode stand '{$clean}' tidak terdaftar atau sudah tidak berlaku.",
         ];
     }
 

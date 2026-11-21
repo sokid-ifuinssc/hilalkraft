@@ -207,9 +207,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/kembali-ke-super-admin', $impersonateGetFallback);
 
     // Scan Barcode / QR Kehadiran Bazar, Stand Toko & Poin Doorprize (Pembeli / Akun Terdaftar)
-    Route::get('/bazar/scan/{token}', [BazaarManagementController::class, 'handleTokenScan'])->name('bazaar.scan.token');
-    Route::get('/pembeli/bazar-poin', [BazaarManagementController::class, 'scanPage'])->name('bazaar.scan.page');
-    Route::post('/pembeli/bazar-poin/scan', [BazaarManagementController::class, 'submitManualScan'])->name('bazaar.scan.submit');
+    // Diberi throttling proteksi brute-force & spamming
+    Route::get('/bazar/scan/{token}', [BazaarManagementController::class, 'handleTokenScan'])
+        ->middleware('throttle:30,1')
+        ->name('bazaar.scan.token');
+    Route::get('/pembeli/bazar-poin', [BazaarManagementController::class, 'scanPage'])
+        ->name('bazaar.scan.page');
+    Route::post('/pembeli/bazar-poin/scan', [BazaarManagementController::class, 'submitManualScan'])
+        ->middleware('throttle:20,1')
+        ->name('bazaar.scan.submit');
 
     // Chat Penjual <-> Pembeli di Dalam Aplikasi (terpisah dari Tanya/Konsultasi WA)
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');

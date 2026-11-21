@@ -42,11 +42,28 @@ Halaman untuk Pembeli / Pengunjung berakun (`/pembeli/bazar-poin`):
                 </span>
             </div>
 
-            <div id="qr-reader-container" class="rounded-2xl overflow-hidden bg-slate-900/95 border border-slate-200 min-h-[220px] flex flex-col items-center justify-center text-center p-4">
-                <div id="qr-reader" class="w-full max-w-sm mx-auto"></div>
-                <div id="qr-placeholder" class="space-y-2 py-6">
-                    <svg class="w-10 h-10 text-emerald-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    <p class="text-xs font-semibold text-slate-300">Tekan tombol di bawah untuk mengaktifkan kamera pemindai QR.</p>
+            <div id="qr-reader-container" class="relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-700/80 min-h-[260px] flex flex-col items-center justify-center text-center p-3 shadow-inner">
+                <div id="qr-reader" class="w-full max-w-sm mx-auto overflow-hidden rounded-xl"></div>
+                <div id="qr-placeholder" class="space-y-3 py-8 px-4">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                    </div>
+                    <p class="text-xs font-bold text-slate-200">Kamera Pemindai Cepat Barcode & QR Code Stand Bazar</p>
+                    <p class="text-[11px] text-slate-400 max-w-xs mx-auto">Mendukung kamera belakang HP otomatis dengan akselerasi pendeteksi hardware BarcodeDetector.</p>
+                </div>
+
+                <!-- Laser Animasi & Indikator Aktif saat Kamera Menyala -->
+                <div id="qr-scanning-overlay" class="hidden pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                    <div class="relative w-64 h-64 border-2 border-dashed border-emerald-400/60 rounded-2xl flex items-center justify-center overflow-hidden">
+                        <div class="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399] animate-scanner-laser"></div>
+                        <span class="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-emerald-400"></span>
+                        <span class="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-emerald-400"></span>
+                        <span class="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-emerald-400"></span>
+                        <span class="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-emerald-400"></span>
+                    </div>
+                    <span class="mt-3 text-[11px] font-bold tracking-wide text-emerald-300 bg-slate-900/85 px-3 py-1 rounded-full border border-emerald-500/30">
+                        Arahkan Barcode / QR ke dalam kotak
+                    </span>
                 </div>
             </div>
 
@@ -310,15 +327,57 @@ Halaman untuk Pembeli / Pengunjung berakun (`/pembeli/bazar-poin`):
         </div>
     </div>
 
+    <style>
+        @keyframes scannerLaser {
+            0% { top: 6%; opacity: 0.3; }
+            50% { top: 90%; opacity: 1; }
+            100% { top: 6%; opacity: 0.3; }
+        }
+        .animate-scanner-laser {
+            animation: scannerLaser 2s ease-in-out infinite;
+        }
+        #qr-reader video {
+            object-fit: cover !important;
+            border-radius: 0.75rem !important;
+            width: 100% !important;
+            max-height: 380px !important;
+        }
+        #qr-reader__scan_region {
+            background: transparent !important;
+        }
+        #qr-reader__dashboard {
+            padding: 8px !important;
+        }
+    </style>
+
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
         let _bzScanner = null;
         let _bzBusy = false;
 
+        // Feedback Audio Bip Ringan saat QR berhasil terdeteksi kamera
+        function playScanBeep() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            } catch (e) {}
+        }
+
         function showScanFeedback(ok, msg) {
             const box = document.getElementById('qr-scan-feedback');
             if (!box) return;
-            box.textContent = msg;
+            box.innerHTML = msg;
             box.className = 'rounded-xl px-3.5 py-2.5 text-xs font-bold ' + (ok
                 ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
                 : 'bg-rose-50 border border-rose-200 text-rose-700');
@@ -331,19 +390,54 @@ Halaman untuk Pembeli / Pengunjung berakun (`/pembeli/bazar-poin`):
                 return;
             }
             const placeholder = document.getElementById('qr-placeholder');
+            const overlay = document.getElementById('qr-scanning-overlay');
             const startBtn = document.getElementById('btn-start-scan');
             const stopBtn = document.getElementById('btn-stop-scan');
             if (placeholder) placeholder.classList.add('hidden');
+            if (overlay) overlay.classList.remove('hidden');
             if (startBtn) startBtn.classList.add('hidden');
             if (stopBtn) stopBtn.classList.remove('hidden');
 
-            _bzScanner = new Html5Qrcode('qr-reader');
+            // Gunakan akselerasi hardware BarcodeDetector & format QR_CODE agar fokus instan dan responsif
+            _bzScanner = new Html5Qrcode('qr-reader', {
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                },
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.QR_CODE
+                ],
+                verbose: false
+            });
+
+            const qrConfig = {
+                fps: 20,
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                    const edge = Math.floor(minEdge * 0.78);
+                    return { width: edge, height: edge };
+                },
+                aspectRatio: 1.0,
+                videoConstraints: {
+                    facingMode: { ideal: 'environment' },
+                    focusMode: 'continuous',
+                    width: { min: 640, ideal: 1280, max: 1920 }
+                }
+            };
+
             _bzScanner.start(
                 { facingMode: 'environment' },
-                { fps: 10, qrbox: { width: 230, height: 230 } },
+                qrConfig,
                 function onScanSuccess(decodedText) {
                     if (_bzBusy) return;
                     _bzBusy = true;
+
+                    // Audio dan getar HP saat terbaca
+                    playScanBeep();
+                    if (navigator.vibrate) {
+                        try { navigator.vibrate([80, 40, 80]); } catch (e) {}
+                    }
+
+                    showScanFeedback(true, 'Kode QR terdeteksi! Sedang memvalidasi poin...');
 
                     fetch('{{ route('bazaar.scan.submit') }}', {
                         method: 'POST',
@@ -354,18 +448,41 @@ Halaman untuk Pembeli / Pengunjung berakun (`/pembeli/bazar-poin`):
                         },
                         body: JSON.stringify({ code: decodedText })
                     })
-                    .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
-                    .then(res => {
-                        showScanFeedback(res.data.ok, res.data.message);
-                        if (res.data.ok) {
+                    .then(async (response) => {
+                        // Deteksi proteksi keamanan sesi kedaluwarsa (419 / 401)
+                        if (response.status === 419 || response.status === 401) {
+                            showScanFeedback(false, 'Sesi login Anda telah kedaluwarsa demi keamanan. Mengalihkan ke login...');
+                            stopBazaarCamera();
+                            setTimeout(() => {
+                                window.location.href = '{{ route('login') }}';
+                            }, 1500);
+                            return;
+                        }
+
+                        // Deteksi proteksi rate-limiting jika ada upaya spam scan
+                        if (response.status === 429) {
+                            showScanFeedback(false, 'Terlalu banyak permintaan scan dalam 1 menit (Rate Limit). Harap tunggu sejenak demi keamanan.');
+                            setTimeout(() => { _bzBusy = false; }, 3000);
+                            return;
+                        }
+
+                        let res;
+                        try {
+                            res = await response.json();
+                        } catch (e) {
+                            throw new Error('Respon tidak valid');
+                        }
+
+                        showScanFeedback(res.ok, res.message);
+                        if (res.ok) {
                             stopBazaarCamera();
                             setTimeout(() => window.location.reload(), 1200);
                         } else {
-                            setTimeout(() => { _bzBusy = false; }, 1800);
+                            setTimeout(() => { _bzBusy = false; }, 2000);
                         }
                     })
                     .catch(() => {
-                        showScanFeedback(false, 'Gagal memproses hasil scan. Coba lagi atau masukkan kode manual.');
+                        showScanFeedback(false, 'Gagal memproses hasil scan. Periksa koneksi internet atau gunakan input kode manual.');
                         _bzBusy = false;
                     });
                 }
@@ -377,16 +494,23 @@ Halaman untuk Pembeli / Pengunjung berakun (`/pembeli/bazar-poin`):
 
         function stopBazaarCamera() {
             const placeholder = document.getElementById('qr-placeholder');
+            const overlay = document.getElementById('qr-scanning-overlay');
             const startBtn = document.getElementById('btn-start-scan');
             const stopBtn = document.getElementById('btn-stop-scan');
             if (_bzScanner) {
                 _bzScanner.stop().then(() => _bzScanner.clear()).catch(() => {});
                 _bzScanner = null;
             }
+            if (overlay) overlay.classList.add('hidden');
             if (placeholder) placeholder.classList.remove('hidden');
             if (startBtn) startBtn.classList.remove('hidden');
             if (stopBtn) stopBtn.classList.add('hidden');
         }
+
+        // Jaga sesi tetap aktif selama pengguna berada di halaman scanner (ping tiap 8 menit)
+        setInterval(() => {
+            fetch('{{ route('bazaar.scan.page') }}', { method: 'HEAD' }).catch(() => {});
+        }, 8 * 60 * 1000);
 
         document.addEventListener('DOMContentLoaded', function () {
             if (typeof Chart === 'undefined') return;
